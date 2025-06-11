@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 筆記型電腦銷售助理</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="[https://cdn.jsdelivr.net/npm/marked/marked.min.js](https://cdn.jsdelivr.net/npm/marked/marked.min.js)"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>AI 筆記型電腦銷售助理</h1>
+            <p>您的專業產品比較與問題解答幫手</p>
+        </header>
+        <main class="chat-main-container">
+            {% include 'chat/ai-chat-content.html' %}
+        </main>
+    </div>
+    <script src="/static/js/ai-chat.js"></script>
+</body>
+</html>
