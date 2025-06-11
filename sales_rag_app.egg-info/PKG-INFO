@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: sales_rag_app
+Version: 0.1
+License-File: LICENSE
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: python-dotenv
+Requires-Dist: jinja2
+Dynamic: license-file
+Dynamic: requires-dist

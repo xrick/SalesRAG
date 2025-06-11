@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+sales_rag_app.egg-info/PKG-INFO
+sales_rag_app.egg-info/SOURCES.txt
+sales_rag_app.egg-info/dependency_links.txt
+sales_rag_app.egg-info/requires.txt
+sales_rag_app.egg-info/top_level.txt

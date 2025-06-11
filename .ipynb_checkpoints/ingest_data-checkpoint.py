@@ -95,9 +95,6 @@ def main():
     all_docs = []
     for filename in os.listdir(DATA_DIR):
         file_path = os.path.join(DATA_DIR, filename)
-        # 跳過目錄和非 .txt 文件
-        if os.path.isdir(file_path) or not filename.endswith('.txt'):
-            continue
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
             # 使用 LangChain 的 TextSplitter

@@ -1,11 +1,15 @@
 import os
+import sys
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from libs.service_manager import ServiceManager 
 
-from libs.service_manager import ServiceManager
+
+# from libs.service_manager import ServiceManager
 
 # 載入環境變數
 load_dotenv()
