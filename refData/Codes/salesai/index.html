@@ -4,33 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>筆記型電腦銷售 RAG 系統</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
+        <!-- 側邊欄 - 聊天歷史 -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>聊天歷史</h2>
                 <button id="clearHistory" class="btn btn--sm btn--outline">清除</button>
             </div>
             <div id="chatHistory" class="chat-history">
-                </div>
+                <!-- 聊天歷史將在此顯示 -->
+            </div>
         </aside>
 
+        <!-- 主內容區 - 聊天介面 -->
         <main class="main-content">
             <div class="chat-header">
                 <h1>筆記型電腦銷售助手</h1>
                 <p>智能比較 AG958 和 AKK839 筆記型電腦</p>
             </div>
 
+            <!-- 聊天訊息顯示區 -->
             <div id="chatMessages" class="chat-messages">
-                </div>
+                <!-- 聊天訊息將在此顯示 -->
+            </div>
 
+            <!-- 預設問題快速選擇區 -->
             <div class="preset-questions">
                 <h3>預設問題</h3>
                 <div class="preset-buttons">
                     <button class="preset-btn" data-question="AG958和AKK839的主要差異是什麼？">AG958和AKK839的主要差異是什麼？</button>
-                    <button class="preset-btn" data-question="AG958和AKK839的散熱設計有什麼不同？">AG958和AKK839的散熱設計有什麼不同？</button>
                     <button class="preset-btn" data-question="哪款筆記型電腦更適合遊戲？">哪款筆記型電腦更適合遊戲？</button>
                     <button class="preset-btn" data-question="兩款產品的電池續航力如何比較？">兩款產品的電池續航力如何比較？</button>
                     <button class="preset-btn" data-question="存儲擴展能力比較如何？">存儲擴展能力比較如何？</button>
@@ -41,6 +46,7 @@
                 </div>
             </div>
 
+            <!-- 輸入區 -->
             <div class="chat-input-container">
                 <textarea id="userInput" class="chat-input form-control" placeholder="輸入您的問題..." rows="1"></textarea>
                 <button id="sendButton" class="btn btn--primary send-button">
@@ -50,14 +56,13 @@
         </main>
     </div>
 
-    <div id="copy-to-clipboard-template" style="display: none;">
-        <button class="btn btn--icon btn--sm copy-btn" title="複製">
-            <svg viewBox="0 0 24 24" class="icon icon--sm">
-                <path d="M16 1H4C2.9 1 2 1.9 2 3v14h2V3h12V1zm3 4H8C6.9 5 6 5.9 6 7v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path>
-            </svg>
-        </button>
+    <!-- 複製訊息的模板 -->
+    <div id="copyToast" class="toast hidden">
+        <div class="toast-content">已複製到剪貼簿</div>
     </div>
+
+    <!-- 載入 Marked.js 庫以正確解析 Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="/static/js/ai-chat.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
