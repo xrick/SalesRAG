@@ -4,7 +4,7 @@ import os
 from .services.base_service import BaseService
 
 class ServiceManager:
-    def __init__(self, service_directory="sales_rag_app/libs/services"):
+    def __init__(self, service_directory="libs/services"):
         self.services = {}
         self._discover_services(service_directory)
 
@@ -15,7 +15,7 @@ class ServiceManager:
             if os.path.isdir(service_path) and service_name != "__pycache__":
                 try:
                     # 動態導入 service.py 模組
-                    module_path = f"sales_rag_app.libs.services.{service_name}.service"
+                    module_path = f"libs.services.{service_name}.service"
                     service_module = importlib.import_module(module_path)
 
                     # 在模組中尋找繼承自 BaseService 的類別

@@ -85,11 +85,11 @@ class SalesAssistantService(BaseService):
             print(f"Error in SalesAssistantService.chat_stream: {e}")
             error_obj = {"error": "An unexpected error occurred in the service."}
             yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
-````
+'''
 
 #### **`sales_rag_app/libs/services/sales_assistant/prompts/sales_prompt.txt`**
 
-````text
+'''
 ### SYSTEM PROMPT ###
 你是一位頂級的筆記型電腦技術銷售專家。你的任務是根據提供的「上下文資料」，精確、客觀地回答使用者關於 AG958 和 AKK839 這兩款筆記型電腦的問題。
 
@@ -130,22 +130,4 @@ class SalesAssistantService(BaseService):
 {query}
 
 ### 你的 JSON 回答 ###
-````
-
-#### **`sales_rag_app/libs/RAG/DB/DatabaseQuery.py`**
-
-```python
-from abc import ABC, abstractmethod
-
-class DatabaseQuery(ABC):
-    @abstractmethod
-    def connect(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def query(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abstractmethod
-    def disconnect(self):
-        raise NotImplementedError
+'''

@@ -18,7 +18,7 @@ load_dotenv()
 app = FastAPI()
 
 # 掛載靜態檔案目錄
-app.mount("/static", StaticFiles(directory="sales_rag_app/static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 設定模板目錄
 templates = Jinja2Templates(directory="sales_rag_app/templates")
