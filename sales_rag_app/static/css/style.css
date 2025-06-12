@@ -193,6 +193,17 @@
   .message-content p:first-child { margin-top: 0; }
   .message-content p:last-child { margin-bottom: 0; }
   
+  /* 訊息元數據樣式 */
+  .message-metadata {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-12);
+    padding: var(--space-8);
+    background-color: rgba(94, 82, 64, 0.05);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-primary);
+  }
+  
   .message-info {
     font-size: var(--font-size-xs);
     color: var(--color-info);
@@ -242,22 +253,74 @@
     padding-bottom: 0.3em;
   }
   
+  /* 表格樣式增強 - 確保框線顯示 */
+  .message-content table,
   .markdown table {
     width: 100%;
     border-collapse: collapse;
-    margin: 1em 0;
+    margin: 1.2em 0;
     font-size: 0.9em;
-  }
-  
-  .markdown th, .markdown td {
     border: 1px solid var(--color-border);
-    padding: 0.5em;
-    text-align: left;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
   
+  .message-content th, 
+  .message-content td,
+  .markdown th, 
+  .markdown td {
+    border: 1px solid var(--color-border);
+    padding: 0.75em 1em;
+    text-align: left;
+    vertical-align: top;
+  }
+  
+  .message-content th,
   .markdown th {
-    background-color: var(--color-background);
+    background-color: rgba(33, 128, 141, 0.1);
     font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-primary);
+  }
+  
+  .message-content tbody tr:nth-child(even),
+  .markdown tbody tr:nth-child(even) {
+    background-color: rgba(252, 252, 249, 0.5);
+  }
+  
+  .message-content tbody tr:hover,
+  .markdown tbody tr:hover {
+    background-color: rgba(33, 128, 141, 0.05);
+  }
+  
+  /* 表格內容樣式增強 */
+  .message-content table strong,
+  .markdown table strong {
+    color: var(--color-primary);
+  }
+  
+  .message-content table code,
+  .markdown table code {
+    background-color: rgba(94, 82, 64, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: var(--radius-sm);
+    font-size: 0.85em;
+  }
+  
+  .message-content table details,
+  .markdown table details {
+    margin: 0;
+    border: none;
+    padding: 0;
+  }
+  
+  .message-content table summary,
+  .markdown table summary {
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: 0.9em;
   }
   
   .markdown ul, .markdown ol {
@@ -431,13 +494,17 @@
       padding: var(--space-8);
     }
     
+    .message-content table,
     .message-content .markdown table {
       font-size: var(--font-size-sm);
+      margin: 1em 0;
     }
     
+    .message-content table th,
+    .message-content table td,
     .message-content .markdown table th,
     .message-content .markdown table td {
-      padding: var(--space-4) var(--space-6);
+      padding: 0.5em 0.75em;
     }
   }
   
