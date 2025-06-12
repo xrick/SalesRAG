@@ -7,6 +7,14 @@ from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from libs.service_manager import ServiceManager 
+import logging
+
+###setup debug
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 
 
 # from libs.service_manager import ServiceManager
@@ -21,7 +29,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 設定模板目錄
-templates = Jinja2Templates(directory="sales_rag_app/templates")
+templates = Jinja2Templates(directory="templates")
 
 # 初始化服務管理器
 service_manager = ServiceManager()
