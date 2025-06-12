@@ -1,0 +1,474 @@
+[819 Series Specification Summary]
+
+[Codename]
+- AB819-S: FP6
+- AMD819-S / AMD819: FT6
+- ARB819-S / APX819 / AHP819: FP7R2
+
+[Version Stage]
+- AB819-S: MP_v1.6
+- AMD819-S: PVT_v1.2
+- AMD819: Planning_v0.1
+- ARB819-S: PVT_v1.3
+- APX819 / AHP819: EVT_v1.1
+
+[Model Info]
+- AB819-S
+  - Model Name: AB819-S
+  - P/N: EM-819S-NM15AB-X
+  - ID: Standard
+
+- AMD819-S
+  - Model Name: AMD819-S (Customized for Medion PVT EOL)
+  - P/N: EM-819-NM15AMD-X
+
+- AMD819
+  - Model Name: AMD819
+  - P/N: EM-819-NP14AMD-R
+  - MB Ver.: EM_AMD819_MED_V2_1
+  - DB Ver.: EM_TG819_DB_V1P0
+  - ID: (unspecified)
+
+- ARB819-S
+  - Model Name: ARB819-S (Education)
+  - P/N: EM-819-NP15ARB-L
+  - MB Ver.: v2.1
+  - DB Ver.: v1.0 (BM Version only), IDL819_HLT_DB_V2.0 (Standard only)
+  - ID: 
+    - Option 1: SuperMan/DEYI (Standard - GY / Customized x3 set, TBC)
+    - Option 2: HLTech (Standard_MP)
+    - Option 3: YINGDA (Customized by BM), pending PM update
+
+- APX819
+  - Model Name: APX819
+  - P/N: EM-819-NP15APX
+  - MB Ver.: v2.1
+  - ID: Same as ARB819-S
+
+- AHP819
+  - Model Name: AHP819
+  - P/N: EM-819-NP15AHP
+  - MB Ver.: v2.1
+  - ID: Same as ARB819-S
+
+[Development Timeline]
+
+- AB819-S / AMD819-S / AMD819:
+  - Planning: N/A
+  - Kick-off: N/A
+  - EVT: N/A
+  - DVT: N/A
+  - PVT: N/A
+  - Pilot run: N/A
+  - MP: N/A
+
+- ARB819-S:
+  - Planning: 2023/05/03 – 2023/05/10
+  - Kick-off: 2023/05/11
+  - EVT: 2023/05/15 – 2023/07/24
+  - DVT: 2023/07/24 – 2023/08/18
+  - PVT: 2023/08/24 – 2024/01/31
+  - Pilot run: 2023/11/14 – 2023/11/24
+  - MP: 2024/04 (estimated)
+
+- APX819 / AHP819:
+  - Planning: 2024/06/05 – Now
+  - Kick-off: 2024/10/16
+  - EVT: 2024/10/17 – 
+    - APX819: 2024/10/30
+    - AHP819: 2024/12/15
+  - DVT / PVT / Pilot / MP: TBD
+
+[Project Owner]
+- AB819-S: HQCN_Wenhong
+- AMD819-S: HQCN_Zhao Beike
+- AMD819: HQCN_ (unspecified)
+- ARB819-S / APX819 / AHP819: Dillon
+
+[Client / Customization]
+- AB819-S: Extended device (standard)
+- AMD819-S: (blank)
+- AMD819:
+  - Client: Unwhy tender
+- ARB819-S:
+  - Client: Extended device
+  - Customization Notes:
+    - Lancheng: New ID, M/B CKD shipment, small board (BM Ver.) PCBA shipment, total 10K CKD (1K 1st batch completed by 11/30)
+    - Changcheng: Introducing new HDMI-in daughter card, initiated in AB819 (expected 5K). No order request yet for ARB819.
+    - 15.6" SI: Younghwa, HLTech chassis
+    - 16" SI: Haoqin, HLTech chassis
+- APX819 / AHP819: (blank)
+
+
+
+
+[819 Series - Structure & Interface Summary]
+
+[Structure Configuration]
+
+Form:
+- AB819-S / ARB819-S / APX819 / AHP819: Commercial Notebook
+- AMD819-S / AMD819: Consumer Notebook
+
+Dimension:
+- AB819-S / AMD819-S: 359.1 × 240.4 × 19.5 mm
+- AMD819: 323.5 × 219.5 × 19.5 mm
+- ARB819-S / APX819 / AHP819: 359.1 × 240.4 × 21.0 mm (BM Customized / TBD E/July)
+
+Material & Surface:
+- AB819-S: A/C/D case – Plastic (Anodize), B case – Plastic (Texture)
+- AMD819-S: A/C/D case – Metal (Anodize), B case – Plastic (Texture)
+- AMD819 / ARB819-S / APX819 / AHP819: A/B/C/D case – Plastic
+
+Hinge:
+- All models: 140-degree hinge
+
+Weight:
+- AB819-S / AMD819-S: 1860 g
+- AMD819: 1487 g
+- ARB819-S / APX819 / AHP819: 1840 g (BM Customized or TBD E/July)
+
+[LCD Specification]
+
+Dimension:
+- AB819-S / AMD819-S / ARB819-S / APX819 / AHP819: 15.6", 16:9
+- AMD819: 14.0", 16:9
+
+Resolution:
+- AB819-S / AMD819-S / ARB819-S: 15.6" FHD 1920×1080 144Hz, 3 sides narrow bezel
+- AMD819: 14.0" FHD 1920×1080 60Hz (TBC)
+- APX819 / AHP819: 15.6" FHD 1920×1080 60Hz / 250nits, 3 sides narrow bezel (TBC M/July)
+
+[Touch Panel]
+- All models: N/A
+
+[IO Interface - MB IO (Left)]
+
+All Models:
+- 1× 3.5mm DC-IN port (MB)
+- 1× HDMI 1.4 Type A (MB)
+
+USB (Left):
+- AB819-S / AMD819-S / AMD819: 1× USB 3.2 Gen1, Type A
+- ARB819-S / APX819 / AHP819: Option1 (超人/藍晨) & Option2 (宏利泰): 1× USB 3.2 Gen1, Type A
+
+Type-C:
+- AB819-S / ARB819-S / APX819 / AHP819: 2× USB 3.2 Gen2, Type-C (PD, Data, DP1.4)
+- AMD819-S / AMD819: 1× USB 3.2 Gen2, Type-C (PD, Data, DP1.4)
+  - AMD819 additional: 1× USB 3.2 Gen1, Type-C (Data only)
+
+Camera/Mic Switch:
+- AB819-S / AMD819-S / AMD819: 1× physical Camera/Mic switch
+- ARB819-S / APX819 / AHP819: N/A (reserved on MB)
+
+[IO Interface - DB IO (Right)]
+
+Kensington Lock:
+- All models: 1× Supportive Kensington Lock slot
+
+LAN:
+- AB819-S:
+  - DB_Option1: 1× RJ45 (EM_AB819_HLT_DB_V1.2)
+  - DB_Option2: 1× RJ45
+  - DB_Option3: N/A
+- AMD819-S: 1× RJ45 (IRL819_DB_V1P0_FINAL)
+- AMD819: 1× USB 3.2 Gen1, Type A (EM_TG819_DB_V1P0)
+- ARB819-S / APX819 / AHP819:
+  - Option1 (超人/藍晨): N/A
+  - Option2 (宏利泰): 1× RJ45 (Tooling dependent)
+
+USB2.0 (Type A):
+- AB819-S:
+  - DB_Option2: 1× USB2.0, Type A
+- AMD819-S: 2× USB2.0, Type A
+- AMD819: 1× USB2.0, Type A
+- ARB819-S / APX819 / AHP819: N/A
+
+Headphone Jack:
+- All models: 1× 3.5mm headphone jack
+
+Micro SD Card:
+- All models: 1× Micro SD card, up to 2TB
+
+Extra USB (Type A):
+- ARB819-S / APX819 / AHP819:
+  - Option1: 1× USB2.0, Type A
+  - Option2: 1× USB2.0, Type A
+
+Special Ports:
+- AB819-S: DB_Option1: 1× Mini HDMI-in
+- AMD819-S: 1× USB 3.2 Gen1, Type C
+- ARB819-S / APX819 / AHP819:
+  - Option1: 1× USB 3.2 Gen1, Type A
+
+[IO Interface - Rear MB]
+- All models: N/A
+
+[LED Indicators]
+
+Power:
+- AB819-S / AMD819-S / AMD819:
+  - On: Blue light / Off: No light / Sleep: Breathing light
+- ARB819-S / APX819 / AHP819:
+  - 14": Green / Off: No light / Sleep: Breathing
+  - 15": Blue / Off: No light / Sleep: Breathing
+
+Battery/Charge:
+- AB819-S / AMD819-S / AMD819:
+  - Charging: Red / Full: Blue / Off: No light
+- ARB819-S / APX819 / AHP819:
+  - 14"/15": Charging: Red / Full: Green / Off: No light
+
+Webcam:
+- AB819-S / AMD819-S / AMD819:
+  - On: Blue / Off: No light
+- ARB819-S / APX819 / AHP819:
+  - 14": On: Green / 15": N/A
+
+SSD LED:
+- All models: N/A
+
+Caps Lock:
+- AB819-S / AMD819-S / AMD819:
+  - On: White / Off: No light
+- ARB819-S / APX819 / AHP819:
+  - 14"/15": On: White / Off: No light
+
+Num Lock:
+- AB819-S / AMD819-S:
+  - On: White / Off: No light
+- AMD819: N/A
+- ARB819-S / APX819 / AHP819:
+  - 14": N/A / 15": On: White / Off: No light
+
+[Power Button]
+- All models: Separated power button key (on DB)
+
+[Keyboard]
+
+Backlight:
+- AB819-S / AMD819-S / AMD819: Single LED (White)
+- ARB819-S / APX819 / AHP819: Single color or no backlight (optional)
+
+Matrix:
+- All models: US
+
+Others:
+- All models: N/A
+
+[Web Camera]
+
+Front Camera:
+- AB819-S / AMD819 / AMD819-S: 1× 1.0MP (720P) with LED
+- ARB819-S / APX819 / AHP819:
+  - Default: 1.0MP (720P) with LED
+  - Option1: 2.0MP (1080P) with LED
+
+Rear Camera:
+- All models: N/A
+
+Windows Hello:
+- All models: Optional
+
+[Touchpad]
+
+Interface:
+- All models: I2C
+
+Size:
+- AB819-S: N/A
+- AMD819-S: 118 × 78.1 mm
+- AMD819: TBC
+- ARB819-S / APX819 / AHP819: 132 × 86 mm
+
+Feature:
+- All models: Multi-touch support, gestures & scroll
+
+[Fingerprint Sensor]
+
+Location:
+- All models: On Touchpad
+
+Interface:
+- All models: USB, Security Level 2 (GF3206+GM188, Optional)
+
+Windows Hello:
+- All models: Supported
+
+[Audio]
+
+Speaker:
+- AB819-S / AMD819-S: 4× Built-in Speaker (4Ω/2W on MB)
+- AMD819: 2× Built-in Speaker (4Ω/1.5W on DB)
+- ARB819-S / APX819 / AHP819: 2× Built-in Speaker (4Ω/2W on MB)
+
+Mic:
+- AB819-S / AMD819-S / AMD819: 2× Built-in digital microphones (on MB)
+- ARB819-S / APX819 / AHP819: 2× Built-in digital microphones (on camera module)
+
+Others:
+- All models: N/A
+
+[Battery]
+
+Type:
+- All models: Lithium-ion polymer battery
+
+Capacity:
+- AB819-S / ARB819-S / APX819 / AHP819:
+  - 1× 55Wh, 11.4V / 4825mAh, 3S1P, Damp battery
+- AMD819-S / AMD819:
+  - 1× 55Wh, 11.4V / 4825mAh, 3S1P, Smart battery
+
+Certification:
+- All models: N/A
+
+Life:
+- AB819-S / AMD819-S: 10 Hours
+- AMD819: 10 Hours (TBC)
+- ARB819-S / APX819 / AHP819: 6–8 Hours
+
+
+
+
+[CPU Configuration]
+- AB819-S: AMD Zen2 (Renoir, Cezanne, Lucienne, Barcelo Refresh)
+- AMD819-S & AMD819: AMD Zen2 (Mendocino U Series), Athlon™ Gold 7220U, Ryzen™ 3 7320U, Ryzen™ 5 7520U
+- ARB819-S: AMD Zen3+ (Rembrandt, Rembrandt Refresh), Ryzen™ 5 6600U, 6800U, 7535U, 7735U
+- APX819: AMD Zen4 (Phoenix), Ryzen™ 3 7440U, Ryzen™ 5 7540U, 7640U, Ryzen™ 7 7840U
+- AHP819: AMD Zen4 (Hawk Point), Ryzen™ 3 8440U, Ryzen™ 5 8540U, 8640U, Ryzen™ 7 8840U
+
+[GPU Model]
+- AB819-S: AMD Radeon™ Graphics
+- AMD819-S: AMD Radeon™ 610M
+- AMD819: AMD Radeon™ Graphics
+- ARB819-S: Radeon™ 660M / 680M
+- APX819: Radeon™ 740M / 760M / 780M
+- AHP819: Radeon™ 740M / 760M / 780M
+
+[RAM]
+- AB819-S: 2x SO-DIMM DDR4 up to 3200MT/s, max 32GB
+- AMD819-S: LPDDR5-3200Mhz, up to 16GB
+- AMD819: 2x LPDDR5-3200Mhz, up to 16GB
+- ARB819-S: 2x SO-DIMM DDR5 up to 4800MT/s, max 32GB
+- APX819 & AHP819: 2x SO-DIMM DDR5 up to 5600MT/s, max 32GB
+
+[LCD Connector]
+- All Models: EDP
+
+[Storage (ROM)]
+- AB819-S: 1x M.2 2280 PCle G3 (Lane 4), up to 8TB (on MB)
+- AMD819-S: 1x M.2 2280 PCle G3 (Lane 2) + 1x M.2 SATA SSD
+- AMD819: 1x M.2 2280 PCle G3 (Lane 2)
+- ARB819-S: 1x M.2 2280 PCle G4 (Lane 4)
+- APX819 & AHP819: 1x M.2 2280 PCle G4 (Lane x4)
+
+[Wi-Fi Configuration]
+- AB819-S: 1x M.2 Key-E 2230 for WiFi 5 + BT5.0
+- AMD819-S & AMD819: Default WiFi 5 + BT5.0 / Option: WiFi 6 + BT5.2
+- ARB819-S: WiFi 6 + BT5.2
+- APX819 & AHP819: Default WiFi 5 + BT5.0 / Option: WiFi 6 + BT5.2
+
+[SD Card]
+- All Models: 1x Micro SD card, up to 2TB, SDHC/SDXC supported
+
+[LTE]
+- All Models: Not Available
+
+[Sensors]
+- G-sensor: Not Available
+- Hall sensor: Supported on all models
+
+[Thermal Solution (TDP)]
+- AB819-S / AMD819-S / AMD819: TDP 15W
+- ARB819-S: TDP 28W
+- APX819 & AHP819: Default TDP 15W / Option: 28W
+
+[TPM Support]
+- All Models: 
+  - Option1: Hardware chip on MB, dTPM 2.0
+  - Option2: AMD Pluton, implemented in firmware (fTPM2.0)
+
+[V-PRO]
+- All Models: Not Supported
+
+[RTC Connector]
+- All Models: Supported
+
+[Other Features]
+- All Models: N/A
+
+
+
+
+[Wireless Network Configuration]
+
+[Wi-Fi Module]
+- AB819-S:
+  - 1x M.2 Key-E 2230 for WiFi 5 + Bluetooth 5.0 (on module)
+- AMD819-S & AMD819:
+  - Default: 1x M.2 Key-E 2230 for WiFi 5 + Bluetooth 5.0 (on module)
+  - Option: 1x M.2 Key-E 2230 for WiFi 6 + Bluetooth 5.2 (on module)
+- ARB819-S:
+  - 1x M.2 Key-E 2230 for WiFi 6 + Bluetooth 5.2 (on module)
+- APX819 & AHP819:
+  - Default: 1x M.2 Key-E 2230 for WiFi 5 + Bluetooth 5.0 (on module)
+  - Option: 1x M.2 Key-E 2230 for WiFi 6 + Bluetooth 5.2 (on module)
+
+[Bluetooth Version]
+- All Models: Support
+  - AB819-S: BT 5.0
+  - Others (if upgraded to WiFi 6): BT 5.2
+
+[Wi-Fi/BT Power Switch]
+- All Models: Support WiFi and Bluetooth Power On/Off switch
+
+[LAN]
+- All Models: 1x RJ45 (Giga LAN 10/100/1000 Mbps, on MB)
+
+[LTE]
+- All Models: Not Available
+
+
+
+
+[Software Configuration]
+
+[Operating System]
+- AB819-S, AMD819-S, AMD819, ARB819-S:
+  - OS: Windows 11 SV2 (23H2)
+- APX819, AHP819:
+  - OS: Windows 11 SV2 (24H2)
+- All Models:
+  - Language Support: Multi-language supported
+
+[BIOS/EC]
+- All Models:
+  - UI Spec: Standard spec
+
+[AI Functions in Windows]
+- AB819-S, AMD819-S, AMD819, ARB819-S:
+  - Not supported
+- APX819, AHP819:
+  - MEP (Microsoft OEM Approval Required):
+    - Features: Automatic Framing, Eye Contact, Background Effect
+  - Copilot: Supported (Region-dependent)
+
+[AI Software Support]
+- AB819-S, AMD819-S, AMD819, ARB819-S:
+  - Not supported
+- APX819, AHP819:
+  - Supported with License Requirement:
+    - Large Language Model
+    - Text to Image Model
+    - Image to Image Model
+
+[Accessory]
+
+[Power Adapter]
+- AB819-S, AMD819-S:
+  - 1x 65Wh, AC input 100/240V, 50/60Hz, DC output 20V / 3.25A
+- AMD819:
+  - 1x 65W Type-C
+- ARB819-S, APX819, AHP819:
+  - 1x 65Wh, AC input 100/240V, 50/60Hz, DC output 19V / 3.42A

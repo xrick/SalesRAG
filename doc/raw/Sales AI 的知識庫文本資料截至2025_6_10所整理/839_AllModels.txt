@@ -1,0 +1,286 @@
+[Stage / Version]
+- AKK839: EVT_v1.0
+- AHP839: Planning_v0.1
+- APX839: Planning_v0.1
+- ARB839: Planning_v0.1
+
+[Model Information]
+- Model Name:
+  - AKK839
+  - AHP839
+  - APX839
+  - ARB839
+- P/N:
+  - AKK839: EM-839-ND14AKK
+  - AHP839: EM-839-ND14AHP
+  - APX839: EM-839-ND14APX
+  - ARB839: EM-839-ND14ARB
+- ID: Public (All models)
+
+[Mainboard / Daughterboard Version]
+- MB Ver.: v1.0 (All models)
+- DB Ver.: v1.0 (All models)
+
+[Development Timeline]
+- Planning:
+  - All Models: 2024/06/14 - 2024/07/29
+- Kick-off:
+  - All Models: 2024/07/30
+- E2E:
+  - AKK839: 2024/07/31 - 2024/08/31
+  - AHP839, APX839, ARB839: N/A
+- EVT:
+  - AKK839: 2024/09/01 - 2024/12/01
+  - AHP839, APX839, ARB839: (Blank)
+- DVT:
+  - All Models: N/A
+- PVT:
+  - AKK839: 2024/12/01 - 2025/02/28
+  - AHP839, APX839, ARB839: (Blank)
+- MP:
+  - AKK839: 2025/02/28 - 2025/03/31
+  - AHP839, APX839, ARB839: (Blank)
+
+[Project Management]
+- Owner:
+  - All Models: HQ PM-梁森 / TW-Jasper
+
+
+
+
+[Structure Configuration]
+- Form Factor: Notebook (All models)
+- Dimensions:
+  - 14": 313.65 x 220.8 x 17.95 mm
+  - 16": TBD
+- Material (All models):
+  - Option1: A/D Cover – Aluminium alloy, B Cover – Plastic, C Cover – Aluminum-magnesium alloy
+  - Option2: A/D Cover – Aluminium alloy, B/C Cover – Plastic
+- Hinge: 180-degree hinge
+- Weight: 1.8 kg
+
+[LCD]
+- Size: 14", 16:10 (All models)
+- Resolution:
+  - Default: 1920x1200 FHD, Anti-Glare, 120Hz (TCL)
+  - Option1: 2880x1800 2.8K, Anti-Glare, 120Hz (TCL)
+
+[Touch Panel]
+- Form: N/A (Support via PCBA)
+
+[IO Interface]
+- MB IO (Left):
+  - 1 x USB 3.2 Gen2 Type-C (PD/DP1.4/USB 10Gbps)
+  - 1 x HDMI 2.1 TMDS Type-A (4K@60Hz)
+  - 1 x USB 3.2 Gen1 Type-A (5Gbps)
+  - 1 x USB 4.0 Type-C (DP1.4/USB 40Gbps)
+  - 1 x OCULINK (Optional)
+- DB IO (Right):
+  - Default: 1 x 2.5G RJ45 (10/100/1000/2500Mbps)
+  - Option1: 1 x 1G RJ45 (10/100/1000Mbps, without AMD Dash)
+  - 2 x USB 3.2 Gen1 Type-A (5Gbps)
+  - 1 x φ3.5mm Combo Audio Jack (EU/USA Regulation)
+  - 1 x Micro SD Card (Supports SDSC, SDHC, SDXC up to 2TB)
+- MB IO (Rear): N/A
+
+[LED Indicators]
+- Power: White (On), No light (Off), Breathing (Sleep)
+- WiFi/Bluetooth: N/A
+- Battery/Charging:
+  - Charging: Orange light
+  - Full: Green light
+  - Off: No light
+- Webcam: White light (On), Off: No light
+- SD LED: N/A
+- Caps Lock: White light (On), No light (Off)
+- Num Lock: N/A
+
+[Power Button]
+- Button Type: Separated power button (on DB)
+
+[Keyboard]
+- Backlight:
+  - Default: Single LED (White)
+  - Option1: No backlit
+- Matrix: US/UK
+- Others: N/A
+
+[Web Camera]
+- Front Camera:
+  - Default: 720P / 1MP HD Webcam IR, 30fps, dual mics, LED
+  - Option1: 1080P / 2MP FHD Webcam IR, 30fps, dual mics, LED
+  - Option2: 5MP Webcam IR, dual mics, LED
+  - All options include camera shutter
+- Rear Camera: N/A
+- Windows Hello: Yes
+
+[Touchpad]
+- Interface: I2C/HID
+- Size: TBD (Recommend as large as possible)
+- Features:
+  - Multi-touch, gesture & scroll
+  - Option1: Glass material (C cover - Al-Mg alloy)
+  - Option2: Plastic material (C cover - Plastic)
+
+[Fingerprint Sensor]
+- Location: On Power button
+- Interface: USB, Security level 3
+- Windows Hello: Supported
+- Others: One-click power on supported
+
+[Audio]
+- Speaker: 2 x Built-in Speaker (4Ω/2W) — Suggest HQ finetuned
+- Mic: Dual built-in digital mics (camera module, HD Audio)
+- Others: N/A
+
+[Battery]
+- Type: Lithium-ion polymer battery, fast charging optional
+- Capacity:
+  - 14": 1 x 80Wh, 11.55V, 4S1P Smart battery
+  - 16": 1 x 99Wh
+  - Fast charging up to 80% in <1 hour
+- Certification: CB, MSDS, UN38.3, Airflight transportation report
+- Life: >10 hours via MSFT CTS testing (TBD)
+
+
+
+
+
+[Hardware Configuration]
+
+[CPU]
+AKK839:
+- Architecture: AMD Zen5, Krackan Series, TDP 45W (up to 60W)
+- Options:
+  - Ryzen™ 5, Ryzen™ 7, Ryzen™ 9 (TDP 35W~54W)
+AHP839:
+- Architecture: AMD Zen4, Hawk Point Series, TDP 45W (up to 60W)
+- CPU Options:
+  - AMD Ryzen™ 9 Pro 8945HS (8C/16T, 5.2GHz/4.0GHz, 45W)
+  - AMD Ryzen™ 7 Pro 8845HS (8C/16T, 5.1GHz/3.8GHz, 45W)
+  - AMD Ryzen™ 5 Pro 8645HS (8C/16T, 5.0GHz/4.3GHz, 45W)
+  - AMD Ryzen™ 9 8945HS / 7 8845HS / 5 8645HS
+  - AMD Ryzen™ 7 Pro 8840U / 5 Pro 8640U / 5 Pro 8540U
+  - AMD Ryzen™ 7 8840U / 5 8640U / 5 8540U / 3 8440U
+  - AMD Ryzen™ 7 Pro 8840HS / 8640HS / 8840HS / 8640HS
+APX839:
+- Architecture: AMD Zen4, Phoenix Series, TDP 45W (up to 60W)
+- CPU Options:
+  - Ryzen™ 5 Pro 7640HS (6C/12T, 5.0GHz/4.3GHz, 35W~54W)
+  - Ryzen™ 7 Pro 7840HS (8C/16T, 5.1GHz/3.8GHz, 35W~54W)
+  - Ryzen™ 9 Pro 7940HS (8C/16T, 5.2GHz/4.0GHz, 35W~54W)
+  - Ryzen™ 5 7640HS / 7 7840HS / 9 7940HS
+  - Ryzen™ 5 PRO 7640U / 7 PRO 7840U / 3 7440U / 7540U / 7640U / 7840U
+ARB839:
+- Architecture: AMD Zen43+, Rembrandt Refresh / Rembrandt Series, TDP 45W (up to 60W)
+- CPU Options:
+  - AMD Ryzen™ 5 7535HS / 7 7735HS / 5 6600H / 7 6800H / 5 PRO 6650H / 7 PRO 6850H
+  - Ryzen™ 9 PRO 6950H / 3 Pro 7335U / 7 PRO 7535U / 7335U / 5 7535U / 7 7735U / 7736U
+  - Ryzen™ 5 6600U / 7 6800U / 5 6650U / 7 6850U / 5 Pro 6650U / 7 Pro 6850U
+
+[GPU]
+- AKK839: AMD Radeon™ 880M / 860M
+- Others: AMD Radeon™ Graphics
+
+[Memory]
+- AKK839/AHP839/APX839: DDR5 5600MT/s, up to 128GB (2x SO-DIMM)
+- ARB839: DDR5 4800MT/s, up to 128GB (2x SO-DIMM)
+
+[LCD Connector]
+- All models: eDP
+
+[Storage]
+- All models:
+  - 1x M.2 2280 PCIe G4 NVMe SSD (up to 8TB, 2x 4TB)
+  - 1x M.2 2280 PCIe G3 NVMe SSD (up to 8TB)
+
+[WiFi]
+- All models:
+  - Default: M.2 Key-E 2230 WiFi 6E + BT5.2
+  - Option1: WiFi 6 + BT5.2
+  - Option2: WiFi 5 + BT5.2
+
+[SD Card]
+- All models: 1x Micro SD Card, USB2.0 protocol
+
+[LTE]
+- All models: N/A
+
+[Sensor]
+- G-sensor: N/A
+- Hall sensor: Support (TBD)
+
+[Thermal Solution]
+- All models: Dual Fan / TDP 45W
+
+[TPM]
+- All models:
+  - Default: AMD Pluton (Firmware TPM 2.0)
+  - Option1: Discrete TPM 2.0 (dTPM)
+
+[AMD Dash]
+- All models:
+  - Default: AMD Dash
+  - Option1: Non-AMD Dash
+
+[RTC]
+- All models: PCBA Support
+
+
+
+[Wireless Network Configuration]
+
+[WIFI]
+- Wifi Chip Model:
+  - Default：RZ616 (AMD) – WIFI 6E Dual-band 2T2R 802.11ax + Bluetooth 5.2, M.2 module (MT7922A12L)
+  - Option1：AX210 (Intel) – WiFi 6E 2T2R 802.11ax + Bluetooth 5.3, M.2 module
+  - Option1 (Non-Dash)：AWXB591NF (AzureWave) – WiFi 6E 2T2R + Bluetooth 5.3, M.2 2230 (MT7922AEA)
+  - Option2：AWXT2KV2103 (HSF_RZ616) – WiFi 6E 2T2R + Bluetooth V2.1/4.2/5.2, M.2 2230
+  - Option3：6252M-PUB (FN-LINK) – WiFi 6 Dual-band 2T2R 802.11ax (2.4GHz/5GHz) + Bluetooth 5.2, M.2 2230 (RTL8852BE-CG)
+
+[LAN]
+- RJ45 Port:
+  - Default：1 x 2.5G RJ45 Giga LAN (10/100/1000/2500Mbps, on DB)
+  - Option1：1 x 1G RJ45 Giga LAN (10/100/1000Mbps, on DB, without AMD Dash)
+
+[Bluetooth]
+- Support: Yes
+- Version: Bluetooth 4.2 / 5.2
+
+[LTE]
+- LTE Module: Not supported
+
+
+
+
+[Software Configuration]
+
+[Operating System]
+- System: Windows 11 2024H2 (2024 updated) Copilot version
+- Language Support: Multi-language supported
+
+[BIOS/EC]
+- UI Spec: Standard spec
+
+[AI Function]
+- AI in Windows:
+  - MEP (requires OEM approval from Microsoft)
+    - Automatic framing
+    - Eye contact
+    - Background effect
+  - Copilot (availability depends on region): Supported
+
+- AI Software:
+  - Large language model (license required): Supported
+  - Text to Image model (license required): Supported
+  - Image to Image model (license required): Supported
+
+[Accessory]
+
+[Power Adapter]
+- Standard Configuration: 1× 100W, 20V Type-C fast charger  
+  (Battery charges up to 80% in less than 1 hour)
+
+[Certifications]
+- Safety: N/A  
+- EPEAT and ECO LABEL standards: N/A

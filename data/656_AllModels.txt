@@ -1,0 +1,362 @@
+[Stage & Version]
+- All Models: Version: PVT_1.0
+
+[Model Information]
+- APX656: P/N - EM-656-NS14APX-S
+- AHP656: P/N - EM-656-NS14AHP-S
+- ARB656 (14"): P/N - EM-656-NS14ARB-S
+- ARB656 (15"): P/N - EM-656-NS15ARB-S
+- AKK656: P/N - EM-656-NS14AKK
+
+[Product ID]
+- All Models: Standard (Shenxin)
+
+[Mainboard / Daughterboard]
+- All Models:
+  - MB Version: v1.0
+  - DB Version: v1.0
+
+[Development Stages]
+- All Models:
+  - Planning: 2023/10/02 – 2024/Now (APX only ends 2024/02/25)
+  - Kick-off:
+    - APX656: 2024/02/26
+    - AHP656, ARB656 (14"/15"): 2024/07/01 or 07/03
+    - AKK656: 2024/07/03
+  - EVT: 2024/06/05 – 2024/11/01
+  - DVT: (To be updated)
+  - PVT: 2024/11/02 – 2024/01/31
+  - Pilot Run: (To be updated)
+
+[Project Manager]
+- APX656: SZ – Liang Sen / Chen Xizhi, TP – Jerry
+- Others: (Not specified in this sheet)
+
+[Client Customization]
+- APX656:
+  1. Tender:
+     - MTL (Qty 10K), Started by 24Q3, Owner: Sylvia
+     - Casper (Qty 5K), Started by 24Q3, Owner: Alice
+  2. EVT Sample: 5pcs for R5
+  3. DVT Sample: 10pcs for R7 Pro
+  4. ME part: 240226 T1
+- Other Models: (No customization info listed)
+
+
+
+
+[Structure Configuration]
+Form: Commercial Notebook (All Models)
+
+Dimension:
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / APX819 / AHP819:
+  Option1: 311.9 * 220.1 * 18.9mm
+  Option2: 311.9 * 220.1 * 17.9mm
+- ARB819-S:
+  Option1: 356 * 230.05 * 19.3mm
+  Option2: 356 * 230.05 * 18.3mm
+
+Material: (All Models)
+Option1: A Cover-Alu alloy (Anodize), B Cover-Mylar (Texture), C/D Cover-Plastic(Painting)  
+Option2: A/D Cover-Alu alloy (Anodize), B Cover-Mylar (Texture), C Cover-Plastic(Painting)
+
+Hinge: (All Models)
+180 degree hinge (make sure will not touch the LCD Panel during the opening)  
+one-hand opening + soft close (shouldn’t clap when closing)
+
+Weight:
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / APX819 / AHP819:
+  Option1: 1.44 kg
+  Option2: 1.45 kg
+- ARB819-S:
+  Option1: 1720g (A cover-Al, Battery 60Wh)
+  Option2: 1735g (A/D cover-Al, Battery 60Wh)
+
+[Display (LCD)]
+Dimension:
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / APX819 / AHP819: 14" 16:10
+- ARB819-S: 15.6" 16:9
+
+Resolution:
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / APX819 / AHP819:
+  Default: 2560*1600 QHD, TFT LCD, Anti-Glare, 120Hz, 300 nits, 100% sRGB, PSR, SDRRS, SSCG, with Touch panel(Optional)  
+  Option1: 1920*1200 FHD, TFT LCD, Anti-Glare, 60Hz, 72% sRGB  
+  Option2: 2880*1800 UWQHD, LTPS, Anti-Glare, 120Hz, 300 nits, 100% sRGB, 25ms, Low Blue Light, PSR2, Free Sync, HDR, VRR
+- ARB819-S:
+  Default: 1920*1080 FHD, IPS, Anti-Glare
+
+Touch Panel: N/A (All Models)
+
+[IO Interface]
+MB IO (Left): (All Models)
+- 1* φ 3.5mm DC-IN port (Optional)
+- 1* HDMI Type A 1.4 (Support_4K/30Hz)
+- 1* USB 3.2 Gen1 Type-A (Super Speed 5Gbps)
+- 1* USB 3.2 Gen1 Type-C (Full function: PD 100W, Data, DisplayPort)
+- 1* USB 4.0 Type-C (Full function: 40Gbps, PD 100W, Data, DisplayPort)
+- 1* Bluetooth on/off switch
+
+DB IO (Left): (All Models)
+- Option1: 1* Smartcard Reader, ID card information reading (RPL628_DB_V2.0)
+- Option2: N/A
+
+DB IO (Right): (All Models)
+- 1* Supportive Kensington Lock Type slot (Mini Saver)
+- Default: 1* 1G (RTL8111EPP for DASH) RJ45  
+  Option1: 1* 1G (RTL8111H for NON dash) RJ45 (Compatible for both)
+- 1* USB 3.2 Gen1 Type-A (Super Speed 5Gbps)
+- 1* USB 2.0 Type-A
+- 1* φ3.5mm standard headphone jack
+- 1* Standard SD card slot
+- 1* Camera+Mic physical power on/off switch
+- 1* SIM card slot (Optional)
+
+MB IO (Rear): N/A (All Models)
+
+[LED Indicator] (All Models)
+- Power On/Off/Sleep:
+  On: Blue light / Off: No light / Sleep: Breathing light
+- WiFi/Bluetooth Switch:
+  On: Blue light / Off: No light
+- Battery/Charge:
+  Charging: Red light / Full: Green light / Off: No light
+- Camera Switch:
+  On: No light / Off: Blue light
+- SSD LED:
+  On: Blue light / Off: No light
+- Caps Lock:
+  On: White light / Off: No light
+- Number Lock: N/A
+
+[Power Button]
+- Type: Separated Power button key (On DB) (All Models)
+
+[Keyboard]
+- Backlight:
+  Default: Single backlit  
+  Option1: No backlit KB
+- Matrix: US (All Models)
+- Others:
+  Spill resistant with drain for drainage (200CC waterproof)  
+  Typical keyboard w/o removable design
+
+[Web Camera]
+Front Camera: (All Models)
+- Default: 1080P/2M Webcam Infrared 30 fps, w/ mic*2, LED, with latch  
+- Option1: 1080P/2M Webcam IR  
+- Option2: 720P/1M Webcam IR  
+- Support Camera+Mic physical power on/off switch  
+- Camera shutter included
+
+Rear Camera: N/A  
+Windows Hello (Facial): Yes (All Models)
+
+[Touchpad]
+- Interface Type: I2C  
+- Size: 114 * 74 mm  
+- Feature:
+  Support Number button (PCBA support)  
+  Multi-touch, gestures, scroll  
+  Spill resistant with drain (200CC waterproof)
+
+[Fingerprint]
+- Location: On the Power Button  
+- Interface Type: USB, Security level 3 - HTX-938-GF3258  
+- Windows Hello: Yes  
+- Others: Support one-click power on
+
+[Audio]
+- Speaker: 2* Built-in Speakers (2* 4Ω/2W)  
+- Mic: 2* Built-in digital microphones (CAM module)  
+- Others:
+  HD Audio, Box  
+  (Note: For 4G version, box may be partially removed, affecting speaker effect)
+
+[Battery]
+- Type: Lithium-ion polymer smart battery, PD3.0 support fast charging (Optional)  
+- Capacity:
+  - AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / APX819 / AHP819:
+    1* 60Wh, 11.55V / 6060mAh, 3S1P
+  - ARB819-S:
+    1* 60.06Wh, 11.55V / 5200mAh, 3S1P
+- Certification: CB, MSDS, UN38.3, Airflight transportation report  
+- Battery Life: 8 Hours (U Series) TBD
+
+
+
+[Hardware Configuration]
+
+[CPU Platform]
+- AB819-S: AMD Zen4, Phoenix 7040 U Series, TDP: 15W~30W
+- AMD819-S_客製MedionPVT EOL: AMD Zen4, Hawk Point U/HS/PRO Series, TDP: 15W~30W
+- AMD819 / ARB819-S: AMD Zen3+, Rembrandt Refresh/PRO U Series, TDP: 15W~28W
+- APX819 / AHP819: AMD Zen5, Krackan Series, TDP: 35W~54W
+
+[CPU Model]
+- AB819-S: Ryzen 3 7440U, Ryzen 5 7540U / 7640U / PRO 7640U, Ryzen 7 7840U / PRO 7840U
+- AMD819-S_客製MedionPVT EOL: Ryzen 3 8440U, Ryzen 5 8540U / 8640U / PRO / HS PRO, Ryzen 7 8840U / PRO / HS PRO
+- AMD819 / ARB819-S: Ryzen 3 7335U, Ryzen 5 7535U / 6600U / 6650U, Ryzen 7 7735U / 6800U / 6850U
+- APX819 / AHP819: Ryzen 5 / 7 / 9 (TDP 35W~54W)
+
+[GPU]
+- AB819-S: Radeon 740M / 760M / 780M (RDNA3, 4nm)
+- AMD819-S_客製MedionPVT EOL: Radeon Graphics (RDNA3, 4nm)
+- AMD819 / ARB819-S / APX819 / AHP819: Radeon 660M / 680M
+
+[Memory (RAM)]
+- AB819-S / AMD819-S_客製MedionPVT EOL: 2x DDR5 SO-DIMM, up to 32GB DDR5 5600MHz
+- Others: 2x DDR5 SO-DIMM, up to 32GB DDR5 4800MHz
+
+[LCD Connector]
+- All Models: EDP
+
+[Storage (SSD)]
+- All Models: 2x M.2 2280 PCIe G4 (Lane 4), NVMe, up to 32TB (2x 4TB)
+
+[Wi-Fi]
+- All Models: 1x M.2 Key-E 2230, WiFi 6E 2T2R + BT5.2, with DASH
+
+[Smart Card Reader]
+- All Models:
+  - IC: AK9563-GAF
+  - CCID Compatible
+  - Supports ISO 7816 Class A/B/C, T=0, CAC, PIV
+  - Protocols: T0, T1, I2C memory cards (SLE series, AT88SC, AT45D041/DB041)
+
+[SD Card]
+- All Models: Realtek RTS5176, USB 2.0, supports SD/MMC/SDHC/SDXC, SD 2.0
+
+[LTE]
+- All Models: Default: M.2 Key-B 2242 slot for LTE/UMTS/HSPA+ (USB 2.0); Option1: N/A
+
+[Sensors]
+- G-sensor: N/A
+- Hall sensor: Supported
+
+[Thermal Solution (TDP)]
+- All Models: 30W
+
+[TPM]
+- All Models:
+  - Default: AMD Pluton, implemented in firmware (fTPM2.0)
+  - Option1: Hardware chip on MB (dTPM 2.0)
+
+[Dash Support]
+- All Models: Default: AMD DASH; Option1: Non-AMD DASH
+
+[RTC Connector]
+- All Models: Supported
+
+
+
+
+[Wireless Network Configuration]
+
+[Wi-Fi Chipset]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - Default: RZ616 (AMD), WiFi 6E 802.11ax 2Tx2R + Bluetooth 5.2
+  - Interface: M.2 module
+  - Major Chipset: MT7922A12L
+
+[Bluetooth Feature]
+- All Models:
+  - Support Bluetooth power on/off switch
+  - Bluetooth version: BT 5.2 / 5.3
+
+[LAN (RJ45)]
+- All Models:
+  - Giga LAN 10/100/1000 Mbps (on DB)
+
+[LTE]
+- All Models:
+  - Support (For 4G/LTE version, optional)
+
+
+
+
+[Software Configuration]
+
+[Operating System]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - System: Windows 11 2024H2 (2024 updated), Copilot version
+  - Language Support: Support multi Language
+
+[BIOS/EC]
+- All Models:
+  - UI Spec: Standard spec
+
+
+
+
+[AI Function]
+
+[AI in Windows]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - MEP (need OEM get approval from Microsoft):
+    - Automatic framing
+    - Eye contact
+    - Background effect
+  - Copilot (Support Region depends on Microsoft): Support
+
+[AI Software]
+- All Models:
+  - Large language model (License requirement): Support
+  - Text to Image model (License requirement): Support
+  - Image to Image model (License requirement): Support
+
+
+
+
+[Accessory]
+
+[Power Adapter]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - Default: 65W, 19V/3.42A DC charger for U Series
+  - Option 1: 65W GaN charging Cyberize for U Series
+  - Option 2: 100W GaN charging – same like 938 for HS Series
+
+
+
+[Certifications]
+
+[VPRO]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - Dash: Support
+
+[MIL-STD-810H]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - Mechanical Shock Test, Method 516.8, Procedure I – MIL-STD-810H, Method 516.8, Procedure I – Choque
+  - Moisture Test, Method 507.6, Procedure II – MIL-STD-810H, Method 507.6, Procedure II – Humidade
+  - Drop Test, Method 516.8, Procedure IV – MIL-STD-810H, Method 516.8, Procedure IV – Queda
+  - High Temperature Test, Method 501.7, Procedure II – MIL-STD-810H, Method 501.7 Procedure II – Alta Temperatura
+  - Low Temperature Test, Method 501.7, Procedure II – MIL-STD-810H, Method 502.7 Procedure II – Baixa Temperatura
+  - Low pressure test in operation, Method 500.6, Procedure I – MIL-STD-810H, Method 500.6, Procedure I – Baixa pressão em operação
+  - Low Pressure Storage Test, Method 500.6, Procedure II – MIL-STD-810H, Method 500.6, Procedure II – Baixa pressão em armazenamento
+  - Sand and Dust Test, Method 510.7, Procedure I – MIL-STD-810H, Method 510.7, Procedure I – Areia e poeira
+  - Dust Burst Test, Method 510.7, Procedure II – MIL-STD-810H, Method 510.7, Procedure II – Rajadas de Poeira
+  - Vibration Test, Method 514.8, Procedure II – MIL-STD-810H, Method 514.8, Procedure II – Vibração
+  - Freeze-Thaw Test, Method 524.1, Procedure III – MIL-STD-810H, Method 524.1, Procedure III – Congelamento e Descongelamento
+
+[Safety]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - RoHS (manufacturer): Support
+  - RoHS (electro-electronic components): Support
+  - EnergyStar: N/A
+  - IEC 61000, CISPR22 e CISPR24: Support
+  - IEC 60950/IEC 62368: Support
+  - EPEAT2.0 / ECO LABEL (TBC):
+    Plastic marking on parts over 25G according to EPEAT and ECO LABEL standards.
+    The plastic resin is PC+ABS, in section 7. Description is Triangle+resin.
+    Remember the marking must be on all plastic parts over 25g (APX819 uses 26g).
+
+[Battery]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - CB: Support
+  - MSDS: Support
+  - UN38.3: Support
+  - Airflight transportation report: Support
+  - EAC: Support
+
+[Charging Source]
+- AB819-S / AMD819-S_客製MedionPVT EOL / AMD819 / ARB819-S / APX819 / AHP819:
+  - Brazilian standard NBR 14136: N/A

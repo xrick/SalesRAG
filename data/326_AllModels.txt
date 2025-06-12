@@ -1,0 +1,282 @@
+[Stage]
+- Version: EVT 1.2
+
+[Model]
+- Model Name: AHP326, AST326
+- P/N: EM-336-NM14AHP, EM-326-NM14AST
+- ID: Standard (宏利泰)
+
+[Mainboard]
+- MB Ver.: v1.0
+- DB Ver.: v1.0
+
+[Development Stage]
+- Planning: 2023/10/02 – 2024/04/02
+- Kick-off: 2024/04/03
+- EVT: 2024/08/07 – 2024/11/05
+- DVT: (not started)
+- PVT: (not started)
+- Pilot run: (not started)
+
+[PM]
+- Owner: Jasper
+
+[Client]
+- Customized: N/A
+
+
+
+
+[Structure]
+- Form: Commercial Notebook
+- Dimension: 309.26 × 223.32 × 17.95 mm
+- Material: A/D Cover - Alu alloy (Anodize), B Cover - Mylar (Texture)
+- Hinge: 180 degree hinge
+- Weight: TBD
+
+[LCD]
+- Dimension: 14.0" (16:10)
+- Resolution:
+  - Default: 1920×1200 FHD IPS, LED  
+  - Option1: 2240×1400 2K IPS, LED  
+  - Option2: 2560×1600 QSXGA IPS, LED
+
+[Touch Panel]
+- Form: Reserved by PCBA
+
+[IO Interface]
+- MB IO (Left):
+  - 1× HDMI 2.0 Type A (Support HDMI2.1 TMDS_4K/60Hz) (MB), EVT function test finish
+  - 1× USB3.2 Gen2, Super Speed USB 10Gbps, Type-A (MB), EVT function test finish
+  - 2× USB4.0, 40Gbps, full function, 100W Power Delivery, Data, DisplayPort 1.4, Type-C (MB), EVT function test finish
+- DB IO (Right):
+  - 1× Supportive Kensington Lock Type slot (Mini Saver)
+  - 1× USB3.2 Gen1, Super Speed USB 5Gbps, Type-A (DB), EVT function test finish
+  - 1× USB2.0, Super Speed, Type-A (DB), EVT function test finish
+  - 1× φ3.5mm standard headphone jack (DB)
+  - 1× USB2.0, Super Speed, Type-C (DB), EVT function test finish
+  - 1× Camera+Mic physical power on/off switch
+- MB IO (Rear): N/A
+
+[LED Indicator]
+- Power On/Off/Sleep:
+  - On: Green light  
+  - Off: No light  
+  - Sleep: Breathing light
+- WiFi/Bluetooth Switch: N/A
+- Battery/Charge:
+  - Charging: Red light  
+  - Full-charged: Green light  
+  - Off: No light
+- Camera Switch:
+  - On: White light  
+  - Off: No light
+- SSD LED: N/A
+- Caps Lock:
+  - On: White light  
+  - Off: No light
+- Number Lock: N/A
+
+[Power Button]
+- Button: Separated Power button key (on DB), TBD
+
+[Keyboard]
+- Backlight:
+  - Default: Single backlit (Single LED - White)  
+  - Option1: No backlit KB
+- Matrix: US
+- Others: Keyboard spill resistant with drain, typical keyboard without removable design
+
+[Web Camera]
+- Front:
+  - Default: 1× 1080P / 2M Webcam Infrared (IR), 30 fps, w/ mic*2, LED, with latch  
+  - Option1: 1× 720P / 1M Webcam Infrared (IR), 30 fps, w/ mic*2, LED, with latch  
+  - With Camera+Mic physical power on/off switch
+- Rear: N/A
+- Windows Hello: Yes
+
+[Touchpad]
+- Interface Type: I2C / USB
+- Size: xxx × xxx mm
+- Feature: Multi-touch support, gestures and scroll function
+
+[Fingerprint]
+- Location: On the Power Button
+- Interface Type: USB, Security level 3 – HTX-938-GF3258
+- Windows Hello: N/A
+- Others: Support one-click power on
+
+[Audio]
+- Speaker: 2× Built-in Speakers (1× 4Ω/2W, 1× 8Ω/0.8W)
+- Mic: 2× Built-in (dual) digital microphones on CAM module
+- Others: HD Audio, Box
+
+[Battery]
+- Type: Lithium-ion polymer battery, PD3.0 support fast charging (fully charged in 2 hours by standard adapter)
+- Capacity: 1× 50Wh, xxxV / xxxxmAh, 3S1P, Smart battery
+- Certification: CB, MSDS, UN38.3, Airflight transportation report, EAC
+- Life:
+  - 8 Hours (U Series), TBD  
+  - 10 Hours (HS Series), TBD
+
+
+
+
+[CPU]
+- AHP326:
+  - AMD Zen4, AMD Hawk Point U Series, TDP: 28W
+    - Ryzen™ 5 8640U (6C/12T, 4.9GHz/3.5GHz, TDP: 28W), NPU 16 tops, total 31Tops  
+    - Ryzen™ 7 8840U (8C/16T, 5.1GHz/3.3GHz, TDP: 35W~54W), NPU 16 tops, total 38Tops  
+  - AMD Zen4, AMD Hawk Point HS Series, TDP: 28W
+    - Ryzen™ 7 8640HS (8C/16T, 3.5GHz/4.9GHz, 24MB, TDP: 28W), NPU 16 tops, total 31Tops  
+    - Ryzen™ 7 8840HS (8C/16T, 3.3GHz/5.1GHz, 24MB, TDP: 28W), NPU 16 tops, total 38Tops  
+
+- AST326:
+  - AMD Zen5, AMD Strix Point Series, TDP: 28W
+    - AMD Ryzen™ AI 9 HX 375 (12C/24T, 5.1GHz/2.0GHz, 36MB, XDNA, TDP: 28W), NPU 55 tops, total 85Tops  
+    - AMD Ryzen™ AI 9 HX 370 (12C/24T, 5.1GHz/2.0GHz, 36MB, XDNA, TDP: 28W), NPU 50 tops, total 80Tops  
+    - AMD Ryzen™ AI 9 365 (10C/20T, 5.0GHz/2.0GHz, 36MB, XDNA, TDP: 28W), NPU 73 tops, total 50 Tops  
+
+[GPU]
+- AHP326: AMD Radeon™ Graphics integrated, RDNA 3 4nm iGPU, 30W
+- AST326: AMD Radeon™ 890M
+
+[Memory]
+- LPDDR5X-7500MHz (315B, PCB uVIA), up to 16GB / 32GB onboard
+
+[LCD Connector]
+- Port: EDP
+
+[Storage]
+- 1× M.2 2280 PCIe G4 (Lane 4) / NVMe SSD, up to 32TB
+
+[WiFi]
+- Default: 1× WiFi7 2Tx2R + BT5.4 (on board)  
+- Option1: 1× WiFi6E 2Tx2R + BT5.2 (on board)  
+- Option2: 1× WiFi6 2Tx2R + BT5.2 (on board)
+
+[Smart Card]
+- N/A
+
+[Micro SD Card]
+- N/A
+
+[LTE]
+- N/A
+
+[Sensor]
+- G Sensor: N/A  
+- Hall Sensor: Support
+
+[Thermal Solution]
+- TDP: 28W
+
+[TPM]
+- Default: AMD Pluton, Implemented in system firmware, fTPM 2.0 (Firmware TPM)  
+- Option1: Hardware chip on the MB, dTPM 2.0 (Discrete TPM)
+
+[Dash]
+- Type: N/A
+
+[RTC]
+- RTC Connector: Support
+
+[Others]
+- Feature: N/A
+
+
+
+
+
+[Wireless Network Configuration]
+
+[WIFI]
+- Wifi Chip Model:
+  - Default: RZ616 (AMD), WIFI 6E 2Tx2R 802.11ax + BT 5.2, on board  
+    (Major Chipset – MT7922AE)
+  - Option1: AW-XM514NF (AzureWave), WIFI 6E 2T2R 802.11ax + BT 5.3, on board  
+    (Major Chipset – MT7922A12L)
+
+- Others:
+  - Support Wifi and Bluetooth Power on/off switch
+
+[LAN]
+- RJ45: N/A
+
+[LTE]
+- LTE: N/A
+
+[Bluetooth]
+- Bluetooth: Support
+- Version: BT 5.2 / 5.3 / 5.4
+
+
+
+
+
+[Software Configuration]
+
+[Operating System]
+- System: Windows 11 2024H2 (2024 updated) Copilot version
+- Language Support: Support multi Language
+
+[BIOS/EC]
+- UI spec: Standard spec
+
+
+
+[AI Function]
+
+[AI in Windows]
+- MEP (need OEM get approval from Microsoft): 
+  - Automatic framing
+  - Eye contact
+  - Background effect
+- Copilot (Support Region depends on Microsoft): Support
+
+[AI Software]
+- Large language model (License requirement): Support
+- Text to Image model (License requirement): Support
+- Image to Image model (License requirement): Support
+
+
+
+
+
+[Accessory]
+
+[Power Adapter]
+- Standard Configuration: 1* 65W, 20V/3.25A Type C charger
+
+
+
+
+[Certifications]
+
+[VPRO]
+- Dash: N/A
+
+[Safety Certifications]
+- FCC: N/A
+- CEC: N/A
+- DOE: N/A
+- Prop65: N/A
+- RoHS: N/A
+- BQB: N/A
+- Energy Star: N/A
+- UL: N/A
+- CB: N/A
+
+[Adapter Certifications]
+- UL: N/A
+- DOE6: N/A
+- Prop65: N/A
+- RoHS: N/A
+- FCC: N/A
+
+[Battery Certifications]
+- CB: Support
+- MSDS: Support
+- UN38.3: Support
+- Airflight transportation report: Support
+- EAC: Support
