@@ -24,7 +24,7 @@ class SalesAssistantService(BaseService):
         self.duckdb_query = DuckDBQuery(db_file="db/sales_specs.db")
 
         # 載入提示模板
-        self.prompt_template = self._load_prompt_template("libs/services/sales_assistant/prompts/sales_prompt.txt")
+        self.prompt_template = self._load_prompt_template("libs/services/sales_assistant/prompts/sales_prompt2.txt")
 
     def _load_prompt_template(self, path: str) -> str:
         with open(path, 'r', encoding='utf-8') as f:

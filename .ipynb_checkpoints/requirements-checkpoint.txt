@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+langchain
+langchain-community
+sentence-transformers
+pymilvus
+duckdb
+pandas
+jinja2
+python-multipart
+requests
+beautifulsoup4
