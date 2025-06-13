@@ -1,0 +1,3 @@
+<program_description>
+建立一個程式用以處理多種不同Notebook型號的資料
+</program_description>
