@@ -34,10 +34,10 @@ graph TD
     subgraph "RAG 核心引擎"
         C[ServiceManager] --> D{SalesAssistantService}
         D --> E[Hybrid Retriever]
-        E --> F[Milvus - Vector Database<br>(Semantic Search)]
-        E --> G[DuckDB - Relational Database<br>(Keyword/Spec Queries)]
+        E --> F[Milvus Vector Database Semantic Search]
+        E --> G[DuckDB Relational Database Keyword Spec Queries]
         H[Prompt Template]
-        I[Ollama (LLM)]
+        I[Ollama LLM]
     end
 
     A -- "User Query" --> B
@@ -46,7 +46,7 @@ graph TD
     E -- "Query Specs" --> G
     F -- "Unstructured Context" --> D
     G -- "Structured Context" --> D
-    D -- "Combine Prompt (Question + Context)" --> H
+    D -- "Combine Prompt Question + Context" --> H
     H -- "Final Prompt" --> I
     I -- "Generate JSON Answer" --> D
     D -- "Stream Response" --> B
