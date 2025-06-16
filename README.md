@@ -34,22 +34,22 @@ graph TD
     subgraph "RAG 核心引擎"
         C[ServiceManager] --> D{SalesAssistantService}
         D --> E[Hybrid Retriever]
-        E --> F[Milvus - 向量資料庫<br><i>(語意搜尋)</i>]
-        E --> G[DuckDB - 關聯式資料庫<br><i>(關鍵字/規格查詢)</i>]
+        E --> F[Milvus - Vector Database<br>(Semantic Search)]
+        E --> G[DuckDB - Relational Database<br>(Keyword/Spec Queries)]
         H[Prompt Template]
         I[Ollama (LLM)]
     end
 
-    A -- "使用者問題 (Query)" --> B
-    B -- "傳遞 Query" --> C
-    E -- "搜尋相關文件" --> F
-    E -- "查詢精確規格" --> G
-    F -- "非結構化上下文" --> D
-    G -- "結構化上下文" --> D
-    D -- "組合 Prompt (問題 + 上下文)" --> H
-    H -- "最終 Prompt" --> I
-    I -- "生成 JSON 格式答案" --> D
-    D -- "串流回傳" --> B
+    A -- "User Query" --> B
+    B -- "Pass Query" --> C
+    E -- "Search Documents" --> F
+    E -- "Query Specs" --> G
+    F -- "Unstructured Context" --> D
+    G -- "Structured Context" --> D
+    D -- "Combine Prompt (Question + Context)" --> H
+    H -- "Final Prompt" --> I
+    I -- "Generate JSON Answer" --> D
+    D -- "Stream Response" --> B
     B -- "Streaming Response" --> A
 ```
 
