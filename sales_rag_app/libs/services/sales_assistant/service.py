@@ -120,11 +120,22 @@ class SalesAssistantService(BaseService):
 
             # 5. 解析並回傳 JSON
             try:
-                json_start = response_str.find("{")
-                json_end = response_str.rfind("}")
+                # 首先檢查是否有 <think> 標籤，如果有則提取 </think> 之後的內容
+                think_end = response_str.find("</think>")
+                if think_end != -1:
+                    # 提取 </think> 之後的內容
+                    cleaned_response_str = response_str[think_end + 8:].strip()
+                    logging.info(f"提取 </think> 之後的內容: {cleaned_response_str}")
+                else:
+                    # 如果沒有 <think> 標籤，使用原始回應
+                    cleaned_response_str = response_str
+                
+                # 在清理後的內容中尋找 JSON
+                json_start = cleaned_response_str.find("{")
+                json_end = cleaned_response_str.rfind("}")
                 if json_start != -1 and json_end != -1:
-                    cleaned_response_str = response_str[json_start:json_end+1]
-                    parsed_json = json.loads(cleaned_response_str)
+                    json_content = cleaned_response_str[json_start:json_end+1]
+                    parsed_json = json.loads(json_content)
                     yield f"data: {json.dumps(parsed_json, ensure_ascii=False)}\n\n"
                 else:
                     raise ValueError("在 LLM 回應中找不到有效的 JSON 物件。")
