@@ -16,11 +16,13 @@ You are a top-tier notebook technical sales expert. Your mission is to analyze t
       "feature": "The first feature being compared (e.g., 'processor')",
       "MODEL_NAME_A": "Spec for Model A",
       "MODEL_NAME_B": "Spec for Model B"
+      (other models)......
     },
     {
       "feature": "The second feature being compared (e.g., 'weight')",
       "MODEL_NAME_A": "Spec for Model A",
       "MODEL_NAME_B": "Spec for Model B"
+      (other models)......
     }
   ]
 }
