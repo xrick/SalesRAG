@@ -15,12 +15,19 @@ step1 prompt for ingest data
 
 step2 prompt for modifying service.py:
 請進行修改Lib/services/sales_assistant/service.py 以滿足以下的需求:
-	1. service.py中，改成會提供表格式的資料進行處理。
-	2. 在表格式中的資料，每一列代表一個NB型號及資料。
-	3. 請針對給予的表格式資料，產生一個通用的、專業的提示詞，讓llm能以表格式資料，針對使用者的問題進行以下方面的處理。
+	1. 在duckdb spec含有的欄位如下:
+	   spec_fields = [
+            'modeltype', 'version', 'modelname', 'mainboard', 'devtime', 'pm', 
+            'structconfig', 'lcd', 'touchpanel', 'iointerface', 'ledind', 
+            'powerbutton', 'keyboard', 'webcamera', 'touchpad', 'fingerprint', 
+            'audio', 'battery', 'cpu', 'gpu', 'memory', 'lcdconnector', 'storage', 
+            'wifi', 'thermal', 'tpm', 'rtc', 'wireless', 'softwareconfig', 'ai', 
+            'accessory', 'otherfeatures', 'cetfication'
+        ]
+     2. 請針對給予從從spec中讀取出的資料，產生一個通用的、專業的提示詞，讓llm能以表格式資料，針對使用者的問題進行以下方面的處理。
 		3.1.根據使用者查詢、內部結果，你**必須**逐步思考，提供總結性的答案，並以以下格式輸出：
 		{
-			"answer_summary": 總結性的答案
+			"answer_summary": **總結性的答案**
 			"comparison_table": [
 	    		{
 			      "feature": "比較的特性1",
