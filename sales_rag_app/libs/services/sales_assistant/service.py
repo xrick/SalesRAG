@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from prettytable import PrettyTable
 from ..base_service import BaseService
 from ...RAG.DB.MilvusQuery import MilvusQuery
 from ...RAG.DB.DuckDBQuery import DuckDBQuery
@@ -50,8 +51,8 @@ class SalesAssistantService(BaseService):
     def __init__(self):
         self.llm = LLMInitializer().get_llm()
         self.milvus_query = MilvusQuery(collection_name="sales_notebook_specs")
-        self.duckdb_query = DuckDBQuery(db_file="db/sales_specs.db")
-        self.prompt_template = self._load_prompt_template("libs/services/sales_assistant/prompts/sales_prompt4.txt")
+        self.duckdb_query = DuckDBQuery(db_file="sales_rag_app/db/sales_specs.db")
+        self.prompt_template = self._load_prompt_template("sales_rag_app/libs/services/sales_assistant/prompts/sales_prompt4.txt")
         
         # ★ 修正點 1：修正 spec_fields 列表，使其與 .xlsx 檔案的標題列完全一致
         self.spec_fields = [
@@ -67,6 +68,118 @@ class SalesAssistantService(BaseService):
     def _load_prompt_template(self, path: str) -> str:
         with open(path, 'r', encoding='utf-8') as f:
             return f.read()
+
+    def _create_beautiful_markdown_table(self, comparison_table: list | dict, model_names: list) -> str:
+        """
+        支援 dict of lists 且自動轉置為「型號為欄，規格為列」的 markdown 表格
+        """
+        try:
+            # 如果是 dict of lists 格式，且有 "Model" 或 "Device Model" 欄位，則自動轉置
+            if isinstance(comparison_table, dict):
+                # 檢查是否有模型欄位
+                model_key = None
+                for key in comparison_table.keys():
+                    if key.lower() in ["model", "device model", "modelname"]:
+                        model_key = key
+                        break
+                
+                if model_key:
+                    models = comparison_table[model_key]
+                    spec_keys = [k for k in comparison_table.keys() if k != model_key]
+                    # 產生 list of dicts 格式
+                    new_table = []
+                    for spec in spec_keys:
+                        row = {"feature": spec}
+                        for idx, model in enumerate(models):
+                            value = comparison_table[spec][idx] if idx < len(comparison_table[spec]) else "N/A"
+                            row[model] = value
+                        new_table.append(row)
+                    comparison_table = new_table
+                    model_names = models
+
+            # 確保 comparison_table 是 list of dicts 格式
+            if not isinstance(comparison_table, list):
+                logging.error(f"comparison_table 格式不正確: {type(comparison_table)}")
+                return "表格格式錯誤"
+
+            # 產生 markdown 表格
+            header = "| **規格項目** |" + "".join([f" **{name}** |" for name in model_names])
+            separator = "| --- |" + " --- |" * len(model_names)
+            rows = []
+            for row in comparison_table:
+                if not isinstance(row, dict):
+                    logging.error(f"表格行格式不正確: {type(row)}")
+                    continue
+                    
+                feature = row.get("feature", "N/A")
+                row_str = f"| **{feature}** |"
+                for model_name in model_names:
+                    value = row.get(model_name, "N/A")
+                    value_str = str(value)
+                    if len(value_str) > 50:
+                        value_str = value_str[:47] + "..."
+                    row_str += f" {value_str} |"
+                rows.append(row_str)
+            table_lines = [header, separator] + rows
+            return "\n".join(table_lines)
+        except Exception as e:
+            logging.error(f"創建美化表格失敗: {e}", exc_info=True)
+            return "表格生成失敗"
+
+    def _create_simple_markdown_table(self, comparison_table: list, model_names: list) -> str:
+        """
+        創建簡單的 markdown 表格作為備用
+        """
+        try:
+            # 創建標題行
+            header = "| **規格項目** |"
+            separator = "| --- |"
+            
+            for name in model_names:
+                header += f" **{name}** |"
+                separator += " --- |"
+            
+            # 創建數據行
+            rows = []
+            for row in comparison_table:
+                feature = row.get("feature", "N/A")
+                row_str = f"| {feature} |"
+                for model_name in model_names:
+                    value = row.get(model_name, "N/A")
+                    row_str += f" {value} |"
+                rows.append(row_str)
+            
+            # 組合表格
+            table_lines = [header, separator] + rows
+            return "\n".join(table_lines)
+            
+        except Exception as e:
+            logging.error(f"創建簡單表格也失敗: {e}")
+            return "表格生成失敗"
+
+    def _format_response_with_beautiful_table(self, answer_summary: str, comparison_table: list, model_names: list) -> dict:
+        """
+        格式化回應，包含美化的 markdown 表格
+        """
+        try:
+            # 創建美化的 markdown 表格
+            beautiful_table = self._create_beautiful_markdown_table(comparison_table, model_names)
+            
+            # 組合完整的回應
+            formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
+            
+            return {
+                "answer_summary": formatted_response,
+                "comparison_table": comparison_table,
+                "beautiful_table": beautiful_table
+            }
+            
+        except Exception as e:
+            logging.error(f"格式化回應失敗: {e}")
+            return {
+                "answer_summary": answer_summary,
+                "comparison_table": comparison_table
+            }
 
     def _check_query_contains_modelname(self, query: str) -> tuple[bool, list]:
         """
@@ -247,13 +360,39 @@ class SalesAssistantService(BaseService):
                     
                     # 檢查是否已經是正確的格式
                     if "answer_summary" in parsed_json and "comparison_table" in parsed_json:
-                        yield f"data: {json.dumps(parsed_json, ensure_ascii=False)}\n\n"
+                        # 提取模型名稱用於美化表格
+                        model_names = []
+                        for item in context_list_of_dicts:
+                            model_name = item.get('modelname', 'Unknown')
+                            if model_name not in model_names:
+                                model_names.append(model_name)
+                        
+                        # 使用美化表格格式化回應
+                        formatted_response = self._format_response_with_beautiful_table(
+                            parsed_json["answer_summary"],
+                            parsed_json["comparison_table"],
+                            model_names
+                        )
+                        yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
                     else:
                         # 嘗試將 LLM 的 JSON 轉換為我們需要的格式
                         logging.info("LLM 輸出的 JSON 格式不符合要求，嘗試轉換...")
                         converted_json = self._convert_llm_response_to_required_format(parsed_json, context_list_of_dicts, query)
                         if converted_json:
-                            yield f"data: {json.dumps(converted_json, ensure_ascii=False)}\n\n"
+                            # 提取模型名稱用於美化表格
+                            model_names = []
+                            for item in context_list_of_dicts:
+                                model_name = item.get('modelname', 'Unknown')
+                                if model_name not in model_names:
+                                    model_names.append(model_name)
+                            
+                            # 使用美化表格格式化回應
+                            formatted_response = self._format_response_with_beautiful_table(
+                                converted_json["answer_summary"],
+                                converted_json["comparison_table"],
+                                model_names
+                            )
+                            yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
                         else:
                             raise ValueError("無法轉換 LLM 回應為所需格式")
                 else:
@@ -274,12 +413,38 @@ class SalesAssistantService(BaseService):
                         parsed_json = json.loads(json_content)
                         
                         if "answer_summary" in parsed_json and "comparison_table" in parsed_json:
-                            yield f"data: {json.dumps(parsed_json, ensure_ascii=False)}\n\n"
+                            # 提取模型名稱用於美化表格
+                            model_names = []
+                            for item in context_list_of_dicts:
+                                model_name = item.get('modelname', 'Unknown')
+                                if model_name not in model_names:
+                                    model_names.append(model_name)
+                            
+                            # 使用美化表格格式化回應
+                            formatted_response = self._format_response_with_beautiful_table(
+                                parsed_json["answer_summary"],
+                                parsed_json["comparison_table"],
+                                model_names
+                            )
+                            yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
                         else:
                             # 嘗試轉換格式
                             converted_json = self._convert_llm_response_to_required_format(parsed_json, context_list_of_dicts, query)
                             if converted_json:
-                                yield f"data: {json.dumps(converted_json, ensure_ascii=False)}\n\n"
+                                # 提取模型名稱用於美化表格
+                                model_names = []
+                                for item in context_list_of_dicts:
+                                    model_name = item.get('modelname', 'Unknown')
+                                    if model_name not in model_names:
+                                        model_names.append(model_name)
+                                
+                                # 使用美化表格格式化回應
+                                formatted_response = self._format_response_with_beautiful_table(
+                                    converted_json["answer_summary"],
+                                    converted_json["comparison_table"],
+                                    model_names
+                                )
+                                yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
                             else:
                                 raise ValueError("清理後的 JSON 結構仍不正確且無法轉換")
                     else:
@@ -316,13 +481,15 @@ class SalesAssistantService(BaseService):
                     # 構建摘要
                     summary = f"根據提供的資料，比較了 {len(model_names)} 個筆電型號的規格。"
                     
-                    fallback_json = {
-                        "answer_summary": summary,
-                        "comparison_table": comparison_table
-                    }
+                    # 使用美化表格格式化回應
+                    formatted_response = self._format_response_with_beautiful_table(
+                        summary,
+                        comparison_table,
+                        model_names
+                    )
                     
-                    logging.info(f"使用備用 JSON: {fallback_json}")
-                    yield f"data: {json.dumps(fallback_json, ensure_ascii=False)}\n\n"
+                    logging.info(f"使用備用 JSON: {formatted_response}")
+                    yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
                     
                 except Exception as fallback_err:
                     logging.error(f"備用 JSON 構建也失敗: {fallback_err}")

@@ -4,9 +4,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from libs.service_manager import ServiceManager 
+
+# 添加專案根目錄到 Python 路徑
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.append(project_root)
+
+from sales_rag_app.libs.service_manager import ServiceManager 
 import logging
 
 ###setup debug
@@ -16,7 +22,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
-
 # from libs.service_manager import ServiceManager
 
 # 載入環境變數
@@ -25,11 +30,21 @@ load_dotenv()
 # 初始化 FastAPI 應用
 app = FastAPI()
 
-# 掛載靜態檔案目錄
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# 添加 CORS 中間件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 開發時允許所有來源
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# 設定模板目錄
-templates = Jinja2Templates(directory="templates")
+# 掛載靜態檔案目錄 - 修正路徑
+app.mount("/static", StaticFiles(directory="sales_rag_app/static"), name="static")
+
+# 設定模板目錄 - 修正路徑
+# 設定模板目錄 - 修正路徑
+templates = Jinja2Templates(directory="sales_rag_app/templates")
 
 # 初始化服務管理器
 service_manager = ServiceManager()
