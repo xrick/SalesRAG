@@ -57,8 +57,8 @@ class MilvusQuery(DatabaseQuery):
             'structconfig', 'lcd', 'touchpanel', 'iointerface', 'ledind', 
             'powerbutton', 'keyboard', 'webcamera', 'touchpad', 'fingerprint', 
             'audio', 'battery', 'cpu', 'gpu', 'memory', 'lcdconnector', 'storage', 
-            'wifi', 'thermal', 'tpm', 'rtc', 'wireless', 'softwareconfig', 'ai', 
-            'accessory', 'otherfeatures', 'cetfication'
+            'wifislot', 'thermal', 'tpm', 'rtc', 'wireless', 'lan', 'bluetooth', 
+            'softwareconfig', 'ai', 'accessory', 'otherfeatures', 'certfications'
         ]
 
         # 3. 執行向量搜尋
