@@ -982,3 +982,17 @@
       max-width: 100px;
     }
   }
+
+  /* Answer Summary 樣式 */
+  .answer-summary {
+    font-size: 1.2rem !important;
+    line-height: 1.7 !important;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+    margin-bottom: var(--space-16);
+  }
+
+  .answer-summary strong {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }

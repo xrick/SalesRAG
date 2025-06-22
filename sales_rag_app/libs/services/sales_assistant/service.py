@@ -750,381 +750,221 @@ class SalesAssistantService(BaseService):
                             model_name = item.get('modelname', 'Unknown')
                             if model_name not in model_names:
                                 model_names.append(model_name)
-                        # 檢查 comparison_table 是否正確（modelname 是否為欄位）
-                        valid_keys = set(model_names)
                         
-                        # 檢查 comparison_table 的格式和內容
-                        comparison_table = parsed_json.get("comparison_table", [])
-                        needs_fix = False
+                        # ★ 新增：驗證LLM回答是否包含正確的模型名稱
+                        llm_response_valid = self._validate_llm_response(parsed_json, target_modelnames)
                         
-                        # 如果 comparison_table 是字典格式，需要轉換
-                        if isinstance(comparison_table, dict):
-                            logging.info("LLM 輸出了字典格式的 comparison_table，需要轉換為列表格式")
-                            needs_fix = True
-                        # 如果是列表格式，檢查第一行是否包含正確的模型名稱
-                        elif isinstance(comparison_table, list) and comparison_table:
-                            first_row = comparison_table[0]
-                            if isinstance(first_row, dict):
-                                # 檢查第一行是否包含模型名稱作為鍵
-                                if not valid_keys.intersection(first_row.keys()):
-                                    logging.info("comparison_table 第一行不包含正確的模型名稱，需要修正")
-                                    needs_fix = True
+                        if not llm_response_valid:
+                            logging.warning("LLM回答包含錯誤的模型名稱，使用預處理數據")
+                            # 使用預處理的數據生成回答
+                            processed_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
                         else:
-                            logging.info("comparison_table 為空或格式不正確，需要修正")
-                            needs_fix = True
+                            logging.info("LLM回答驗證通過，使用LLM回答")
+                            processed_response = self._process_llm_response(parsed_json, context_list_of_dicts, target_modelnames)
                         
-                        if needs_fix:
-                            # 自動修正為正確格式 - 固定格式：第一欄為 feature，第一列為模型名稱
-                            comparison_table = []
-                            
-                            # 根據查詢類型決定要比較的 features
-                            if "電池" in query or "續航" in query or "battery" in query.lower():
-                                # 電池相關比較
-                                features = [
-                                    ("Battery Capacity (14inch)", r"14inch.*?(\d+Wh)"),
-                                    ("Battery Capacity (16inch)", r"16inch.*?(\d+Wh)"),
-                                    ("Charging Speed", r"charging.*?(\d+%.*?hour|fast charging.*?hour|快充.*?小時|80%.*?hour)"),
-                                    ("Battery Life", r">(\d+)\s*Hours|(\d+)\s*小時")
-                                ]
-                            elif "cpu" in query.lower() or "處理器" in query:
-                                # CPU 相關比較
-                                features = [
-                                    ("CPU Model", r"(AMD Ryzen™ \d+ \d+[A-Z]*[HS]*)"),
-                                    ("CPU Cores/Threads", r"(\d+C/\d+T)"),
-                                    ("CPU TDP", r"TDP:\s*(\d+W)"),
-                                    ("CPU Max Frequency", r"(\d+\.\d+GHz)")
-                                ]
-                            elif "gpu" in query.lower() or "顯卡" in query:
-                                # GPU 相關比較
-                                features = [
-                                    ("GPU Model", r"(AMD Radeon™ Graphics|Intel.*?Graphics|NVIDIA.*?)"),
-                                    ("GPU Memory", r"(\d+GB.*?Graphics|Graphics.*?\d+GB)")
-                                ]
-                            elif "記憶體" in query or "ram" in query.lower():
-                                # 記憶體相關比較
-                                features = [
-                                    ("RAM Type", r"(DDR\d+)"),
-                                    ("RAM Speed", r"(\d+MT/s)"),
-                                    ("RAM Capacity", r"up to (\d+G/\d+G/\d+G/\d+GB)")
-                                ]
-                            elif "儲存" in query or "storage" in query.lower() or "ssd" in query.lower():
-                                # 儲存相關比較
-                                features = [
-                                    ("Storage Type", r"(M\.2.*?PCIe.*?NVMe)"),
-                                    ("Storage Capacity", r"up to (\d+TB)"),
-                                    ("Storage Slots", r"(\d+x M\.2)")
-                                ]
-                            else:
-                                # 通用比較 - 包含主要規格
-                                features = [
-                                    ("CPU Model", r"(AMD Ryzen™ \d+ \d+[A-Z]*[HS]*)"),
-                                    ("GPU Model", r"(AMD Radeon™ Graphics)"),
-                                    ("RAM Type", r"(DDR\d+)"),
-                                    ("Battery Capacity (14inch)", r"14inch.*?(\d+Wh)"),
-                                    ("Battery Capacity (16inch)", r"16inch.*?(\d+Wh)"),
-                                    ("Storage Type", r"(M\.2.*?PCIe.*?NVMe)")
-                                ]
-                            
-                            # 為每個 feature 創建一行
-                            for feature_name, pattern in features:
-                                row = {"feature": feature_name}
-                                for model in model_names:
-                                    # 根據 feature 類型選擇對應的資料欄位
-                                    if "battery" in feature_name.lower() or "charging" in feature_name.lower():
-                                        data_field = "battery"
-                                    elif "cpu" in feature_name.lower():
-                                        data_field = "cpu"
-                                    elif "gpu" in feature_name.lower():
-                                        data_field = "gpu"
-                                    elif "ram" in feature_name.lower() or "記憶體" in feature_name.lower():
-                                        data_field = "memory"
-                                    elif "storage" in feature_name.lower() or "儲存" in feature_name.lower():
-                                        data_field = "storage"
-                                    else:
-                                        data_field = "cpu"  # 預設
-                                    
-                                    # 從對應的資料欄位提取資訊
-                                    field_data = next((item.get(data_field, "") for item in context_list_of_dicts if item.get("modelname") == model), "")
-                                    
-                                    if feature_name == "Charging Speed":
-                                        if "fast charging" in field_data.lower() or "快充" in field_data:
-                                            row[model] = "Fast charging, up to 80% in less than 1 hour"
-                                        else:
-                                            row[model] = "N/A"
-                                    elif feature_name == "Battery Life":
-                                        match = re.search(pattern, field_data, re.IGNORECASE)
-                                        if match:
-                                            row[model] = f">{match.group(1) or match.group(2)} Hours"
-                                        else:
-                                            row[model] = ">10 Hours"  # 預設值
-                                    else:
-                                        match = re.search(pattern, field_data, re.IGNORECASE)
-                                        if match:
-                                            row[model] = match.group(1)
-                                        else:
-                                            row[model] = "N/A"
-                                
-                                comparison_table.append(row)
-                            
-                            parsed_json["comparison_table"] = comparison_table
-                        
-                        # 使用美化表格格式化回應
-                        formatted_response = self._format_response_with_beautiful_table(
-                            parsed_json["answer_summary"],
-                            parsed_json["comparison_table"],
-                            model_names
-                        )
-                        yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
+                        yield f"data: {json.dumps(processed_response, ensure_ascii=False)}\n\n"
+                        return
                     else:
-                        # 嘗試將 LLM 的 JSON 轉換為我們需要的格式
-                        logging.info("LLM 輸出的 JSON 格式不符合要求，嘗試轉換...")
-                        converted_json = self._convert_llm_response_to_required_format(parsed_json, context_list_of_dicts, query)
-                        if converted_json:
-                            # 提取模型名稱用於美化表格
-                            model_names = []
-                            for item in context_list_of_dicts:
-                                model_name = item.get('modelname', 'Unknown')
-                                if model_name not in model_names:
-                                    model_names.append(model_name)
-                            
-                            # 使用美化表格格式化回應
-                            formatted_response = self._format_response_with_beautiful_table(
-                                converted_json["answer_summary"],
-                                converted_json["comparison_table"],
-                                model_names
-                            )
-                            yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
-                        else:
-                            raise ValueError("無法轉換 LLM 回應為所需格式")
+                        logging.error("LLM回應格式不正確，缺少必要欄位")
+                        fallback_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
+                        yield f"data: {json.dumps(fallback_response, ensure_ascii=False)}\n\n"
+                        return
                 else:
-                    # 如果找不到 JSON，嘗試清理回應並重新尋找
-                    logging.warning("在回應中找不到有效的 JSON 物件，嘗試清理回應...")
+                    logging.error("無法從LLM回應中提取JSON")
+                    fallback_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
+                    yield f"data: {json.dumps(fallback_response, ensure_ascii=False)}\n\n"
+                    return
                     
-                    # 移除可能的 markdown 格式
-                    cleaned_response_str = cleaned_response_str.replace("```json", "").replace("```", "")
-                    cleaned_response_str = cleaned_response_str.strip()
-                    
-                    # 再次尋找 JSON
-                    json_start = cleaned_response_str.find("{")
-                    json_end = cleaned_response_str.rfind("}")
-                    
-                    if json_start != -1 and json_end != -1 and json_end > json_start:
-                        json_content = cleaned_response_str[json_start:json_end+1]
-                        logging.info(f"清理後提取的 JSON 內容: {json_content}")
-                        parsed_json = json.loads(json_content)
-                        
-                        if "answer_summary" in parsed_json and "comparison_table" in parsed_json:
-                            # 提取模型名稱用於美化表格和 post-process
-                            model_names = []
-                            for item in context_list_of_dicts:
-                                model_name = item.get('modelname', 'Unknown')
-                                if model_name not in model_names:
-                                    model_names.append(model_name)
-                            # 檢查 comparison_table 是否正確（modelname 是否為欄位）
-                            valid_keys = set(model_names)
-                            
-                            # 檢查 comparison_table 的格式和內容
-                            comparison_table = parsed_json.get("comparison_table", [])
-                            needs_fix = False
-                            
-                            # 如果 comparison_table 是字典格式，需要轉換
-                            if isinstance(comparison_table, dict):
-                                logging.info("LLM 輸出了字典格式的 comparison_table，需要轉換為列表格式")
-                                needs_fix = True
-                            # 如果是列表格式，檢查第一行是否包含正確的模型名稱
-                            elif isinstance(comparison_table, list) and comparison_table:
-                                first_row = comparison_table[0]
-                                if isinstance(first_row, dict):
-                                    # 檢查第一行是否包含模型名稱作為鍵
-                                    if not valid_keys.intersection(first_row.keys()):
-                                        logging.info("comparison_table 第一行不包含正確的模型名稱，需要修正")
-                                        needs_fix = True
-                            else:
-                                logging.info("comparison_table 為空或格式不正確，需要修正")
-                                needs_fix = True
-                            
-                            if needs_fix:
-                                # 自動修正為正確格式 - 固定格式：第一欄為 feature，第一列為模型名稱
-                                comparison_table = []
-                                
-                                # 根據查詢類型決定要比較的 features
-                                if "電池" in query or "續航" in query or "battery" in query.lower():
-                                    # 電池相關比較
-                                    features = [
-                                        ("Battery Capacity (14inch)", r"14inch.*?(\d+Wh)"),
-                                        ("Battery Capacity (16inch)", r"16inch.*?(\d+Wh)"),
-                                        ("Charging Speed", r"charging.*?(\d+%.*?hour|fast charging.*?hour|快充.*?小時|80%.*?hour)"),
-                                        ("Battery Life", r">(\d+)\s*Hours|(\d+)\s*小時")
-                                    ]
-                                elif "cpu" in query.lower() or "處理器" in query:
-                                    # CPU 相關比較
-                                    features = [
-                                        ("CPU Model", r"(AMD Ryzen™ \d+ \d+[A-Z]*[HS]*)"),
-                                        ("CPU Cores/Threads", r"(\d+C/\d+T)"),
-                                        ("CPU TDP", r"TDP:\s*(\d+W)"),
-                                        ("CPU Max Frequency", r"(\d+\.\d+GHz)")
-                                    ]
-                                elif "gpu" in query.lower() or "顯卡" in query:
-                                    # GPU 相關比較
-                                    features = [
-                                        ("GPU Model", r"(AMD Radeon™ Graphics|Intel.*?Graphics|NVIDIA.*?)"),
-                                        ("GPU Memory", r"(\d+GB.*?Graphics|Graphics.*?\d+GB)")
-                                    ]
-                                elif "記憶體" in query or "ram" in query.lower():
-                                    # 記憶體相關比較
-                                    features = [
-                                        ("RAM Type", r"(DDR\d+)"),
-                                        ("RAM Speed", r"(\d+MT/s)"),
-                                        ("RAM Capacity", r"up to (\d+G/\d+G/\d+G/\d+GB)")
-                                    ]
-                                elif "儲存" in query or "storage" in query.lower() or "ssd" in query.lower():
-                                    # 儲存相關比較
-                                    features = [
-                                        ("Storage Type", r"(M\.2.*?PCIe.*?NVMe)"),
-                                        ("Storage Capacity", r"up to (\d+TB)"),
-                                        ("Storage Slots", r"(\d+x M\.2)")
-                                    ]
-                                else:
-                                    # 通用比較 - 包含主要規格
-                                    features = [
-                                        ("CPU Model", r"(AMD Ryzen™ \d+ \d+[A-Z]*[HS]*)"),
-                                        ("GPU Model", r"(AMD Radeon™ Graphics)"),
-                                        ("RAM Type", r"(DDR\d+)"),
-                                        ("Battery Capacity (14inch)", r"14inch.*?(\d+Wh)"),
-                                        ("Battery Capacity (16inch)", r"16inch.*?(\d+Wh)"),
-                                        ("Storage Type", r"(M\.2.*?PCIe.*?NVMe)")
-                                    ]
-                                
-                                # 為每個 feature 創建一行
-                                for feature_name, pattern in features:
-                                    row = {"feature": feature_name}
-                                    for model in model_names:
-                                        # 根據 feature 類型選擇對應的資料欄位
-                                        if "battery" in feature_name.lower() or "charging" in feature_name.lower():
-                                            data_field = "battery"
-                                        elif "cpu" in feature_name.lower():
-                                            data_field = "cpu"
-                                        elif "gpu" in feature_name.lower():
-                                            data_field = "gpu"
-                                        elif "ram" in feature_name.lower() or "記憶體" in feature_name.lower():
-                                            data_field = "memory"
-                                        elif "storage" in feature_name.lower() or "儲存" in feature_name.lower():
-                                            data_field = "storage"
-                                        else:
-                                            data_field = "cpu"  # 預設
-                                        
-                                        # 從對應的資料欄位提取資訊
-                                        field_data = next((item.get(data_field, "") for item in context_list_of_dicts if item.get("modelname") == model), "")
-                                        
-                                        if feature_name == "Charging Speed":
-                                            if "fast charging" in field_data.lower() or "快充" in field_data:
-                                                row[model] = "Fast charging, up to 80% in less than 1 hour"
-                                            else:
-                                                row[model] = "N/A"
-                                        elif feature_name == "Battery Life":
-                                            match = re.search(pattern, field_data, re.IGNORECASE)
-                                            if match:
-                                                row[model] = f">{match.group(1) or match.group(2)} Hours"
-                                            else:
-                                                row[model] = ">10 Hours"  # 預設值
-                                        else:
-                                            match = re.search(pattern, field_data, re.IGNORECASE)
-                                            if match:
-                                                row[model] = match.group(1)
-                                            else:
-                                                row[model] = "N/A"
-                                    
-                                    comparison_table.append(row)
-                                
-                                parsed_json["comparison_table"] = comparison_table
-                            
-                            # 使用美化表格格式化回應
-                            formatted_response = self._format_response_with_beautiful_table(
-                                parsed_json["answer_summary"],
-                                parsed_json["comparison_table"],
-                                model_names
-                            )
-                            yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
-                        else:
-                            # 嘗試轉換格式
-                            converted_json = self._convert_llm_response_to_required_format(parsed_json, context_list_of_dicts, query)
-                            if converted_json:
-                                # 提取模型名稱用於美化表格
-                                model_names = []
-                                for item in context_list_of_dicts:
-                                    model_name = item.get('modelname', 'Unknown')
-                                    if model_name not in model_names:
-                                        model_names.append(model_name)
-                                
-                                # 使用美化表格格式化回應
-                                formatted_response = self._format_response_with_beautiful_table(
-                                    converted_json["answer_summary"],
-                                    converted_json["comparison_table"],
-                                    model_names
-                                )
-                                yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
-                            else:
-                                raise ValueError("清理後的 JSON 結構仍不正確且無法轉換")
-                    else:
-                        raise ValueError("在 LLM 回應中找不到有效的 JSON 物件")
-                        
-            except (json.JSONDecodeError, ValueError) as json_err:
-                logging.error(f"JSON 解析失敗: {json_err}")
-                logging.error(f"原始回應: {response_str}")
+            except json.JSONDecodeError as e:
+                logging.error(f"JSON解析失敗: {e}")
+                fallback_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
+                yield f"data: {json.dumps(fallback_response, ensure_ascii=False)}\n\n"
+                return
+            except Exception as e:
+                logging.error(f"處理LLM回應時發生錯誤: {e}")
+                fallback_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
+                yield f"data: {json.dumps(fallback_response, ensure_ascii=False)}\n\n"
+                return
                 
-                # 嘗試從回應中提取有用的資訊並手動構建 JSON
-                try:
-                    # 提取模型名稱
-                    model_names = []
-                    for item in context_list_of_dicts:
-                        model_name = item.get('modelname', 'Unknown')
-                        if model_name not in model_names:
-                            model_names.append(model_name)
-                    
-                    # 構建基本的比較表格
-                    comparison_table = []
-                    if len(model_names) >= 2:
-                        # 添加一些基本特徵的比較
-                        features_to_compare = ['cpu', 'memory', 'storage', 'battery']
-                        for feature in features_to_compare:
-                            row = {"feature": feature}
-                            for model_name in model_names:
-                                # 找到對應模型的資料
-                                for item in context_list_of_dicts:
-                                    if item.get('modelname') == model_name:
-                                        row[model_name] = item.get(feature, 'N/A')
-                                        break
-                            comparison_table.append(row)
-                    
-                    # 構建摘要
-                    summary = f"根據提供的資料，比較了 {len(model_names)} 個筆電型號的規格。"
-                    
-                    # 使用美化表格格式化回應
-                    formatted_response = self._format_response_with_beautiful_table(
-                        summary,
-                        comparison_table,
-                        model_names
-                    )
-                    
-                    logging.info(f"使用備用 JSON: {formatted_response}")
-                    yield f"data: {json.dumps(formatted_response, ensure_ascii=False)}\n\n"
-                    
-                except Exception as fallback_err:
-                    logging.error(f"備用 JSON 構建也失敗: {fallback_err}")
-                    error_obj = {
-                        "answer_summary": "抱歉，AI 回應的格式不正確，無法解析。",
-                        "comparison_table": []
-                    }
-                    yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
-
         except Exception as e:
-            logging.error(f"在 chat_stream 中發生未預期的錯誤: {e}", exc_info=True)
-            error_obj = {"error": f"服務內部發生錯誤: {e}"}
+            logging.error(f"chat_stream 發生錯誤: {e}", exc_info=True)
+            error_obj = {
+                "answer_summary": f"處理您的查詢時發生錯誤: {str(e)}",
+                "comparison_table": []
+            }
             yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
 
-    def _convert_llm_response_to_required_format(self, parsed_json, context_list_of_dicts, query):
+    def _validate_llm_response(self, parsed_json, target_modelnames):
         """
-        將 LLM 的不同 JSON 格式轉換為我們需要的標準格式
+        驗證LLM回答是否包含正確的模型名稱
+        """
+        try:
+            logging.info(f"開始驗證LLM回答，目標模型名稱: {target_modelnames}")
+            
+            # 檢查answer_summary中是否包含正確的模型名稱
+            answer_summary = parsed_json.get("answer_summary", "")
+            logging.info(f"檢查answer_summary: {answer_summary}")
+            
+            if answer_summary:
+                # 首先檢查是否包含任何目標模型名稱
+                has_valid_model = False
+                for model_name in target_modelnames:
+                    if model_name in answer_summary:
+                        has_valid_model = True
+                        logging.info(f"找到有效模型名稱: {model_name}")
+                        break
+                
+                # 如果包含正確的模型名稱，即使有品牌名稱也認為有效
+                if has_valid_model:
+                    logging.info("LLM回答包含正確的模型名稱，驗證通過")
+                    return True
+                
+                # 檢查是否包含錯誤的品牌名稱（如Acer）
+                invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "HP", "MSI", "Razer"]
+                for brand in invalid_brands:
+                    if brand in answer_summary:
+                        logging.warning(f"LLM回答包含無效品牌且無正確模型名稱: {brand}")
+                        return False
+            
+            # 檢查comparison_table中的模型名稱
+            comparison_table = parsed_json.get("comparison_table", [])
+            logging.info(f"檢查comparison_table: {comparison_table}")
+            
+            if isinstance(comparison_table, list) and comparison_table:
+                # 檢查表格中的模型名稱
+                for row in comparison_table:
+                    if isinstance(row, dict):
+                        # 檢查是否包含正確的模型名稱作為鍵
+                        for model_name in target_modelnames:
+                            if model_name in row:
+                                logging.info(f"在comparison_table中找到有效模型名稱: {model_name}")
+                                return True
+                        
+                        # 檢查是否包含錯誤的模型名稱
+                        for key in row.keys():
+                            if key != "feature" and key not in target_modelnames:
+                                # 檢查是否包含常見的錯誤模型名稱
+                                invalid_models = ["A520", "M20W", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
+                                for invalid_model in invalid_models:
+                                    if invalid_model in key:
+                                        logging.warning(f"LLM回答包含無效模型名稱: {invalid_model}")
+                                        return False
+            
+            # 如果沒有找到任何目標模型名稱，認為無效
+            logging.warning("LLM回答中未找到任何目標模型名稱")
+            return False
+            
+        except Exception as e:
+            logging.error(f"驗證LLM回應時發生錯誤: {e}")
+            return False
+
+    def _generate_fallback_response(self, query, context_list_of_dicts, target_modelnames):
+        """
+        生成備用回應，基於實際數據創建比較表格
+        """
+        try:
+            # 根據查詢類型決定要比較的特徵
+            if "遊戲" in query or "gaming" in query.lower():
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("GPU Model", "gpu"), 
+                    ("Thermal Design", "thermal"),
+                    ("Memory Type", "memory"),
+                    ("Storage Type", "storage")
+                ]
+            elif "電池" in query or "續航" in query or "battery" in query.lower():
+                features = [
+                    ("Battery Capacity", "battery"),
+                    ("Battery Life", "battery"),
+                    ("Charging Speed", "battery")
+                ]
+            elif "cpu" in query.lower() or "處理器" in query:
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("CPU Architecture", "cpu"),
+                    ("CPU TDP", "cpu")
+                ]
+            elif "gpu" in query.lower() or "顯卡" in query:
+                features = [
+                    ("GPU Model", "gpu"),
+                    ("GPU Memory", "gpu"),
+                    ("GPU Power", "gpu")
+                ]
+            else:
+                # 通用比較
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("GPU Model", "gpu"),
+                    ("Memory Type", "memory"),
+                    ("Storage Type", "storage"),
+                    ("Battery Capacity", "battery")
+                ]
+            
+            # 構建比較表格
+            comparison_table = []
+            for feature_name, data_field in features:
+                row = {"feature": feature_name}
+                for model_name in target_modelnames:
+                    # 找到對應模型的數據
+                    model_data = next((item for item in context_list_of_dicts if item.get("modelname") == model_name), None)
+                    if model_data:
+                        field_data = model_data.get(data_field, "")
+                        # 提取關鍵信息
+                        if data_field == "cpu":
+                            # 提取CPU型號
+                            cpu_match = re.search(r"Ryzen™\s+\d+\s+\d+[A-Z]*[HS]*", field_data)
+                            row[model_name] = cpu_match.group(0) if cpu_match else "N/A"
+                        elif data_field == "gpu":
+                            # 提取GPU型號
+                            gpu_match = re.search(r"AMD Radeon™\s+[A-Z0-9]+[A-Z]*", field_data)
+                            row[model_name] = gpu_match.group(0) if gpu_match else "N/A"
+                        elif data_field == "memory":
+                            # 提取記憶體類型
+                            memory_match = re.search(r"DDR\d+", field_data)
+                            row[model_name] = memory_match.group(0) if memory_match else "N/A"
+                        elif data_field == "storage":
+                            # 提取儲存類型
+                            storage_match = re.search(r"M\.2.*?PCIe.*?NVMe", field_data)
+                            row[model_name] = storage_match.group(0) if storage_match else "N/A"
+                        elif data_field == "battery":
+                            # 提取電池容量
+                            battery_match = re.search(r"(\d+\.?\d*)\s*Wh", field_data)
+                            row[model_name] = f"{battery_match.group(1)}Wh" if battery_match else "N/A"
+                        elif data_field == "thermal":
+                            # 提取散熱設計
+                            thermal_match = re.search(r"(\d+)W", field_data)
+                            row[model_name] = f"{thermal_match.group(1)}W" if thermal_match else "N/A"
+                        else:
+                            row[model_name] = "N/A"
+                    else:
+                        row[model_name] = "N/A"
+                comparison_table.append(row)
+            
+            # 生成摘要
+            if "遊戲" in query or "gaming" in query.lower():
+                summary = f"根據實際數據，{target_modelnames[0]} 系列包含 {len(target_modelnames)} 個遊戲筆記型電腦型號，各有不同的性能配置。"
+            else:
+                summary = f"根據提供的數據，比較了 {len(target_modelnames)} 個筆電型號的規格。"
+            
+            # 使用美化表格格式化回應
+            formatted_response = self._format_response_with_beautiful_table(
+                summary,
+                comparison_table,
+                target_modelnames
+            )
+            
+            return formatted_response
+            
+        except Exception as e:
+            logging.error(f"生成備用回應時發生錯誤: {e}")
+            return {
+                "answer_summary": "抱歉，處理數據時發生錯誤。",
+                "comparison_table": []
+            }
+
+    def _process_llm_response(self, parsed_json, context_list_of_dicts, target_modelnames):
+        """
+        處理LLM回應並生成最終結果
         """
         try:
             # 提取模型名稱
@@ -1134,94 +974,24 @@ class SalesAssistantService(BaseService):
                 if model_name not in model_names:
                     model_names.append(model_name)
             
-            # 嘗試從 LLM 回應中提取摘要
-            answer_summary = ""
-            comparison_table = []
+            # 檢查comparison_table格式並修正
+            comparison_table = parsed_json.get("comparison_table", [])
+            if isinstance(comparison_table, dict):
+                # 轉換字典格式為列表格式
+                comparison_table = self._convert_dict_to_list_of_dicts(comparison_table)
             
-            # 檢查是否有常見的 LLM 回應格式
-            if "more_suitable_for_gaming" in parsed_json:
-                # 處理遊戲性能比較格式
-                gaming_data = parsed_json["more_suitable_for_gaming"]
-                if "model" in gaming_data and "reasons" in gaming_data:
-                    model = gaming_data["model"]
-                    reasons = gaming_data["reasons"]
-                    answer_summary = f"根據分析，{model} 型號更適合遊戲需求。"
-                    
-                    # 構建比較表格
-                    for reason in reasons:
-                        if "CPU" in reason:
-                            comparison_table.append({
-                                "feature": "CPU 性能",
-                                **{name: self._extract_cpu_info(name, context_list_of_dicts) for name in model_names}
-                            })
-                        elif "GPU" in reason:
-                            comparison_table.append({
-                                "feature": "GPU 性能", 
-                                **{name: self._extract_gpu_info(name, context_list_of_dicts) for name in model_names}
-                            })
-                        elif "TDP" in reason or "Thermal" in reason:
-                            comparison_table.append({
-                                "feature": "散熱設計",
-                                **{name: self._extract_thermal_info(name, context_list_of_dicts) for name in model_names}
-                            })
+            # 使用美化表格格式化回應
+            formatted_response = self._format_response_with_beautiful_table(
+                parsed_json.get("answer_summary", ""),
+                comparison_table,
+                model_names
+            )
             
-            elif "summary" in parsed_json:
-                # 處理有摘要的格式
-                answer_summary = parsed_json["summary"]
-                if "comparison" in parsed_json:
-                    comparison_table = parsed_json["comparison"]
-            
-            elif "analysis" in parsed_json:
-                # 處理分析格式
-                answer_summary = parsed_json["analysis"]
-                if "features" in parsed_json:
-                    comparison_table = parsed_json["features"]
-            
-            else:
-                # 如果無法識別格式，使用預設處理
-                answer_summary = f"根據提供的資料，比較了 {len(model_names)} 個筆電型號的規格。"
-                
-                # 構建基本的比較表格
-                features_to_compare = ['cpu', 'memory', 'storage', 'battery']
-                for feature in features_to_compare:
-                    row = {"feature": feature}
-                    for model_name in model_names:
-                        for item in context_list_of_dicts:
-                            if item.get('modelname') == model_name:
-                                row[model_name] = item.get(feature, 'N/A')
-                                break
-                    comparison_table.append(row)
-            
-            # 如果沒有摘要，生成一個
-            if not answer_summary:
-                answer_summary = f"根據查詢 '{query}'，比較了 {len(model_names)} 個筆電型號的相關規格。"
-            
-            return {
-                "answer_summary": answer_summary,
-                "comparison_table": comparison_table
-            }
+            return formatted_response
             
         except Exception as e:
-            logging.error(f"轉換 LLM 回應格式失敗: {e}")
-            return None
-    
-    def _extract_cpu_info(self, model_name, context_list_of_dicts):
-        """提取 CPU 資訊"""
-        for item in context_list_of_dicts:
-            if item.get('modelname') == model_name:
-                return item.get('cpu', 'N/A')
-        return 'N/A'
-    
-    def _extract_gpu_info(self, model_name, context_list_of_dicts):
-        """提取 GPU 資訊"""
-        for item in context_list_of_dicts:
-            if item.get('modelname') == model_name:
-                return item.get('gpu', 'N/A')
-        return 'N/A'
-    
-    def _extract_thermal_info(self, model_name, context_list_of_dicts):
-        """提取散熱資訊"""
-        for item in context_list_of_dicts:
-            if item.get('modelname') == model_name:
-                return item.get('thermal', 'N/A')
-        return 'N/A'
+            logging.error(f"處理LLM回應時發生錯誤: {e}")
+            return {
+                "answer_summary": "抱歉，AI 回應的格式不正確，無法解析。",
+                "comparison_table": []
+            }

@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 1. 智慧處理 answer_summary
         if (content.answer_summary) {
             if (typeof content.answer_summary === 'string') {
-                markdownString += content.answer_summary + "\n\n";
+                markdownString += `<div class="answer-summary">${content.answer_summary}</div>\n\n`;
             } else if (typeof content.answer_summary === 'object') {
                 // 處理字典格式的 answer_summary
                 if (content.answer_summary['主要差异']) {
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             }
                             return `- ${JSON.stringify(item)}`;
                         }).join('\n');
-                        markdownString += `**主要差異**:\n${summaryText}\n\n`;
+                        markdownString += `<div class="answer-summary">**主要差異**:\n${summaryText}</div>\n\n`;
                     }
                 } else {
                     // 其他字典格式的處理
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         return `- ${item}`;
                     }).join('\n');
                     if (summaryText) {
-                        markdownString += `**主要差異**:\n${summaryText}\n\n`;
+                        markdownString += `<div class="answer-summary">**主要差異**:\n${summaryText}</div>\n\n`;
                     }
                 }
             }

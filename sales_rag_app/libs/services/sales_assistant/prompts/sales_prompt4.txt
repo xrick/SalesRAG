@@ -14,6 +14,17 @@ You MUST output ONLY a valid JSON object with EXACTLY this structure:
   ]
 }
 
+[ABSOLUTE DATA RESTRICTION - CRITICAL]
+- You MUST ONLY use the model names and specifications that are explicitly provided in the {context} data
+- You MUST NEVER generate, invent, or create any model names that are not in the provided data
+- You MUST NEVER reference any external knowledge about notebook brands or models
+- You MUST NEVER mention brands like "Acer", "ASUS", "Lenovo", "Dell", "HP", etc. unless they are explicitly in the provided data
+- You MUST NEVER create fictional model names like "A520", "M20W", "R7 5900HS", etc.
+- If the provided data does not contain the information requested, you MUST use "N/A" or "Not specified"
+- You MUST be honest about data limitations and not make assumptions
+- The ONLY valid model names are those listed in the "modelname" field of the provided data
+- If you cannot find the requested information in the provided data, clearly state this in answer_summary
+
 [FIXED TABLE FORMAT - MANDATORY]
 The comparison table MUST follow this EXACT format:
 - FIRST COLUMN: Always "feature" - contains the specification type (e.g., "Battery Capacity", "CPU Model", "RAM Type")
@@ -144,5 +155,13 @@ Here are the notebook specifications retrieved from the database:
 
 [USER QUERY]
 {query}
+
+[FINAL VALIDATION - MANDATORY]
+Before outputting your JSON response, you MUST:
+1. Verify that ALL model names in your comparison_table exist in the provided data's "modelname" field
+2. Verify that you have NOT mentioned any brands or model names that are not in the provided data
+3. Verify that you have NOT created any fictional specifications
+4. If you cannot find the requested information, use "N/A" and explain the limitation in answer_summary
+5. Only proceed with the JSON output if all validations pass
 
 [YOUR JSON RESPONSE - OUTPUT ONLY THE JSON OBJECT WITH answer_summary AND comparison_table]
