@@ -112,6 +112,22 @@ class SalesAssistantService(BaseService):
                             new_table.append(row)
                         comparison_table = new_table
                         model_names = models
+                    else:
+                        # 處理簡單的字典格式：{"特征": "对比", "AG958": "v1.0", "APX958": "v2.0"}
+                        logging.info("檢測到簡單字典格式，轉換為 list of dicts")
+                        keys = list(comparison_table.keys())
+                        if len(keys) >= 2:
+                            # 第一個鍵通常是特徵名稱，其他鍵是模型名稱
+                            feature_key = keys[0]
+                            model_keys = keys[1:]
+                            
+                            # 創建單行表格
+                            row = {"feature": comparison_table[feature_key]}
+                            for model_key in model_keys:
+                                row[model_key] = comparison_table[model_key]
+                            
+                            comparison_table = [row]
+                            model_names = model_keys
 
             # 確保 comparison_table 是 list of dicts 格式
             if not isinstance(comparison_table, list):
@@ -173,11 +189,44 @@ class SalesAssistantService(BaseService):
             logging.error(f"創建簡單表格也失敗: {e}")
             return "表格生成失敗"
 
-    def _format_response_with_beautiful_table(self, answer_summary: str, comparison_table: list, model_names: list) -> dict:
+    def _format_response_with_beautiful_table(self, answer_summary: str | dict, comparison_table: list, model_names: list) -> dict:
         """
         格式化回應，包含美化的 markdown 表格
         """
+        logging.info(f"_format_response_with_beautiful_table 被調用")
+        logging.info(f"answer_summary 類型: {type(answer_summary)}, 值: {answer_summary}")
+        logging.info(f"comparison_table 類型: {type(comparison_table)}, 值: {comparison_table}")
+        logging.info(f"model_names: {model_names}")
+        
         try:
+            # 如果 answer_summary 是字典，保持其字典格式
+            if isinstance(answer_summary, dict):
+                logging.info("answer_summary 是字典格式，保持字典格式")
+                # 創建美化的 markdown 表格
+                beautiful_table = self._create_beautiful_markdown_table(comparison_table, model_names)
+                
+                # 檢查表格是否創建成功
+                if beautiful_table == "表格格式錯誤" or beautiful_table == "表格生成失敗":
+                    # 如果美化表格失敗，嘗試創建簡單表格
+                    logging.warning("美化表格創建失敗，嘗試簡單表格")
+                    simple_table = self._create_simple_markdown_table(comparison_table, model_names)
+                    
+                    result = {
+                        "answer_summary": answer_summary,  # 保持字典格式
+                        "comparison_table": comparison_table,
+                        "beautiful_table": simple_table
+                    }
+                    logging.info(f"美化表格失敗，使用簡單表格，返回結果: {result}")
+                    return result
+                
+                result = {
+                    "answer_summary": answer_summary,  # 保持字典格式
+                    "comparison_table": comparison_table,
+                    "beautiful_table": beautiful_table
+                }
+                logging.info(f"字典格式處理成功，返回結果: {result}")
+                return result
+            
             # 如果 comparison_table 是字典格式，先轉換為 list of dicts 格式
             if isinstance(comparison_table, dict):
                 logging.info("檢測到字典格式的 comparison_table，正在轉換為 list of dicts 格式")
@@ -188,22 +237,26 @@ class SalesAssistantService(BaseService):
                     
                     # 組合完整的回應
                     formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
-                    return {
+                    result = {
                         "answer_summary": formatted_response,
                         "comparison_table": converted_table,  # 返回轉換後的表格
                         "beautiful_table": beautiful_table
                     }
+                    logging.info(f"字典格式轉換成功，返回結果: {result}")
+                    return result
                 else:
                     # 如果轉換失敗，使用改進的字典表格創建方法
                     beautiful_table = self._create_simple_table_from_dict_improved(comparison_table, answer_summary)
                     
                     # 組合完整的回應
                     formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
-                    return {
+                    result = {
                         "answer_summary": formatted_response,
                         "comparison_table": comparison_table,  # 保持原始格式
                         "beautiful_table": beautiful_table
                     }
+                    logging.info(f"字典格式轉換失敗，使用備用方法，返回結果: {result}")
+                    return result
             
             # 創建美化的 markdown 表格
             beautiful_table = self._create_beautiful_markdown_table(comparison_table, model_names)
@@ -217,29 +270,35 @@ class SalesAssistantService(BaseService):
                 # 組合完整的回應
                 formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{simple_table}"
                 
-                return {
+                result = {
                     "answer_summary": formatted_response,
                     "comparison_table": comparison_table,
                     "beautiful_table": simple_table
                 }
+                logging.info(f"美化表格失敗，使用簡單表格，返回結果: {result}")
+                return result
             
             # 組合完整的回應
             formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
             
-            return {
+            result = {
                 "answer_summary": formatted_response,
                 "comparison_table": comparison_table,
                 "beautiful_table": beautiful_table
             }
+            logging.info(f"標準處理成功，返回結果: {result}")
+            return result
             
         except Exception as e:
             logging.error(f"格式化回應失敗: {e}", exc_info=True)
             # 返回基本的錯誤回應
-            return {
+            result = {
                 "answer_summary": f"{answer_summary}\n\n表格生成失敗，請稍後再試。",
                 "comparison_table": comparison_table,
                 "beautiful_table": "表格生成失敗"
             }
+            logging.info(f"發生異常，返回錯誤結果: {result}")
+            return result
 
     def _convert_dict_to_list_of_dicts(self, comparison_dict: dict, answer_summary=None) -> list:
         """
@@ -247,10 +306,14 @@ class SalesAssistantService(BaseService):
         """
         try:
             if not comparison_dict:
+                logging.warning("comparison_dict 為空")
                 return []
+            
+            logging.info(f"開始轉換字典格式，輸入數據: {comparison_dict}")
             
             # 檢查是否包含 main_differences 結構
             if answer_summary and isinstance(answer_summary, dict) and 'main_differences' in answer_summary:
+                logging.info("檢測到 main_differences 結構")
                 # 使用 main_differences 中的 category 作為 feature names
                 main_differences = answer_summary['main_differences']
                 converted_table = []
@@ -278,13 +341,44 @@ class SalesAssistantService(BaseService):
                         
                         converted_table.append(row)
                 
+                logging.info(f"main_differences 轉換結果: {converted_table}")
                 return converted_table
+            
+            # 處理標準字典格式：第一個鍵包含特徵名稱，其他鍵是模型名稱
+            keys = list(comparison_dict.keys())
+            logging.info(f"字典鍵: {keys}")
+            
+            if len(keys) >= 2:
+                # 檢查第一個鍵是否包含特徵名稱列表
+                first_key = keys[0]
+                logging.info(f"第一個鍵: {first_key}, 值類型: {type(comparison_dict[first_key])}")
+                
+                if isinstance(comparison_dict[first_key], list):
+                    features = comparison_dict[first_key]
+                    model_names = keys[1:]  # 其他鍵都是模型名稱
+                    
+                    logging.info(f"特徵列表: {features}")
+                    logging.info(f"模型名稱: {model_names}")
+                    
+                    converted_table = []
+                    for i, feature in enumerate(features):
+                        row = {"feature": feature}
+                        for model_name in model_names:
+                            if i < len(comparison_dict[model_name]):
+                                row[model_name] = comparison_dict[model_name][i]
+                            else:
+                                row[model_name] = "N/A"
+                        converted_table.append(row)
+                    
+                    logging.info(f"標準字典格式轉換結果: {converted_table}")
+                    return converted_table
             
             # 處理嵌套結構：主要差异 -> [{'型号': 'AG958', '特性': '16.1英寸', ...}, ...]
             for main_key, main_value in comparison_dict.items():
                 if isinstance(main_value, list) and len(main_value) > 0:
                     # 檢查是否為模型規格列表
                     if isinstance(main_value[0], dict):
+                        logging.info("檢測到嵌套結構")
                         # 提取所有可能的規格項目
                         all_specs = set()
                         for model_spec in main_value:
@@ -317,10 +411,12 @@ class SalesAssistantService(BaseService):
                             
                             converted_table.append(row)
                         
+                        logging.info(f"嵌套結構轉換結果: {converted_table}")
                         return converted_table
             
             # 標準處理：假設第一個欄位是 Feature，其他欄位是模型名稱
             if "Feature" in comparison_dict:
+                logging.info("檢測到 Feature 欄位")
                 features = comparison_dict["Feature"]
                 model_names = [k for k in comparison_dict.keys() if k != "Feature"]
                 
@@ -334,28 +430,8 @@ class SalesAssistantService(BaseService):
                             row[model_name] = "N/A"
                     converted_table.append(row)
                 
+                logging.info(f"Feature 欄位轉換結果: {converted_table}")
                 return converted_table
-            
-            # 如果沒有 Feature 欄位，嘗試其他處理方式
-            keys = list(comparison_dict.keys())
-            if len(keys) >= 2:
-                # 假設第一個欄位包含特徵名稱
-                first_key = keys[0]
-                if isinstance(comparison_dict[first_key], list):
-                    features = comparison_dict[first_key]
-                    model_names = keys[1:]
-                    
-                    converted_table = []
-                    for i, feature in enumerate(features):
-                        row = {"feature": feature}
-                        for model_name in model_names:
-                            if i < len(comparison_dict[model_name]):
-                                row[model_name] = comparison_dict[model_name][i]
-                            else:
-                                row[model_name] = "N/A"
-                        converted_table.append(row)
-                    
-                    return converted_table
             
             logging.warning("無法識別字典格式，返回空列表")
             return []
