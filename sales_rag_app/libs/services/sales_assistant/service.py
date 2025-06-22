@@ -183,20 +183,27 @@ class SalesAssistantService(BaseService):
                 logging.info("檢測到字典格式的 comparison_table，正在轉換為 list of dicts 格式")
                 converted_table = self._convert_dict_to_list_of_dicts(comparison_table, answer_summary)
                 if converted_table:
-                    comparison_table = converted_table
                     # 創建美化的 markdown 表格
-                    beautiful_table = self._create_beautiful_markdown_table(comparison_table, model_names)
+                    beautiful_table = self._create_beautiful_markdown_table(converted_table, model_names)
+                    
+                    # 組合完整的回應
+                    formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
+                    return {
+                        "answer_summary": formatted_response,
+                        "comparison_table": converted_table,  # 返回轉換後的表格
+                        "beautiful_table": beautiful_table
+                    }
                 else:
                     # 如果轉換失敗，使用改進的字典表格創建方法
                     beautiful_table = self._create_simple_table_from_dict_improved(comparison_table, answer_summary)
-                
-                # 組合完整的回應
-                formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
-                return {
-                    "answer_summary": formatted_response,
-                    "comparison_table": comparison_table,
-                    "beautiful_table": beautiful_table
-                }
+                    
+                    # 組合完整的回應
+                    formatted_response = f"{answer_summary}\n\n**詳細規格比較表：**\n\n{beautiful_table}"
+                    return {
+                        "answer_summary": formatted_response,
+                        "comparison_table": comparison_table,  # 保持原始格式
+                        "beautiful_table": beautiful_table
+                    }
             
             # 創建美化的 markdown 表格
             beautiful_table = self._create_beautiful_markdown_table(comparison_table, model_names)
@@ -272,6 +279,45 @@ class SalesAssistantService(BaseService):
                         converted_table.append(row)
                 
                 return converted_table
+            
+            # 處理嵌套結構：主要差异 -> [{'型号': 'AG958', '特性': '16.1英寸', ...}, ...]
+            for main_key, main_value in comparison_dict.items():
+                if isinstance(main_value, list) and len(main_value) > 0:
+                    # 檢查是否為模型規格列表
+                    if isinstance(main_value[0], dict):
+                        # 提取所有可能的規格項目
+                        all_specs = set()
+                        for model_spec in main_value:
+                            if isinstance(model_spec, dict):
+                                all_specs.update(model_spec.keys())
+                        
+                        # 排除模型名稱相關的欄位
+                        model_name_keys = {'型号', 'model', 'modelname', 'device_model'}
+                        spec_keys = [key for key in all_specs if key not in model_name_keys]
+                        
+                        converted_table = []
+                        for spec_key in spec_keys:
+                            row = {"feature": spec_key}
+                            for model_spec in main_value:
+                                if isinstance(model_spec, dict):
+                                    # 嘗試找到模型名稱
+                                    model_name = None
+                                    for name_key in model_name_keys:
+                                        if name_key in model_spec:
+                                            model_name = model_spec[name_key]
+                                            break
+                                    
+                                    if not model_name:
+                                        # 如果沒有找到模型名稱，使用索引
+                                        model_name = f"Model_{main_value.index(model_spec) + 1}"
+                                    
+                                    # 獲取規格值
+                                    value = model_spec.get(spec_key, "N/A")
+                                    row[model_name] = value
+                            
+                            converted_table.append(row)
+                        
+                        return converted_table
             
             # 標準處理：假設第一個欄位是 Feature，其他欄位是模型名稱
             if "Feature" in comparison_dict:
