@@ -624,30 +624,15 @@ class SalesAssistantService(BaseService):
             # 檢查查詢中是否包含有效的modelname
             contains_modelname, found_modelnames = self._check_query_contains_modelname(query)
             
-            # 如果同時包含modeltype和modelname，以modeltype為主
+            # 如果同時包含modeltype和modelname，優先使用modelname
             if contains_modeltype and contains_modelname:
-                logging.info(f"查詢同時包含modeltype和modelname，以modeltype為主")
+                logging.info(f"查詢同時包含modeltype和modelname，優先使用modelname")
                 logging.info(f"找到的modeltype: {found_modeltypes}")
                 logging.info(f"找到的modelname: {found_modelnames}")
                 
-                # 只取第一個modeltype
-                target_modeltype = found_modeltypes[0]
-                logging.info(f"使用第一個modeltype: {target_modeltype}")
-                
-                # 根據modeltype獲取所有相關的modelname
-                target_modelnames = self._get_models_by_type(target_modeltype)
-                
-                if not target_modelnames:
-                    error_message = f"未找到modeltype為 '{target_modeltype}' 的筆電型號。"
-                    error_obj = {
-                        "answer_summary": error_message,
-                        "comparison_table": []
-                    }
-                    yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
-                    return
-                
-                # 直接使用DuckDB查詢這些modelname的資料
-                logging.info(f"根據modeltype '{target_modeltype}' 查詢相關modelname: {target_modelnames}")
+                # 優先使用明確指定的modelname
+                target_modelnames = found_modelnames
+                logging.info(f"使用明確指定的modelname: {target_modelnames}")
                 
             elif contains_modeltype:
                 # 只有modeltype，沒有modelname
@@ -801,6 +786,10 @@ class SalesAssistantService(BaseService):
         try:
             logging.info(f"開始驗證LLM回答，目標模型名稱: {target_modelnames}")
             
+            # 定義無效的品牌和GPU型號列表
+            invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "HP", "MSI", "Razer", "NVIDIA", "Nvidia"]
+            invalid_gpu_models = ["RTX", "GTX", "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660"]
+            
             # 檢查answer_summary中是否包含正確的模型名稱
             answer_summary = parsed_json.get("answer_summary", "")
             logging.info(f"檢查answer_summary: {answer_summary}")
@@ -814,17 +803,25 @@ class SalesAssistantService(BaseService):
                         logging.info(f"找到有效模型名稱: {model_name}")
                         break
                 
-                # 如果包含正確的模型名稱，即使有品牌名稱也認為有效
+                # 檢查無效品牌
+                for brand in invalid_brands:
+                    if brand in answer_summary:
+                        logging.warning(f"LLM回答包含無效品牌: {brand}")
+                        return False
+                
+                # 檢查無效GPU型號
+                for gpu_model in invalid_gpu_models:
+                    if gpu_model in answer_summary:
+                        logging.warning(f"LLM回答包含無效GPU型號: {gpu_model}")
+                        return False
+                
+                # 如果包含正確的模型名稱，即使有其他內容也認為有效
                 if has_valid_model:
                     logging.info("LLM回答包含正確的模型名稱，驗證通過")
                     return True
-                
-                # 檢查是否包含錯誤的品牌名稱（如Acer）
-                invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "HP", "MSI", "Razer"]
-                for brand in invalid_brands:
-                    if brand in answer_summary:
-                        logging.warning(f"LLM回答包含無效品牌且無正確模型名稱: {brand}")
-                        return False
+                else:
+                    logging.warning("LLM回答中未找到任何目標模型名稱")
+                    return False
             
             # 檢查comparison_table中的模型名稱
             comparison_table = parsed_json.get("comparison_table", [])
@@ -848,6 +845,14 @@ class SalesAssistantService(BaseService):
                                 for invalid_model in invalid_models:
                                     if invalid_model in key:
                                         logging.warning(f"LLM回答包含無效模型名稱: {invalid_model}")
+                                        return False
+                        
+                        # 檢查值中是否包含無效GPU型號
+                        for value in row.values():
+                            if isinstance(value, str):
+                                for gpu_model in invalid_gpu_models:
+                                    if gpu_model in value:
+                                        logging.warning(f"LLM回答包含無效GPU型號: {gpu_model}")
                                         return False
             
             # 如果沒有找到任何目標模型名稱，認為無效
@@ -877,6 +882,13 @@ class SalesAssistantService(BaseService):
                     ("Battery Capacity", "battery"),
                     ("Battery Life", "battery"),
                     ("Charging Speed", "battery")
+                ]
+            elif "輕便" in query or "重量" in query or "weight" in query.lower() or "portable" in query.lower():
+                features = [
+                    ("Weight", "structconfig"),
+                    ("Dimensions", "structconfig"),
+                    ("Form Factor", "structconfig"),
+                    ("Material", "structconfig")
                 ]
             elif "cpu" in query.lower() or "處理器" in query:
                 features = [
@@ -934,6 +946,27 @@ class SalesAssistantService(BaseService):
                             # 提取散熱設計
                             thermal_match = re.search(r"(\d+)W", field_data)
                             row[model_name] = f"{thermal_match.group(1)}W" if thermal_match else "N/A"
+                        elif data_field == "structconfig":
+                            # 提取結構配置信息
+                            if feature_name == "Weight":
+                                weight_match = re.search(r"Weight:\s*(\d+)\s*g", field_data)
+                                if weight_match:
+                                    weight_g = int(weight_match.group(1))
+                                    weight_kg = weight_g / 1000
+                                    row[model_name] = f"{weight_g}g ({weight_kg:.1f}kg)"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Dimensions":
+                                dim_match = re.search(r"Dimension:\s*([\d\.]+\s*×\s*[\d\.]+\s*×\s*[\d\.]+\s*mm)", field_data)
+                                row[model_name] = dim_match.group(1) if dim_match else "N/A"
+                            elif feature_name == "Form Factor":
+                                form_match = re.search(r"Form:\s*([^\n]+)", field_data)
+                                row[model_name] = form_match.group(1) if form_match else "N/A"
+                            elif feature_name == "Material":
+                                material_match = re.search(r"Material[^:]*:\s*([^\n]+)", field_data)
+                                row[model_name] = material_match.group(1) if material_match else "N/A"
+                            else:
+                                row[model_name] = "N/A"
                         else:
                             row[model_name] = "N/A"
                     else:
@@ -941,7 +974,32 @@ class SalesAssistantService(BaseService):
                 comparison_table.append(row)
             
             # 生成摘要
-            if "遊戲" in query or "gaming" in query.lower():
+            if "輕便" in query or "重量" in query or "weight" in query.lower() or "portable" in query.lower():
+                # 提取重量信息進行比較
+                weights = {}
+                for model_name in target_modelnames:
+                    model_data = next((item for item in context_list_of_dicts if item.get("modelname") == model_name), None)
+                    if model_data:
+                        structconfig = model_data.get("structconfig", "")
+                        weight_match = re.search(r"Weight:\s*(\d+)\s*g", structconfig)
+                        if weight_match:
+                            weights[model_name] = int(weight_match.group(1))
+                
+                if len(weights) >= 2:
+                    # 找到最輕的型號
+                    lightest_model = min(weights.keys(), key=lambda x: weights[x])
+                    lightest_weight = weights[lightest_model]
+                    heaviest_model = max(weights.keys(), key=lambda x: weights[x])
+                    heaviest_weight = weights[heaviest_model]
+                    
+                    if lightest_weight < heaviest_weight:
+                        weight_diff = heaviest_weight - lightest_weight
+                        summary = f"根據重量比較，{lightest_model} 最輕便，重量為 {lightest_weight}g ({lightest_weight/1000:.1f}kg)，比 {heaviest_model} 輕 {weight_diff}g。"
+                    else:
+                        summary = f"根據提供的數據，{len(target_modelnames)} 個型號的重量相同或相近。"
+                else:
+                    summary = f"根據提供的數據，比較了 {len(target_modelnames)} 個筆電型號的重量規格。"
+            elif "遊戲" in query or "gaming" in query.lower():
                 summary = f"根據實際數據，{target_modelnames[0]} 系列包含 {len(target_modelnames)} 個遊戲筆記型電腦型號，各有不同的性能配置。"
             else:
                 summary = f"根據提供的數據，比較了 {len(target_modelnames)} 個筆電型號的規格。"

@@ -18,12 +18,20 @@ You MUST output ONLY a valid JSON object with EXACTLY this structure:
 - You MUST ONLY use the model names and specifications that are explicitly provided in the {context} data
 - You MUST NEVER generate, invent, or create any model names that are not in the provided data
 - You MUST NEVER reference any external knowledge about notebook brands or models
-- You MUST NEVER mention brands like "Acer", "ASUS", "Lenovo", "Dell", "HP", etc. unless they are explicitly in the provided data
+- You MUST NEVER mention brands like "Acer", "ASUS", "Lenovo", "Dell", "HP", "NVIDIA", "Nvidia", etc. unless they are explicitly in the provided data
 - You MUST NEVER create fictional model names like "A520", "M20W", "R7 5900HS", etc.
+- You MUST NEVER mention NVIDIA GPUs like "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660", etc.
+- You MUST ONLY mention AMD Radeon GPUs that are explicitly listed in the provided data
 - If the provided data does not contain the information requested, you MUST use "N/A" or "Not specified"
 - You MUST be honest about data limitations and not make assumptions
 - The ONLY valid model names are those listed in the "modelname" field of the provided data
 - If you cannot find the requested information in the provided data, clearly state this in answer_summary
+
+[GPU SPECIFIC RESTRICTIONS]
+- The provided data ONLY contains AMD Radeon GPUs (e.g., "AMD Radeon™ RX6550M", "AMD Radeon™ RX7600M")
+- You MUST NEVER mention or suggest NVIDIA GPUs or any other GPU brands
+- You MUST ONLY reference the exact AMD Radeon GPU models listed in the provided data
+- If asked about gaming performance, focus ONLY on the AMD Radeon GPUs available in the data
 
 [FIXED TABLE FORMAT - MANDATORY]
 The comparison table MUST follow this EXACT format:
@@ -53,6 +61,7 @@ The comparison table MUST follow this EXACT format:
 - The "cpu" field contains CPU specifications for each model
 - The "battery" field contains battery specifications for each model
 - The "memory" field contains memory specifications for each model
+- The "gpu" field contains AMD Radeon GPU specifications for each model
 - When comparing features, use the "modelname" as the column headers, NOT CPU model names
 - CPU model names (like R7 7735U, R7 7736U) are SPECIFICATIONS, not models to compare
 
@@ -63,7 +72,7 @@ The comparison table MUST follow this EXACT format:
 - DO NOT put CPU model names as features when comparing battery specifications
 - For battery comparison: feature should be "Battery Capacity (14inch)", "Battery Capacity (16inch)", "Charging Speed", "Battery Life"
 - For CPU comparison: feature should be "CPU Model", "CPU Cores/Threads", "CPU TDP", "CPU Max Frequency"
-- For GPU comparison: feature should be "GPU Model", "GPU Memory"
+- For GPU comparison: feature should be "GPU Model", "GPU Memory", "GPU Power"
 - For memory comparison: feature should be "RAM Type", "RAM Speed", "RAM Capacity"
 - For storage comparison: feature should be "Storage Type", "Storage Capacity", "Storage Slots"
 - ALWAYS use the "modelname" field values as column headers (e.g., AKK839, AHP839, APX839, ARB839)
@@ -72,6 +81,7 @@ The comparison table MUST follow this EXACT format:
 - DO NOT create fake model names like "M20W", "M15W", "R7 5900HS", etc.
 - DO NOT put screen sizes (14inch, 16inch) in the feature field
 - DO NOT put CPU model names in the feature field when comparing battery
+- DO NOT mention NVIDIA GPUs or any non-AMD GPU brands
 - ALWAYS use the exact model names from the "modelname" field: AKK839, AHP839, APX839, ARB839
 - The feature field should contain SPECIFICATION TYPES, not model names or screen sizes
 
@@ -114,10 +124,11 @@ For battery comparison of 839 series, the table should look like this:
 [FEATURE MAPPING FOR DIFFERENT QUERY TYPES]
 1. **Battery/續航力 queries**: Use features like "Battery Capacity (14inch)", "Battery Capacity (16inch)", "Charging Speed", "Battery Life"
 2. **CPU/處理器 queries**: Use features like "CPU Model", "CPU Cores/Threads", "CPU TDP", "CPU Max Frequency"
-3. **GPU/顯卡 queries**: Use features like "GPU Model", "GPU Memory"
+3. **GPU/顯卡 queries**: Use features like "GPU Model", "GPU Memory", "GPU Power" (ONLY AMD Radeon GPUs from the data)
 4. **Memory/記憶體 queries**: Use features like "RAM Type", "RAM Speed", "RAM Capacity"
 5. **Storage/儲存 queries**: Use features like "Storage Type", "Storage Capacity", "Storage Slots"
-6. **General comparison**: Use a mix of key features from different categories
+6. **Weight/輕便性 queries**: Use features like "Weight", "Dimensions", "Form Factor", "Material" (extract from structconfig field)
+7. **General comparison**: Use a mix of key features from different categories
 
 [DATA AVAILABILITY CHECK]
 - Before creating the comparison table, check if the requested data is actually available
@@ -132,16 +143,24 @@ For battery comparison of 839 series, the table should look like this:
 4. **Feature Mapping**: Map user query keywords to actual data fields:
    - "電池" or "battery" → look for "battery" field
    - "CPU" or "處理器" → look for "cpu" field
-   - "顯卡" or "GPU" → look for "gpu" field
+   - "顯卡" or "GPU" → look for "gpu" field (ONLY AMD Radeon)
    - "記憶體" or "memory" → look for "memory" field
    - "儲存" or "storage" → look for "storage" field
+   - "重量" or "輕便" or "weight" or "portable" → look for "structconfig" field (extract weight, dimensions, form factor)
 5. **Data Availability Check**: If the requested feature data is not available in the provided data, clearly state this in the answer_summary and use "N/A" in the comparison table
 6. **Model Name Validation**: Always use the exact model names from the "modelname" field in the data. Do NOT create or invent model names.
+7. **Weight Comparison**: When comparing weight/portability:
+   - Extract weight information from "structconfig" field using pattern "Weight: (\d+) g"
+   - Extract dimensions using pattern "Dimension: ([\d\.]+ × [\d\.]+ × [\d\.]+ mm)"
+   - Extract form factor using pattern "Form: ([^\n]+)"
+   - Extract material using pattern "Material[^:]*: ([^\n]+)"
+   - Compare weights and provide clear conclusion about which model is lighter
 
 [CRITICAL WARNINGS]
 - NEVER generate fake model names like "Razer Basilisk 839 Pro" or "Razer Basilisk 839 Pro HD"
 - NEVER create battery data that is not in the provided context
 - NEVER assume specifications that are not explicitly stated in the data
+- NEVER mention NVIDIA GPUs or any non-AMD GPU brands
 - ALWAYS use the exact model names from the data (e.g., AKK839, AHP839, APX839, ARB839)
 - If you cannot find the requested information in the data, clearly state this and use "N/A"
 - NEVER put CPU model names in the "feature" field when comparing other specifications
@@ -161,7 +180,8 @@ Before outputting your JSON response, you MUST:
 1. Verify that ALL model names in your comparison_table exist in the provided data's "modelname" field
 2. Verify that you have NOT mentioned any brands or model names that are not in the provided data
 3. Verify that you have NOT created any fictional specifications
-4. If you cannot find the requested information, use "N/A" and explain the limitation in answer_summary
-5. Only proceed with the JSON output if all validations pass
+4. Verify that you have NOT mentioned any NVIDIA GPUs or non-AMD GPU brands
+5. If you cannot find the requested information, use "N/A" and explain the limitation in answer_summary
+6. Only proceed with the JSON output if all validations pass
 
 [YOUR JSON RESPONSE - OUTPUT ONLY THE JSON OBJECT WITH answer_summary AND comparison_table]
