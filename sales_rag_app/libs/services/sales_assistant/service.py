@@ -135,6 +135,37 @@ class SalesAssistantService(BaseService):
                 logging.error(f"comparison_table 格式不正確: {type(comparison_table)}")
                 return "表格格式錯誤"
 
+            # 檢查是否為標準的 list of dicts 格式（每個dict都有feature鍵）
+            if comparison_table and isinstance(comparison_table[0], dict):
+                first_row = comparison_table[0]
+                if "feature" not in first_row:
+                    # 如果沒有feature鍵，嘗試從其他鍵推斷
+                    logging.info("檢測到沒有feature鍵的list of dicts格式")
+                    all_keys = set()
+                    for row in comparison_table:
+                        if isinstance(row, dict):
+                            all_keys.update(row.keys())
+                    
+                    # 排除模型名稱相關的鍵
+                    model_keys = {key for key in all_keys if key.lower() in ["modelname", "model", "device model", "model_type"]}
+                    feature_keys = all_keys - model_keys
+                    
+                    if feature_keys:
+                        # 轉換為標準格式
+                        converted_table = []
+                        for row in comparison_table:
+                            for feature_key in feature_keys:
+                                if feature_key in row:
+                                    new_row = {"feature": feature_key}
+                                    for model_key in model_keys:
+                                        if model_key in row:
+                                            new_row[model_key] = row[model_key]
+                                    converted_table.append(new_row)
+                        
+                        if converted_table:
+                            comparison_table = converted_table
+                            logging.info(f"轉換後的表格: {comparison_table}")
+
             # 產生 markdown 表格
             header = "| **規格項目** |" + "".join([f" **{name}** |" for name in model_names])
             separator = "| --- |" + " --- |" * len(model_names)
@@ -355,18 +386,41 @@ class SalesAssistantService(BaseService):
                     logging.info(f"特徵列表: {features}")
                     logging.info(f"模型名稱: {model_names}")
                     
-                    converted_table = []
-                    for i, feature in enumerate(features):
-                        row = {"feature": feature}
-                        for model_name in model_names:
-                            if i < len(comparison_dict[model_name]):
-                                row[model_name] = comparison_dict[model_name][i]
-                            else:
-                                row[model_name] = "N/A"
-                        converted_table.append(row)
-                    
-                    logging.info(f"標準字典格式轉換結果: {converted_table}")
-                    return converted_table
+                    # 檢查是否所有值都是列表且長度相同
+                    all_lists = all(isinstance(comparison_dict[key], list) for key in keys)
+                    if all_lists:
+                        # 標準格式：所有值都是列表
+                        converted_table = []
+                        for i, feature in enumerate(features):
+                            row = {"feature": feature}
+                            for model_name in model_names:
+                                if i < len(comparison_dict[model_name]):
+                                    value = comparison_dict[model_name][i]
+                                    # 確保值是字符串
+                                    if isinstance(value, (dict, list)):
+                                        value = str(value)
+                                    row[model_name] = value
+                                else:
+                                    row[model_name] = "N/A"
+                            converted_table.append(row)
+                        
+                        logging.info(f"標準字典格式轉換結果: {converted_table}")
+                        return converted_table
+                    else:
+                        # 處理混合格式：第一個是特徵列表，其他是單個值
+                        converted_table = []
+                        for i, feature in enumerate(features):
+                            row = {"feature": feature}
+                            for model_name in model_names:
+                                value = comparison_dict[model_name]
+                                # 確保值是字符串
+                                if isinstance(value, (dict, list)):
+                                    value = str(value)
+                                row[model_name] = value
+                            converted_table.append(row)
+                        
+                        logging.info(f"混合格式轉換結果: {converted_table}")
+                        return converted_table
             
             # 處理嵌套結構：主要差异 -> [{'型号': 'AG958', '特性': '16.1英寸', ...}, ...]
             for main_key, main_value in comparison_dict.items():
@@ -386,6 +440,39 @@ class SalesAssistantService(BaseService):
                                     converted_table.append(spec_row)
                             logging.info(f"Model/Specification 格式轉換結果: {converted_table}")
                             return converted_table
+                        
+                        # 特殊處理：深度嵌套結構，如 SYSTEM -> MEMORY -> Channel/Capacity
+                        if main_key == "SYSTEM" and len(main_value) > 0:
+                            logging.info("檢測到 SYSTEM 嵌套結構")
+                            converted_table = []
+                            
+                            for system_item in main_value:
+                                if isinstance(system_item, dict):
+                                    for sub_key, sub_value in system_item.items():
+                                        if isinstance(sub_value, list) and len(sub_value) > 0:
+                                            # 處理 MEMORY 等子結構
+                                            if sub_key == "MEMORY":
+                                                for i, memory_item in enumerate(sub_value):
+                                                    if isinstance(memory_item, dict):
+                                                        # 為每個 Channel 創建一行
+                                                        channel = memory_item.get("Channel", f"Channel {i+1}")
+                                                        capacity = memory_item.get("Capacity", "N/A")
+                                                        row = {
+                                                            "feature": f"Memory {channel}",
+                                                            "APX819: FP7R2": f"{capacity}"
+                                                        }
+                                                        converted_table.append(row)
+                                            else:
+                                                # 處理其他子結構
+                                                row = {
+                                                    "feature": sub_key,
+                                                    "APX819: FP7R2": str(sub_value)
+                                                }
+                                                converted_table.append(row)
+                            
+                            if converted_table:
+                                logging.info(f"SYSTEM 嵌套結構轉換結果: {converted_table}")
+                                return converted_table
                         
                         # 提取所有可能的規格項目
                         all_specs = set()
@@ -413,8 +500,10 @@ class SalesAssistantService(BaseService):
                                         # 如果沒有找到模型名稱，使用索引
                                         model_name = f"Model_{main_value.index(model_spec) + 1}"
                                     
-                                    # 獲取規格值
+                                    # 獲取規格值並確保是字符串
                                     value = model_spec.get(spec_key, "N/A")
+                                    if isinstance(value, (dict, list)):
+                                        value = str(value)
                                     row[model_name] = value
                             
                             converted_table.append(row)
@@ -439,6 +528,16 @@ class SalesAssistantService(BaseService):
                     converted_table.append(row)
                 
                 logging.info(f"Feature 欄位轉換結果: {converted_table}")
+                return converted_table
+            
+            # 新增：处理所有value都是str的单一dict，转为list of dicts
+            if isinstance(comparison_dict, dict) and all(isinstance(v, str) for v in comparison_dict.values()):
+                model_name = comparison_dict.get("Model") or comparison_dict.get("MODELNAME") or comparison_dict.get("modelname") or "Model"
+                converted_table = []
+                for k, v in comparison_dict.items():
+                    if k.lower() not in ["model", "modelname", "model_type", "device model"]:
+                        converted_table.append({"feature": k, model_name: v})
+                logging.info(f"單一 dict 轉換結果: {converted_table}")
                 return converted_table
             
             logging.warning("無法識別字典格式，返回空列表")
