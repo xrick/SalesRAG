@@ -573,10 +573,25 @@ class SalesAssistantService(BaseService):
         found_modelnames = []
         query_lower = query.lower()
         
+        # 改进：使用更严格的匹配逻辑
         for modelname in AVAILABLE_MODELNAMES:
-            if modelname.lower() in query_lower:
+            modelname_lower = modelname.lower()
+            # 使用单词边界匹配，避免部分匹配
+            if re.search(r'\b' + re.escape(modelname_lower) + r'\b', query_lower):
                 found_modelnames.append(modelname)
         
+        # 如果没有找到完全匹配，检查是否有相似的模型名称
+        if not found_modelnames:
+            # 提取查询中可能的模型名称模式
+            potential_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', query)
+            logging.info(f"查询中发现的潜在模型名称: {potential_models}")
+            
+            # 检查这些潜在模型是否在可用列表中
+            for potential_model in potential_models:
+                if potential_model in AVAILABLE_MODELNAMES:
+                    found_modelnames.append(potential_model)
+        
+        logging.info(f"查询验证结果 - 查询: '{query}', 找到的模型名称: {found_modelnames}")
         return len(found_modelnames) > 0, found_modelnames
 
     def _check_query_contains_modeltype(self, query: str) -> tuple[bool, list]:
@@ -663,10 +678,30 @@ class SalesAssistantService(BaseService):
                 target_modelnames = found_modelnames
                 
             else:
-                # 既沒有modeltype也沒有modelname
+                # 如果既没有modeltype也没有modelname
                 available_types_str = "\n".join([f"- {modeltype}" for modeltype in AVAILABLE_MODELTYPES])
                 available_models_str = "\n".join([f"- {model}" for model in AVAILABLE_MODELNAMES])
-                error_message = f"您的查詢中沒有包含任何有效的筆電型號或系列。請明確指定要比較的型號名稱或系列。\n\n可用的系列包括：\n{available_types_str}\n\n可用的型號包括：\n{available_models_str}\n\n請重新提問，例如：'比較 958 系列的 CPU 性能' 或 '比較 AB819-S: FP6 和 AG958 的 CPU 性能'"
+                
+                # 检查查询中是否包含可能的错误模型名称
+                potential_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', query)
+                error_message = f"您的查询中提到的模型名称不在我们的数据库中。"
+                
+                if potential_models:
+                    error_message += f"\n\n您提到的模型名称: {', '.join(potential_models)}"
+                    error_message += f"\n\n可能的正确模型名称:"
+                    # 为每个可能的错误模型提供建议
+                    for potential_model in potential_models:
+                        suggestions = []
+                        for available_model in AVAILABLE_MODELNAMES:
+                            # 简单的相似度检查
+                            if potential_model[:3] in available_model or potential_model[-3:] in available_model:
+                                suggestions.append(available_model)
+                        if suggestions:
+                            error_message += f"\n- '{potential_model}' 可能是: {', '.join(suggestions[:3])}"
+                
+                error_message += f"\n\n可用的系列包括：\n{available_types_str}"
+                error_message += f"\n\n可用的型號包括：\n{available_models_str}"
+                error_message += f"\n\n請重新提問，例如：'比較 958 系列的 CPU 性能' 或 '比較 AB819-S: FP6 和 AG958 的 CPU 性能'"
                 
                 error_obj = {
                     "answer_summary": error_message,
@@ -685,8 +720,16 @@ class SalesAssistantService(BaseService):
 
             if not full_specs_records:
                 logging.error(f"DuckDB 查詢失敗或未找到型號為 {target_modelnames} 的資料。")
-                yield f"data: {json.dumps({'answer_summary': '發生了點問題，無法從資料庫中取得產品詳細規格。', 'comparison_table': []}, ensure_ascii=False)}\n\n"
+                # 提供更详细的错误信息
+                error_message = f"抱歉，在我们的数据库中未找到以下型号的资料：{', '.join(target_modelnames)}"
+                error_message += f"\n\n请检查型号名称是否正确，或查看可用的型号列表。"
+                yield f"data: {json.dumps({'answer_summary': error_message, 'comparison_table': []}, ensure_ascii=False)}\n\n"
                 return
+
+            logging.info(f"成功查询到 {len(full_specs_records)} 条记录")
+            # 记录查询到的实际模型名称
+            found_modelnames = [record[self.spec_fields.index('modelname')] for record in full_specs_records]
+            logging.info(f"查询到的实际模型名称: {found_modelnames}")
 
             # 3. 將查詢結果格式化為 LLM 需要的上下文
             context_list_of_dicts = [dict(zip(self.spec_fields, record)) for record in full_specs_records]
@@ -803,6 +846,13 @@ class SalesAssistantService(BaseService):
                         logging.info(f"找到有效模型名稱: {model_name}")
                         break
                 
+                # 檢查是否包含不存在的模型名稱
+                potential_invalid_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', answer_summary)
+                for potential_model in potential_invalid_models:
+                    if potential_model not in target_modelnames and potential_model not in AVAILABLE_MODELNAMES:
+                        logging.warning(f"LLM回答包含不存在的模型名稱: {potential_model}")
+                        return False
+                
                 # 檢查無效品牌
                 for brand in invalid_brands:
                     if brand in answer_summary:
@@ -846,6 +896,12 @@ class SalesAssistantService(BaseService):
                                     if invalid_model in key:
                                         logging.warning(f"LLM回答包含無效模型名稱: {invalid_model}")
                                         return False
+                                
+                                # 檢查是否是模式匹配的無效模型名稱
+                                if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', key):
+                                    if key not in AVAILABLE_MODELNAMES:
+                                        logging.warning(f"LLM回答包含不存在的模型名稱: {key}")
+                                        return False
                         
                         # 檢查值中是否包含無效GPU型號
                         for value in row.values():
@@ -855,7 +911,24 @@ class SalesAssistantService(BaseService):
                                         logging.warning(f"LLM回答包含無效GPU型號: {gpu_model}")
                                         return False
             
-            # 如果沒有找到任何目標模型名稱，認為無效
+            # 如果comparison_table是字典格式
+            elif isinstance(comparison_table, dict):
+                # 檢查字典中的模型名稱
+                for key in comparison_table.keys():
+                    if key != "modelname" and key not in target_modelnames:
+                        # 檢查是否是模式匹配的無效模型名稱
+                        if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', key):
+                            if key not in AVAILABLE_MODELNAMES:
+                                logging.warning(f"LLM回答包含不存在的模型名稱: {key}")
+                                return False
+                
+                # 檢查是否包含正確的模型名稱
+                for model_name in target_modelnames:
+                    if model_name in comparison_table:
+                        logging.info(f"在comparison_table字典中找到有效模型名稱: {model_name}")
+                        return True
+            
+            # 如果没有找到任何目標模型名稱，認為無效
             logging.warning("LLM回答中未找到任何目標模型名稱")
             return False
             
@@ -868,6 +941,27 @@ class SalesAssistantService(BaseService):
         生成備用回應，基於實際數據創建比較表格
         """
         try:
+            # 檢查是否有實際數據
+            if not context_list_of_dicts:
+                # 如果沒有數據，說明查詢的模型不存在
+                potential_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', query)
+                if potential_models:
+                    error_message = f"抱歉，您查詢的模型 '{', '.join(potential_models)}' 在我们的數據庫中不存在。"
+                    error_message += f"\n\n可用的模型包括：\n"
+                    for model in AVAILABLE_MODELNAMES:
+                        error_message += f"- {model}\n"
+                    error_message += f"\n請使用正確的模型名稱重新查詢。"
+                    
+                    return {
+                        "answer_summary": error_message,
+                        "comparison_table": []
+                    }
+                else:
+                    return {
+                        "answer_summary": "抱歉，無法找到相關的產品數據。請檢查您的查詢。",
+                        "comparison_table": []
+                    }
+            
             # 根據查詢類型決定要比較的特徵
             if "遊戲" in query or "gaming" in query.lower():
                 features = [
@@ -996,13 +1090,13 @@ class SalesAssistantService(BaseService):
                         weight_diff = heaviest_weight - lightest_weight
                         summary = f"根據重量比較，{lightest_model} 最輕便，重量為 {lightest_weight}g ({lightest_weight/1000:.1f}kg)，比 {heaviest_model} 輕 {weight_diff}g。"
                     else:
-                        summary = f"根據提供的數據，{len(target_modelnames)} 個型號的重量相同或相近。"
+                        summary = f"根據提供的数据，{len(target_modelnames)} 个型号的重量相同或相近。"
                 else:
-                    summary = f"根據提供的數據，比較了 {len(target_modelnames)} 個筆電型號的重量規格。"
+                    summary = f"根据提供的数据，比较了 {len(target_modelnames)} 个笔电型号的重量规格。"
             elif "遊戲" in query or "gaming" in query.lower():
-                summary = f"根據實際數據，{target_modelnames[0]} 系列包含 {len(target_modelnames)} 個遊戲筆記型電腦型號，各有不同的性能配置。"
+                summary = f"根据实际数据，{target_modelnames[0]} 系列包含 {len(target_modelnames)} 个游戏笔记型电脑型号，各有不同的性能配置。"
             else:
-                summary = f"根據提供的數據，比較了 {len(target_modelnames)} 個筆電型號的規格。"
+                summary = f"根据提供的数据，比较了 {len(target_modelnames)} 个笔电型号的规格。"
             
             # 使用美化表格格式化回應
             formatted_response = self._format_response_with_beautiful_table(

@@ -14,6 +14,16 @@ You MUST output ONLY a valid JSON object with EXACTLY this structure:
   ]
 }
 
+[CRITICAL MODEL NAME VALIDATION - MANDATORY]
+- You MUST ONLY use model names that are EXACTLY present in the provided data's "modelname" field
+- You MUST NEVER generate, invent, or create any model names that are not in the provided data
+- You MUST NEVER use model names like "MD819-S: FT6", "M20W", "A520", etc. unless they are explicitly in the provided data
+- You MUST NEVER assume model names based on patterns or similar names
+- You MUST NEVER create fictional model names for comparison
+- If the user asks about a model that is not in the provided data, you MUST clearly state that the model is not available
+- You MUST ONLY compare models that are actually present in the provided data
+- Before creating any comparison, verify that ALL model names exist in the data
+
 [ABSOLUTE DATA RESTRICTION - CRITICAL]
 - You MUST ONLY use the model names and specifications that are explicitly provided in the {context} data
 - You MUST NEVER generate, invent, or create any model names that are not in the provided data
