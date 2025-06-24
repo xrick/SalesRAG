@@ -782,6 +782,10 @@ class SalesAssistantService(BaseService):
                         # ★ 新增：驗證LLM回答是否包含正確的模型名稱
                         llm_response_valid = self._validate_llm_response(parsed_json, target_modelnames)
                         
+                        logging.info(f"LLM回答验证结果: {llm_response_valid}")
+                        logging.info(f"LLM answer_summary: {parsed_json.get('answer_summary', '')}")
+                        logging.info(f"LLM comparison_table: {parsed_json.get('comparison_table', '')}")
+                        
                         if not llm_response_valid:
                             logging.warning("LLM回答包含錯誤的模型名稱，使用預處理數據")
                             # 使用預處理的數據生成回答
@@ -790,6 +794,7 @@ class SalesAssistantService(BaseService):
                             logging.info("LLM回答驗證通過，使用LLM回答")
                             processed_response = self._process_llm_response(parsed_json, context_list_of_dicts, target_modelnames)
                         
+                        logging.info(f"最终处理结果 - answer_summary: {processed_response.get('answer_summary', '')}")
                         yield f"data: {json.dumps(processed_response, ensure_ascii=False)}\n\n"
                         return
                     else:
@@ -833,25 +838,55 @@ class SalesAssistantService(BaseService):
             invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "HP", "MSI", "Razer", "NVIDIA", "Nvidia"]
             invalid_gpu_models = ["RTX", "GTX", "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660"]
             
+            # 創建模型名稱的變體列表（處理冒號等格式差異）
+            def get_model_variants(model_name):
+                variants = [model_name]
+                # 添加沒有冒號的版本
+                if ":" in model_name:
+                    variants.append(model_name.replace(":", ""))
+                # 添加有冒號的版本
+                else:
+                    # 嘗試添加冒號
+                    parts = model_name.split()
+                    if len(parts) >= 2:
+                        variants.append(f"{parts[0]}: {' '.join(parts[1:])}")
+                return variants
+            
+            target_model_variants = []
+            for model_name in target_modelnames:
+                target_model_variants.extend(get_model_variants(model_name))
+            
+            logging.info(f"目標模型名稱變體: {target_model_variants}")
+            
             # 檢查answer_summary中是否包含正確的模型名稱
             answer_summary = parsed_json.get("answer_summary", "")
             logging.info(f"檢查answer_summary: {answer_summary}")
             
             if answer_summary:
-                # 首先檢查是否包含任何目標模型名稱
+                # 首先檢查是否包含任何目標模型名稱或其變體
                 has_valid_model = False
-                for model_name in target_modelnames:
-                    if model_name in answer_summary:
+                for model_variant in target_model_variants:
+                    if model_variant in answer_summary:
                         has_valid_model = True
-                        logging.info(f"找到有效模型名稱: {model_name}")
+                        logging.info(f"找到有效模型名稱變體: {model_variant}")
                         break
                 
                 # 檢查是否包含不存在的模型名稱
-                potential_invalid_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', answer_summary)
+                potential_invalid_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', answer_summary)
                 for potential_model in potential_invalid_models:
-                    if potential_model not in target_modelnames and potential_model not in AVAILABLE_MODELNAMES:
-                        logging.warning(f"LLM回答包含不存在的模型名稱: {potential_model}")
-                        return False
+                    # 檢查是否是目標模型的變體
+                    is_valid_variant = False
+                    for model_variant in target_model_variants:
+                        if potential_model == model_variant:
+                            is_valid_variant = True
+                            break
+                    
+                    if not is_valid_variant and potential_model not in AVAILABLE_MODELNAMES:
+                        # 檢查是否是已知的無效模型名稱
+                        known_invalid_models = ["M20W", "A520", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
+                        if potential_model not in known_invalid_models:
+                            logging.warning(f"LLM回答包含不存在的模型名稱: {potential_model}")
+                            return False
                 
                 # 檢查無效品牌
                 for brand in invalid_brands:
@@ -882,25 +917,19 @@ class SalesAssistantService(BaseService):
                 for row in comparison_table:
                     if isinstance(row, dict):
                         # 檢查是否包含正確的模型名稱作為鍵
-                        for model_name in target_modelnames:
-                            if model_name in row:
-                                logging.info(f"在comparison_table中找到有效模型名稱: {model_name}")
+                        for model_variant in target_model_variants:
+                            if model_variant in row:
+                                logging.info(f"在comparison_table中找到有效模型名稱變體: {model_variant}")
                                 return True
                         
                         # 檢查是否包含錯誤的模型名稱
                         for key in row.keys():
-                            if key != "feature" and key not in target_modelnames:
-                                # 檢查是否包含常見的錯誤模型名稱
+                            if key != "feature" and key not in target_model_variants:
+                                # 檢查是否包含常見錯誤模型名稱
                                 invalid_models = ["A520", "M20W", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
                                 for invalid_model in invalid_models:
                                     if invalid_model in key:
                                         logging.warning(f"LLM回答包含無效模型名稱: {invalid_model}")
-                                        return False
-                                
-                                # 檢查是否是模式匹配的無效模型名稱
-                                if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', key):
-                                    if key not in AVAILABLE_MODELNAMES:
-                                        logging.warning(f"LLM回答包含不存在的模型名稱: {key}")
                                         return False
                         
                         # 檢查值中是否包含無效GPU型號
@@ -915,17 +944,17 @@ class SalesAssistantService(BaseService):
             elif isinstance(comparison_table, dict):
                 # 檢查字典中的模型名稱
                 for key in comparison_table.keys():
-                    if key != "modelname" and key not in target_modelnames:
+                    if key != "modelname" and key not in target_model_variants:
                         # 檢查是否是模式匹配的無效模型名稱
-                        if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', key):
+                        if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', key):
                             if key not in AVAILABLE_MODELNAMES:
                                 logging.warning(f"LLM回答包含不存在的模型名稱: {key}")
                                 return False
                 
                 # 檢查是否包含正確的模型名稱
-                for model_name in target_modelnames:
-                    if model_name in comparison_table:
-                        logging.info(f"在comparison_table字典中找到有效模型名稱: {model_name}")
+                for model_variant in target_model_variants:
+                    if model_variant in comparison_table:
+                        logging.info(f"在comparison_table字典中找到有效模型名稱變體: {model_variant}")
                         return True
             
             # 如果没有找到任何目標模型名稱，認為無效
@@ -1139,6 +1168,7 @@ class SalesAssistantService(BaseService):
                 model_names
             )
             
+            logging.info(f"LLM回答处理成功，answer_summary: {parsed_json.get('answer_summary', '')}")
             return formatted_response
             
         except Exception as e:
