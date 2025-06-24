@@ -872,93 +872,130 @@ class SalesAssistantService(BaseService):
                         break
                 
                 # 檢查是否包含不存在的模型名稱
-                potential_invalid_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', answer_summary)
-                for potential_model in potential_invalid_models:
-                    # 檢查是否是目標模型的變體
-                    is_valid_variant = False
-                    for model_variant in target_model_variants:
-                        if potential_model == model_variant:
-                            is_valid_variant = True
-                            break
-                    
-                    if not is_valid_variant and potential_model not in AVAILABLE_MODELNAMES:
-                        # 檢查是否是已知的無效模型名稱
-                        known_invalid_models = ["M20W", "A520", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
-                        if potential_model not in known_invalid_models:
-                            logging.warning(f"LLM回答包含不存在的模型名稱: {potential_model}")
-                            return False
+                # 简化逻辑：根据目标模型名称是否包含特殊符号来使用不同的正则表达式
+                logging.info(f"检查answer_summary中是否包含目标模型名称变体")
                 
-                # 檢查無效品牌
+                # 检查是否包含目标模型名称的变体
+                has_valid_model = False
+                for model_variant in target_model_variants:
+                    if model_variant in answer_summary:
+                        has_valid_model = True
+                        logging.info(f"在answer_summary中找到有效模型名称变体: {model_variant}")
+                        break
+                
+                # 如果没有找到有效模型名称，检查是否有其他可能的模型名称
+                if not has_valid_model:
+                    # 根据目标模型名称是否包含特殊符号来选择正则表达式
+                    potential_models = []
+                    
+                    for target_model in target_modelnames:
+                        if ":" in target_model:
+                            # 如果目标模型包含冒号，使用匹配冒号格式的正则表达式
+                            pattern = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+[A-Z]*)'
+                            matches = re.findall(pattern, answer_summary)
+                            potential_models.extend(matches)
+                            
+                            # 也匹配没有冒号的版本
+                            pattern_no_colon = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s+[A-Z]+\d+[A-Z]*)'
+                            matches_no_colon = re.findall(pattern_no_colon, answer_summary)
+                            potential_models.extend(matches_no_colon)
+                        else:
+                            # 如果目标模型不包含冒号，使用简单格式的正则表达式
+                            pattern = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?'
+                            matches = re.findall(pattern, answer_summary)
+                            potential_models.extend(matches)
+                    
+                    # 去重
+                    potential_models = list(set(potential_models))
+                    logging.info(f"在answer_summary中找到的潜在模型名称: {potential_models}")
+                    
+                    for potential_model in potential_models:
+                        # 检查是否是目标模型的变体
+                        is_valid_variant = False
+                        for model_variant in target_model_variants:
+                            if potential_model == model_variant:
+                                is_valid_variant = True
+                                logging.info(f"找到有效模型名称变体: {potential_model} -> {model_variant}")
+                                break
+                        
+                        if not is_valid_variant and potential_model not in AVAILABLE_MODELNAMES:
+                            # 检查是否是已知的无效模型名称
+                            known_invalid_models = ["M20W", "A520", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
+                            if potential_model not in known_invalid_models:
+                                logging.warning(f"LLM回答包含不存在的模型名称: {potential_model}")
+                                return False
+                
+                # 检查无效品牌
                 for brand in invalid_brands:
                     if brand in answer_summary:
-                        logging.warning(f"LLM回答包含無效品牌: {brand}")
+                        logging.warning(f"LLM回答包含无效品牌: {brand}")
                         return False
                 
-                # 檢查無效GPU型號
+                # 检查无效GPU型号
                 for gpu_model in invalid_gpu_models:
                     if gpu_model in answer_summary:
-                        logging.warning(f"LLM回答包含無效GPU型號: {gpu_model}")
+                        logging.warning(f"LLM回答包含无效GPU型号: {gpu_model}")
                         return False
                 
-                # 如果包含正確的模型名稱，即使有其他內容也認為有效
+                # 如果包含正确的模型名称，即使有其他内容也认为有效
                 if has_valid_model:
-                    logging.info("LLM回答包含正確的模型名稱，驗證通過")
+                    logging.info("LLM回答包含正确的模型名称，验证通过")
                     return True
                 else:
-                    logging.warning("LLM回答中未找到任何目標模型名稱")
+                    logging.warning("LLM回答中未找到任何目标模型名称")
                     return False
             
-            # 檢查comparison_table中的模型名稱
+            # 检查comparison_table中的模型名称
             comparison_table = parsed_json.get("comparison_table", [])
-            logging.info(f"檢查comparison_table: {comparison_table}")
+            logging.info(f"检查comparison_table: {comparison_table}")
             
             if isinstance(comparison_table, list) and comparison_table:
-                # 檢查表格中的模型名稱
+                # 检查表格中的模型名称
                 for row in comparison_table:
                     if isinstance(row, dict):
-                        # 檢查是否包含正確的模型名稱作為鍵
+                        # 检查是否包含正确的模型名称作为键
                         for model_variant in target_model_variants:
                             if model_variant in row:
-                                logging.info(f"在comparison_table中找到有效模型名稱變體: {model_variant}")
+                                logging.info(f"在comparison_table中找到有效模型名称变体: {model_variant}")
                                 return True
                         
-                        # 檢查是否包含錯誤的模型名稱
+                        # 检查是否包含错误的模型名称
                         for key in row.keys():
                             if key != "feature" and key not in target_model_variants:
-                                # 檢查是否包含常見錯誤模型名稱
+                                # 检查是否包含常见错误模型名称
                                 invalid_models = ["A520", "M20W", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
                                 for invalid_model in invalid_models:
                                     if invalid_model in key:
-                                        logging.warning(f"LLM回答包含無效模型名稱: {invalid_model}")
+                                        logging.warning(f"LLM回答包含无效模型名称: {invalid_model}")
                                         return False
                         
-                        # 檢查值中是否包含無效GPU型號
+                        # 检查值中是否包含无效GPU型号
                         for value in row.values():
                             if isinstance(value, str):
                                 for gpu_model in invalid_gpu_models:
                                     if gpu_model in value:
-                                        logging.warning(f"LLM回答包含無效GPU型號: {gpu_model}")
+                                        logging.warning(f"LLM回答包含无效GPU型号: {gpu_model}")
                                         return False
             
             # 如果comparison_table是字典格式
             elif isinstance(comparison_table, dict):
-                # 檢查字典中的模型名稱
+                # 检查字典中的模型名称
                 for key in comparison_table.keys():
                     if key != "modelname" and key not in target_model_variants:
-                        # 檢查是否是模式匹配的無效模型名稱
+                        # 检查是否是模式匹配的无效模型名称
                         if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', key):
                             if key not in AVAILABLE_MODELNAMES:
-                                logging.warning(f"LLM回答包含不存在的模型名稱: {key}")
+                                logging.warning(f"LLM回答包含不存在的模型名称: {key}")
                                 return False
                 
-                # 檢查是否包含正確的模型名稱
+                # 检查是否包含正确的模型名称
                 for model_variant in target_model_variants:
                     if model_variant in comparison_table:
-                        logging.info(f"在comparison_table字典中找到有效模型名稱變體: {model_variant}")
+                        logging.info(f"在comparison_table字典中找到有效模型名称变体: {model_variant}")
                         return True
             
-            # 如果没有找到任何目標模型名稱，認為無效
-            logging.warning("LLM回答中未找到任何目標模型名稱")
+            # 如果没有找到任何目标模型名称，认为无效
+            logging.warning("LLM回答中未找到任何目标模型名称")
             return False
             
         except Exception as e:

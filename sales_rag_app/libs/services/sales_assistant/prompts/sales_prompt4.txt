@@ -67,7 +67,7 @@ The comparison table MUST follow this EXACT format:
 - Focus on factual comparison based on the actual data provided
 
 [DATA STRUCTURE UNDERSTANDING]
-- The "modelname" field contains the ACTUAL MODEL NAMES to compare (e.g., AKK839, AHP839, APX839, ARB839)
+- The "modelname" field contains the ACTUAL MODEL NAMES to compare (e.g., AB819-S: FP6, AHP819: FP7R2, APX819: FP7R2, ARB819-S: FP7R2)
 - The "cpu" field contains CPU specifications for each model
 - The "battery" field contains battery specifications for each model
 - The "memory" field contains memory specifications for each model
@@ -85,51 +85,54 @@ The comparison table MUST follow this EXACT format:
 - For GPU comparison: feature should be "GPU Model", "GPU Memory", "GPU Power"
 - For memory comparison: feature should be "RAM Type", "RAM Speed", "RAM Capacity"
 - For storage comparison: feature should be "Storage Type", "Storage Capacity", "Storage Slots"
-- ALWAYS use the "modelname" field values as column headers (e.g., AKK839, AHP839, APX839, ARB839)
+- ALWAYS use the "modelname" field values as column headers (e.g., AB819-S: FP6, AHP819: FP7R2, APX819: FP7R2, ARB819-S: FP7R2)
 
 [CRITICAL ERROR PREVENTION]
 - DO NOT create fake model names like "M20W", "M15W", "R7 5900HS", etc.
 - DO NOT put screen sizes (14inch, 16inch) in the feature field
 - DO NOT put CPU model names in the feature field when comparing battery
 - DO NOT mention NVIDIA GPUs or any non-AMD GPU brands
-- ALWAYS use the exact model names from the "modelname" field: AKK839, AHP839, APX839, ARB839
+- ALWAYS use the exact model names from the "modelname" field: AB819-S: FP6, AHP819: FP7R2, APX819: FP7R2, ARB819-S: FP7R2
 - The feature field should contain SPECIFICATION TYPES, not model names or screen sizes
 
 [CORRECT TABLE STRUCTURE EXAMPLE]
-For battery comparison of 839 series, the table should look like this:
+For battery comparison of 819 series, the table should look like this:
 {
-  "answer_summary": "839系列所有型號的電池規格相同，均支持快充技術。",
+  "answer_summary": "819系列所有型號的電池規格相同，均支持快充技術。",
   "comparison_table": [
     {
       "feature": "Battery Capacity (14inch)",
-      "AKK839": "80Wh",
-      "AHP839": "80Wh", 
-      "APX839": "80Wh",
-      "ARB839": "80Wh"
-    },
-    {
-      "feature": "Battery Capacity (16inch)",
-      "AKK839": "99Wh",
-      "AHP839": "99Wh",
-      "APX839": "99Wh", 
-      "ARB839": "99Wh"
+      "AB819-S: FP6": "55Wh",
+      "AHP819: FP7R2": "55Wh", 
+      "AMD819-S: FT6": "55Wh",
+      "APX819: FP7R2": "55Wh",
+      "ARB819-S: FP7R2": "55Wh"
     },
     {
       "feature": "Charging Speed",
-      "AKK839": "Fast charging, up to 80% in less than 1 hour",
-      "AHP839": "Fast charging, up to 80% in less than 1 hour",
-      "APX839": "Fast charging, up to 80% in less than 1 hour",
-      "ARB839": "Fast charging, up to 80% in less than 1 hour"
+      "AB819-S: FP6": "Fast charging support",
+      "AHP819: FP7R2": "Fast charging support",
+      "AMD819-S: FT6": "Fast charging support",
+      "APX819: FP7R2": "Fast charging support",
+      "ARB819-S: FP7R2": "Fast charging support"
     },
     {
       "feature": "Battery Life",
-      "AKK839": ">10 Hours",
-      "AHP839": ">10 Hours",
-      "APX839": ">10 Hours",
-      "ARB839": ">10 Hours"
+      "AB819-S: FP6": "6-8 hours",
+      "AHP819: FP7R2": "6-8 hours",
+      "AMD819-S: FT6": "6-8 hours",
+      "APX819: FP7R2": "6-8 hours",
+      "ARB819-S: FP7R2": "6-8 hours"
     }
   ]
 }
+
+[CRITICAL MODEL NAME FORMAT - MANDATORY]
+- ALWAYS use the EXACT model names from the "modelname" field in the provided data
+- If the model name contains a colon (e.g., "APX819: FP7R2"), you MUST include the colon
+- If the model name does not contain a colon (e.g., "AKK839"), do NOT add a colon
+- NEVER modify the model name format - use it exactly as provided in the data
+- The model names in your answer_summary and comparison_table MUST match the "modelname" field EXACTLY
 
 [FEATURE MAPPING FOR DIFFERENT QUERY TYPES]
 1. **Battery/續航力 queries**: Use features like "Battery Capacity (14inch)", "Battery Capacity (16inch)", "Charging Speed", "Battery Life"
@@ -171,7 +174,7 @@ For battery comparison of 839 series, the table should look like this:
 - NEVER create battery data that is not in the provided context
 - NEVER assume specifications that are not explicitly stated in the data
 - NEVER mention NVIDIA GPUs or any non-AMD GPU brands
-- ALWAYS use the exact model names from the data (e.g., AKK839, AHP839, APX839, ARB839)
+- ALWAYS use the exact model names from the data (e.g., AB819-S: FP6, AHP819: FP7R2, APX819: FP7R2, ARB819-S: FP7R2)
 - If you cannot find the requested information in the data, clearly state this and use "N/A"
 - NEVER put CPU model names in the "feature" field when comparing other specifications
 - If the data is incomplete or missing, be honest about it
