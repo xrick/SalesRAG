@@ -374,6 +374,19 @@ class SalesAssistantService(BaseService):
                     # 檢查是否為模型規格列表
                     if isinstance(main_value[0], dict):
                         logging.info("檢測到嵌套結構")
+                        
+                        # 特殊處理：如果第一個字典包含 "Model" 和 "Specification" 鍵
+                        if "Model" in main_value[0] and "Specification" in main_value[0]:
+                            logging.info("檢測到 Model/Specification 格式")
+                            converted_table = []
+                            for item in main_value:
+                                if isinstance(item, dict) and "Model" in item and "Specification" in item:
+                                    # 創建一行顯示規格
+                                    spec_row = {"feature": "Memory Specification", item["Model"]: item["Specification"]}
+                                    converted_table.append(spec_row)
+                            logging.info(f"Model/Specification 格式轉換結果: {converted_table}")
+                            return converted_table
+                        
                         # 提取所有可能的規格項目
                         all_specs = set()
                         for model_spec in main_value:
@@ -790,11 +803,14 @@ class SalesAssistantService(BaseService):
                             logging.warning("LLM回答包含錯誤的模型名稱，使用預處理數據")
                             # 使用預處理的數據生成回答
                             processed_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
+                            logging.info(f"备用响应 - answer_summary: {processed_response.get('answer_summary', '')}")
                         else:
                             logging.info("LLM回答驗證通過，使用LLM回答")
                             processed_response = self._process_llm_response(parsed_json, context_list_of_dicts, target_modelnames)
+                            logging.info(f"LLM响应处理结果 - answer_summary: {processed_response.get('answer_summary', '')}")
                         
                         logging.info(f"最终处理结果 - answer_summary: {processed_response.get('answer_summary', '')}")
+                        logging.info(f"最终处理结果 - comparison_table: {processed_response.get('comparison_table', '')}")
                         yield f"data: {json.dumps(processed_response, ensure_ascii=False)}\n\n"
                         return
                     else:
@@ -871,18 +887,6 @@ class SalesAssistantService(BaseService):
                         logging.info(f"找到有效模型名稱變體: {model_variant}")
                         break
                 
-                # 檢查是否包含不存在的模型名稱
-                # 简化逻辑：根据目标模型名称是否包含特殊符号来使用不同的正则表达式
-                logging.info(f"检查answer_summary中是否包含目标模型名称变体")
-                
-                # 检查是否包含目标模型名称的变体
-                has_valid_model = False
-                for model_variant in target_model_variants:
-                    if model_variant in answer_summary:
-                        has_valid_model = True
-                        logging.info(f"在answer_summary中找到有效模型名称变体: {model_variant}")
-                        break
-                
                 # 如果没有找到有效模型名称，检查是否有其他可能的模型名称
                 if not has_valid_model:
                     # 根据目标模型名称是否包含特殊符号来选择正则表达式
@@ -895,8 +899,8 @@ class SalesAssistantService(BaseService):
                             matches = re.findall(pattern, answer_summary)
                             potential_models.extend(matches)
                             
-                            # 也匹配没有冒号的版本
-                            pattern_no_colon = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s+[A-Z]+\d+[A-Z]*)'
+                            # 也匹配没有冒号的版本 - 修复正则表达式以匹配完整的模型名称
+                            pattern_no_colon = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s+[A-Z]+\d+[A-Z]*\d*)'
                             matches_no_colon = re.findall(pattern_no_colon, answer_summary)
                             potential_models.extend(matches_no_colon)
                         else:
