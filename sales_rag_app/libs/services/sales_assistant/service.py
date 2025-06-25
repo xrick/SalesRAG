@@ -862,6 +862,22 @@ class SalesAssistantService(BaseService):
                 yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
                 return
             
+            # 步骤2.5：检查数据可用性
+            query_intent["query"] = query  # 添加原始查询到意图信息中
+            has_data, missing_data_info = self._check_data_availability(context_list_of_dicts, target_modelnames, query_intent)
+            
+            if not has_data:
+                # 如果没有相关数据，直接返回"並無登記資料"
+                missing_info_str = "、".join(missing_data_info) if missing_data_info else "相關資料"
+                no_data_message = f"抱歉，{missing_info_str}並無登記資料。"
+                
+                no_data_response = {
+                    "answer_summary": no_data_message,
+                    "comparison_table": []
+                }
+                yield f"data: {json.dumps(no_data_response, ensure_ascii=False)}\n\n"
+                return
+            
             # 步骤3：构建增强的上下文，包含查询意图信息
             enhanced_context = {
                 "data": context_list_of_dicts,
@@ -1569,28 +1585,55 @@ Focus your analysis on the specific intent and target models identified above.
         生成备用的answer_summary
         """
         try:
+            # 首先检查数据可用性
+            query_intent = {
+                "intent": "general",
+                "query": query
+            }
+            
+            # 根据查询内容确定意图
+            query_lower = query.lower()
+            if "螢幕" in query or "顯示" in query or "screen" in query_lower:
+                query_intent["intent"] = "display"
+            elif "電池" in query or "續航" in query or "battery" in query_lower:
+                query_intent["intent"] = "battery"
+            elif "cpu" in query_lower or "處理器" in query:
+                query_intent["intent"] = "cpu"
+            elif "gpu" in query_lower or "顯卡" in query:
+                query_intent["intent"] = "gpu"
+            elif "輕便" in query or "重量" in query or "weight" in query_lower:
+                query_intent["intent"] = "portability"
+            
+            # 检查数据可用性
+            has_data, missing_data_info = self._check_data_availability(context_list_of_dicts, target_modelnames, query_intent)
+            
+            if not has_data:
+                # 如果没有相关数据，返回"並無登記資料"
+                missing_info_str = "、".join(missing_data_info) if missing_data_info else "相關資料"
+                return f"抱歉，{missing_info_str}並無登記資料。"
+            
             # 根据查询类型生成不同的摘要
-            if "螢幕" in query or "顯示" in query or "screen" in query.lower():
+            if "螢幕" in query or "顯示" in query or "screen" in query_lower:
                 if len(target_modelnames) > 1:
                     return f"根據提供的数据，{len(target_modelnames)}个型号的螢幕規格比較如下。"
                 else:
                     return f"根據提供的数据，{target_modelnames[0]}的螢幕規格如下。"
-            elif "電池" in query or "續航" in query or "battery" in query.lower():
+            elif "電池" in query or "續航" in query or "battery" in query_lower:
                 if len(target_modelnames) > 1:
                     return f"根據提供的数据，{len(target_modelnames)}个型号的電池規格比較如下。"
                 else:
                     return f"根據提供的数据，{target_modelnames[0]}的電池規格如下。"
-            elif "cpu" in query.lower() or "處理器" in query:
+            elif "cpu" in query_lower or "處理器" in query:
                 if len(target_modelnames) > 1:
                     return f"根據提供的数据，{len(target_modelnames)}个型号的CPU規格比較如下。"
                 else:
                     return f"根據提供的数据，{target_modelnames[0]}的CPU規格如下。"
-            elif "gpu" in query.lower() or "顯卡" in query:
+            elif "gpu" in query_lower or "顯卡" in query:
                 if len(target_modelnames) > 1:
                     return f"根據提供的数据，{len(target_modelnames)}个型号的GPU規格比較如下。"
                 else:
                     return f"根據提供的数据，{target_modelnames[0]}的GPU規格如下。"
-            elif "輕便" in query or "重量" in query or "weight" in query.lower():
+            elif "輕便" in query or "重量" in query or "weight" in query_lower:
                 if len(target_modelnames) > 1:
                     return f"根據提供的数据，{len(target_modelnames)}个型号的重量和便攜性比較如下。"
                 else:
@@ -1605,6 +1648,69 @@ Focus your analysis on the specific intent and target models identified above.
         except Exception as e:
             logging.error(f"生成備用summary失敗: {e}")
             return f"根據提供的数据，比較了 {len(target_modelnames)} 个笔电型号的规格。"
+
+    def _check_data_availability(self, context_list_of_dicts, target_modelnames, query_intent):
+        """
+        检查查询特性的数据可用性
+        返回 (has_data, missing_data_info)
+        """
+        try:
+            intent = query_intent.get("intent", "general")
+            query_lower = query_intent.get("query", "").lower()
+            
+            # 根据意图确定要检查的数据字段
+            data_fields = []
+            if intent == "display" or "螢幕" in query_lower or "顯示" in query_lower:
+                data_fields = ["lcd"]
+            elif intent == "cpu" or "cpu" in query_lower or "處理器" in query_lower:
+                data_fields = ["cpu"]
+            elif intent == "gpu" or "gpu" in query_lower or "顯卡" in query_lower:
+                data_fields = ["gpu"]
+            elif intent == "memory" or "記憶體" in query_lower or "內存" in query_lower:
+                data_fields = ["memory"]
+            elif intent == "storage" or "硬碟" in query_lower or "硬盤" in query_lower:
+                data_fields = ["storage"]
+            elif intent == "battery" or "電池" in query_lower or "續航" in query_lower:
+                data_fields = ["battery"]
+            elif intent == "portability" or "重量" in query_lower or "輕便" in query_lower:
+                data_fields = ["structconfig"]
+            elif intent == "connectivity" or "接口" in query_lower:
+                data_fields = ["iointerface"]
+            else:
+                # 通用检查，检查主要字段
+                data_fields = ["cpu", "gpu", "memory", "storage", "battery"]
+            
+            # 检查每个目标型号的数据
+            missing_data_info = []
+            has_valid_data = False
+            
+            for model_name in target_modelnames:
+                model_data = next((item for item in context_list_of_dicts if item.get("modelname") == model_name), None)
+                if model_data:
+                    model_has_data = False
+                    for field in data_fields:
+                        field_value = model_data.get(field, "")
+                        # 检查字段是否有有效数据
+                        if field_value and field_value.strip() and field_value.lower() not in ["", "null", "none", "nan", "nodata", "n/a"]:
+                            model_has_data = True
+                            break
+                    
+                    if not model_has_data:
+                        missing_data_info.append(f"{model_name} 的 {', '.join(data_fields)} 資料")
+                    else:
+                        has_valid_data = True
+                else:
+                    missing_data_info.append(f"{model_name} 的完整資料")
+            
+            # 如果没有找到任何有效数据
+            if not has_valid_data:
+                return False, missing_data_info
+            
+            return True, missing_data_info
+            
+        except Exception as e:
+            logging.error(f"檢查數據可用性時發生錯誤: {e}")
+            return False, ["數據檢查失敗"]
 
     def _generate_fallback_table(self, context_list_of_dicts, target_modelnames, query):
         """
@@ -1664,13 +1770,41 @@ Focus your analysis on the specific intent and target models identified above.
                         field_data = model_data.get(data_field, "")
                         # 提取关键信息
                         if data_field == "cpu":
-                            # 提取CPU型号
-                            cpu_match = re.search(r"Ryzen™\s+\d+\s+\d+[A-Z]*[HS]*", field_data)
-                            row[model_name] = cpu_match.group(0) if cpu_match else "N/A"
+                            # 根据特征名称提取不同的CPU信息
+                            if feature_name == "CPU Model":
+                                # 提取第一个CPU型号
+                                cpu_match = re.search(r"Ryzen™\s+\d+\s+\d+[A-Z]*[HS]*", field_data)
+                                row[model_name] = cpu_match.group(0) if cpu_match else "N/A"
+                            elif feature_name == "CPU Architecture":
+                                # 提取架构信息
+                                arch_match = re.search(r"AMD\s+([^,]+)", field_data)
+                                row[model_name] = arch_match.group(1).strip() if arch_match else "N/A"
+                            elif feature_name == "CPU TDP":
+                                # 提取TDP信息
+                                tdp_match = re.search(r"TDP:\s*(\d+W)", field_data)
+                                row[model_name] = tdp_match.group(1) if tdp_match else "N/A"
+                            else:
+                                # 默认提取第一个CPU型号
+                                cpu_match = re.search(r"Ryzen™\s+\d+\s+\d+[A-Z]*[HS]*", field_data)
+                                row[model_name] = cpu_match.group(0) if cpu_match else "N/A"
                         elif data_field == "gpu":
-                            # 提取GPU型号
-                            gpu_match = re.search(r"AMD Radeon™\s+[A-Z0-9]+[A-Z]*", field_data)
-                            row[model_name] = gpu_match.group(0) if gpu_match else "N/A"
+                            # 根据特征名称提取不同的GPU信息
+                            if feature_name == "GPU Model":
+                                # 提取第一个GPU型号
+                                gpu_match = re.search(r"AMD Radeon™\s+[A-Z0-9]+[A-Z]*", field_data)
+                                row[model_name] = gpu_match.group(0) if gpu_match else "N/A"
+                            elif feature_name == "GPU Memory":
+                                # 提取显存信息
+                                memory_match = re.search(r"(\d+GB)\s+GDDR\d+", field_data)
+                                row[model_name] = memory_match.group(1) if memory_match else "N/A"
+                            elif feature_name == "GPU Power":
+                                # 提取功耗信息
+                                power_match = re.search(r"(\d+W)", field_data)
+                                row[model_name] = power_match.group(1) if power_match else "N/A"
+                            else:
+                                # 默认提取第一个GPU型号
+                                gpu_match = re.search(r"AMD Radeon™\s+[A-Z0-9]+[A-Z]*", field_data)
+                                row[model_name] = gpu_match.group(0) if gpu_match else "N/A"
                         elif data_field == "memory":
                             # 提取内存类型
                             memory_match = re.search(r"DDR\d+", field_data)
