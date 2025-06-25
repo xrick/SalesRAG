@@ -851,7 +851,7 @@ class SalesAssistantService(BaseService):
             logging.info(f"開始驗證LLM回答，目標模型名稱: {target_modelnames}")
             
             # 定義無效的品牌和GPU型號列表
-            invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "HP", "MSI", "Razer", "NVIDIA", "Nvidia"]
+            invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "MSI", "Razer", "NVIDIA", "Nvidia"]
             invalid_gpu_models = ["RTX", "GTX", "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660"]
             
             # 創建模型名稱的變體列表（處理冒號等格式差異）
@@ -929,9 +929,10 @@ class SalesAssistantService(BaseService):
                                 logging.warning(f"LLM回答包含不存在的模型名称: {potential_model}")
                                 return False
                 
-                # 检查无效品牌
+                # 检查无效品牌 - 改进：避免将模型名称中的字母组合误认为品牌
                 for brand in invalid_brands:
-                    if brand in answer_summary:
+                    # 使用单词边界匹配，避免将模型名称中的字母组合误认为品牌
+                    if re.search(r'\b' + re.escape(brand) + r'\b', answer_summary):
                         logging.warning(f"LLM回答包含无效品牌: {brand}")
                         return False
                 

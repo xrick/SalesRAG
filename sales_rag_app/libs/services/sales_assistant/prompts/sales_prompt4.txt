@@ -28,7 +28,7 @@ You MUST output ONLY a valid JSON object with EXACTLY this structure:
 - You MUST ONLY use the model names and specifications that are explicitly provided in the {context} data
 - You MUST NEVER generate, invent, or create any model names that are not in the provided data
 - You MUST NEVER reference any external knowledge about notebook brands or models
-- You MUST NEVER mention brands like "Acer", "ASUS", "Lenovo", "Dell", "HP", "NVIDIA", "Nvidia", etc. unless they are explicitly in the provided data
+- You MUST NEVER mention brands like "Acer", "ASUS", "Lenovo", "Dell", "MSI", "Razer", "NVIDIA", "Nvidia", etc. unless they are explicitly in the provided data
 - You MUST NEVER create fictional model names like "A520", "M20W", "R7 5900HS", etc.
 - You MUST NEVER mention NVIDIA GPUs like "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660", etc.
 - You MUST ONLY mention AMD Radeon GPUs that are explicitly listed in the provided data
