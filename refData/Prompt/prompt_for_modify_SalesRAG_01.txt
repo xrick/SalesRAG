@@ -1,0 +1,49 @@
+step1 prompt for ingest data
+
+1. 請讀取上傳的nb_data_clean.xlsx檔，並將其第一列(標題列)取出，記錄下來。
+2. 請修改ingest_data.py的程式，以滿足以下需求:
+   - 將xlsx檔中的每一列儲存至duckdb中。
+   - 進行將xlsx中每一列資料儲存到milvus中，以下是需求：
+        * 建立primary FieldSchema:
+          FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True)
+   		* 接下來，以上述1中提取出的標題列的每一欄名稱做為 FieldSchema的名稱，而dtype皆為VARCHAR
+   		* 接下來要建立vector欄位。
+   - 程式每次執行皆要檢查是否已存在既有的duckdb及既有的milvus collection，若有則刪除。
+
+
+=====================================================================================================================================
+
+step2 prompt for modifying service.py:
+請進行修改Lib/services/sales_assistant/service.py 以滿足以下的需求:
+	1. 在duckdb spec含有的欄位如下:
+	   spec_fields = [
+            'modeltype', 'version', 'modelname', 'mainboard', 'devtime', 'pm', 
+            'structconfig', 'lcd', 'touchpanel', 'iointerface', 'ledind', 
+            'powerbutton', 'keyboard', 'webcamera', 'touchpad', 'fingerprint', 
+            'audio', 'battery', 'cpu', 'gpu', 'memory', 'lcdconnector', 'storage', 
+            'wifi', 'thermal', 'tpm', 'rtc', 'wireless', 'softwareconfig', 'ai', 
+            'accessory', 'otherfeatures', 'cetfication'
+        ]
+     2. 請針對給予從從spec中讀取出的資料，產生一個通用的、專業的提示詞，讓llm能以表格式資料，針對使用者的問題進行以下方面的處理。
+		3.1.根據使用者查詢、內部結果，你**必須**逐步思考，提供總結性的答案，並以以下格式輸出：
+		{
+			"answer_summary": **總結性的答案**
+			"comparison_table": [
+	    		{
+			      "feature": "比較的特性1",
+			      "MODEL_A": "型號A在此特性1上的規格或描述",
+			      "MODEL_B": "型號B在此特性1上的規格或描述",
+				  "MODEL_C": "型號C在此特性1上的規格或描述",
+				  ......
+	    		},
+	    		{
+	    		  "feature": "比較的特性2",
+			      "MODEL_A": "型號A在此特性2上的規格或描述",
+			      "MODEL_B": "型號B在此特性2上的規格或描述",
+				  "MODEL_C": "型號C在此特性2上的規格或描述",
+				  ......
+	    		}
+	    		......
+  			],
+		}
+	

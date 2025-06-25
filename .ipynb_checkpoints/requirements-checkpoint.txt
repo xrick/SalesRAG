@@ -11,4 +11,3 @@ jinja2
 python-multipart
 requests
 beautifulsoup4
-pytablewriter

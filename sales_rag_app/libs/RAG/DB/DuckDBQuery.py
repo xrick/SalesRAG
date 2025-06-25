@@ -24,6 +24,16 @@ class DuckDBQuery(DatabaseQuery):
         except Exception as e:
             print(f"DuckDB 查詢失敗: {e}")
             return None
+        
+    def query_with_params(self, sql_query: str, params: list):
+        if not self.connection:
+            print("DuckDB 未連接。")
+            return None
+        try:
+            return self.connection.execute(sql_query, params).fetchall()
+        except Exception as e:
+            print(f"DuckDB 參數化查詢失敗: {e}")
+            return None
 
     def disconnect(self):
         if self.connection:
