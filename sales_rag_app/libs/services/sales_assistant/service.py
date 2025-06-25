@@ -792,25 +792,12 @@ class SalesAssistantService(BaseService):
                             if model_name not in model_names:
                                 model_names.append(model_name)
                         
-                        # ★ 新增：驗證LLM回答是否包含正確的模型名稱
-                        llm_response_valid = self._validate_llm_response(parsed_json, target_modelnames)
+                        # ★ 使用兩步驟策略：分離驗證answer_summary和comparison_table
+                        logging.info("開始使用兩步驟策略處理LLM回應")
+                        processed_response = self._process_llm_response_robust(parsed_json, context_list_of_dicts, target_modelnames, query)
                         
-                        logging.info(f"LLM回答验证结果: {llm_response_valid}")
-                        logging.info(f"LLM answer_summary: {parsed_json.get('answer_summary', '')}")
-                        logging.info(f"LLM comparison_table: {parsed_json.get('comparison_table', '')}")
-                        
-                        if not llm_response_valid:
-                            logging.warning("LLM回答包含錯誤的模型名稱，使用預處理數據")
-                            # 使用預處理的數據生成回答
-                            processed_response = self._generate_fallback_response(query, context_list_of_dicts, target_modelnames)
-                            logging.info(f"备用响应 - answer_summary: {processed_response.get('answer_summary', '')}")
-                        else:
-                            logging.info("LLM回答驗證通過，使用LLM回答")
-                            processed_response = self._process_llm_response(parsed_json, context_list_of_dicts, target_modelnames)
-                            logging.info(f"LLM响应处理结果 - answer_summary: {processed_response.get('answer_summary', '')}")
-                        
-                        logging.info(f"最终处理结果 - answer_summary: {processed_response.get('answer_summary', '')}")
-                        logging.info(f"最终处理结果 - comparison_table: {processed_response.get('comparison_table', '')}")
+                        logging.info(f"兩步驟策略處理完成 - answer_summary: {processed_response.get('answer_summary', '')}")
+                        logging.info(f"兩步驟策略處理完成 - comparison_table: {processed_response.get('comparison_table', '')}")
                         yield f"data: {json.dumps(processed_response, ensure_ascii=False)}\n\n"
                         return
                     else:
@@ -1006,6 +993,193 @@ class SalesAssistantService(BaseService):
         except Exception as e:
             logging.error(f"驗證LLM回應時發生錯誤: {e}")
             return False
+
+    def _validate_llm_response_separated(self, parsed_json, target_modelnames):
+        """
+        分离验证：answer_summary和comparison_table独立验证
+        返回验证结果字典，包含每个部分的验证状态
+        """
+        try:
+            logging.info(f"開始分離驗證LLM回答，目標模型名稱: {target_modelnames}")
+            
+            # 定义无效的品牌和GPU型号列表
+            invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "MSI", "Razer", "NVIDIA", "Nvidia"]
+            invalid_gpu_models = ["RTX", "GTX", "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660"]
+            
+            # 创建模型名称的变体列表
+            def get_model_variants(model_name):
+                variants = [model_name]
+                if ":" in model_name:
+                    variants.append(model_name.replace(":", ""))
+                else:
+                    parts = model_name.split()
+                    if len(parts) >= 2:
+                        variants.append(f"{parts[0]}: {' '.join(parts[1:])}")
+                return variants
+            
+            target_model_variants = []
+            for model_name in target_modelnames:
+                target_model_variants.extend(get_model_variants(model_name))
+            
+            logging.info(f"目標模型名稱變體: {target_model_variants}")
+            
+            # 步骤1：验证answer_summary
+            summary_valid = False
+            answer_summary = parsed_json.get("answer_summary", "")
+            
+            if answer_summary:
+                logging.info(f"驗證answer_summary: {answer_summary}")
+                
+                # 检查是否包含正确的模型名称
+                has_valid_model = False
+                for model_variant in target_model_variants:
+                    if model_variant in answer_summary:
+                        has_valid_model = True
+                        logging.info(f"在answer_summary中找到有效模型名稱變體: {model_variant}")
+                        break
+                
+                # 如果没有找到直接匹配，使用正则表达式查找
+                if not has_valid_model:
+                    potential_models = []
+                    for target_model in target_modelnames:
+                        if ":" in target_model:
+                            pattern = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+[A-Z]*)'
+                            matches = re.findall(pattern, answer_summary)
+                            potential_models.extend(matches)
+                            
+                            pattern_no_colon = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s+[A-Z]+\d+[A-Z]*\d*)'
+                            matches_no_colon = re.findall(pattern_no_colon, answer_summary)
+                            potential_models.extend(matches_no_colon)
+                        else:
+                            pattern = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?'
+                            matches = re.findall(pattern, answer_summary)
+                            potential_models.extend(matches)
+                    
+                    potential_models = list(set(potential_models))
+                    logging.info(f"在answer_summary中找到的潜在模型名称: {potential_models}")
+                    
+                    for potential_model in potential_models:
+                        for model_variant in target_model_variants:
+                            if potential_model == model_variant:
+                                has_valid_model = True
+                                logging.info(f"通過正則表達式找到有效模型名称变体: {potential_model}")
+                                break
+                        if has_valid_model:
+                            break
+                
+                # 检查无效品牌（使用单词边界）
+                has_invalid_brand = False
+                for brand in invalid_brands:
+                    if re.search(r'\b' + re.escape(brand) + r'\b', answer_summary):
+                        logging.warning(f"answer_summary包含无效品牌: {brand}")
+                        has_invalid_brand = True
+                        break
+                
+                # 检查无效GPU型号
+                has_invalid_gpu = False
+                for gpu_model in invalid_gpu_models:
+                    if gpu_model in answer_summary:
+                        logging.warning(f"answer_summary包含无效GPU型号: {gpu_model}")
+                        has_invalid_gpu = True
+                        break
+                
+                # 如果包含正确的模型名称且没有无效内容，认为summary有效
+                if has_valid_model and not has_invalid_brand and not has_invalid_gpu:
+                    summary_valid = True
+                    logging.info("answer_summary驗證通過")
+                else:
+                    logging.warning("answer_summary驗證失敗")
+            
+            # 步骤2：验证comparison_table
+            table_valid = False
+            comparison_table = parsed_json.get("comparison_table", [])
+            
+            if comparison_table:
+                logging.info(f"驗證comparison_table: {comparison_table}")
+                
+                # 检查表格格式和内容
+                if isinstance(comparison_table, list) and comparison_table:
+                    # 检查是否包含正确的模型名称作为键
+                    has_valid_model_in_table = False
+                    has_invalid_content = False
+                    
+                    for row in comparison_table:
+                        if isinstance(row, dict):
+                            # 检查是否包含正确的模型名称
+                            for model_variant in target_model_variants:
+                                if model_variant in row:
+                                    has_valid_model_in_table = True
+                                    logging.info(f"在comparison_table中找到有效模型名称变体: {model_variant}")
+                                    break
+                            
+                            # 检查是否包含错误的模型名称
+                            for key in row.keys():
+                                if key != "feature" and key not in target_model_variants:
+                                    invalid_models = ["A520", "M20W", "R7 5900HS", "Ryzen 7 958", "Ryzen 9 7640H"]
+                                    for invalid_model in invalid_models:
+                                        if invalid_model in key:
+                                            logging.warning(f"comparison_table包含无效模型名称: {invalid_model}")
+                                            has_invalid_content = True
+                                            break
+                            
+                            # 检查值中是否包含无效GPU型号
+                            for value in row.values():
+                                if isinstance(value, str):
+                                    for gpu_model in invalid_gpu_models:
+                                        if gpu_model in value:
+                                            logging.warning(f"comparison_table包含无效GPU型号: {gpu_model}")
+                                            has_invalid_content = True
+                                            break
+                    
+                    if has_valid_model_in_table and not has_invalid_content:
+                        table_valid = True
+                        logging.info("comparison_table驗證通過")
+                    else:
+                        logging.warning("comparison_table驗證失敗")
+                
+                elif isinstance(comparison_table, dict):
+                    # 字典格式的验证
+                    has_valid_model_in_table = False
+                    has_invalid_content = False
+                    
+                    for key in comparison_table.keys():
+                        if key != "modelname" and key not in target_model_variants:
+                            if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', key):
+                                if key not in AVAILABLE_MODELNAMES:
+                                    logging.warning(f"comparison_table包含不存在的模型名称: {key}")
+                                    has_invalid_content = True
+                    
+                    for model_variant in target_model_variants:
+                        if model_variant in comparison_table:
+                            has_valid_model_in_table = True
+                            logging.info(f"在comparison_table字典中找到有效模型名称变体: {model_variant}")
+                            break
+                    
+                    if has_valid_model_in_table and not has_invalid_content:
+                        table_valid = True
+                        logging.info("comparison_table字典格式驗證通過")
+                    else:
+                        logging.warning("comparison_table字典格式驗證失敗")
+            
+            # 返回分离验证结果
+            validation_result = {
+                "summary_valid": summary_valid,
+                "table_valid": table_valid,
+                "answer_summary": answer_summary if summary_valid else None,
+                "comparison_table": comparison_table if table_valid else None
+            }
+            
+            logging.info(f"分離驗證結果: summary_valid={summary_valid}, table_valid={table_valid}")
+            return validation_result
+            
+        except Exception as e:
+            logging.error(f"分離驗證LLM回應時發生錯誤: {e}")
+            return {
+                "summary_valid": False,
+                "table_valid": False,
+                "answer_summary": None,
+                "comparison_table": None
+            }
 
     def _generate_fallback_response(self, query, context_list_of_dicts, target_modelnames):
         """
@@ -1219,3 +1393,195 @@ class SalesAssistantService(BaseService):
                 "answer_summary": "抱歉，AI 回應的格式不正確，無法解析。",
                 "comparison_table": []
             }
+
+    def _process_llm_response_robust(self, parsed_json, context_list_of_dicts, target_modelnames, query):
+        """
+        更稳健的响应处理：使用两步骤策略
+        优先使用LLM的answer_summary，即使comparison_table有问题
+        """
+        try:
+            logging.info("開始使用兩步驟策略處理LLM回應")
+            
+            # 步骤1：分离验证
+            validation_result = self._validate_llm_response_separated(parsed_json, target_modelnames)
+            
+            # 步骤2：优先使用LLM的answer_summary
+            if validation_result["summary_valid"]:
+                answer_summary = validation_result["answer_summary"]
+                logging.info(f"使用LLM的answer_summary: {answer_summary}")
+            else:
+                # 生成备用summary
+                answer_summary = self._generate_fallback_summary(query, context_list_of_dicts, target_modelnames)
+                logging.info(f"使用備用answer_summary: {answer_summary}")
+            
+            # 步骤3：处理comparison_table
+            if validation_result["table_valid"]:
+                comparison_table = validation_result["comparison_table"]
+                logging.info(f"使用LLM的comparison_table: {comparison_table}")
+            else:
+                # 生成备用table
+                comparison_table = self._generate_fallback_table(context_list_of_dicts, target_modelnames, query)
+                logging.info(f"使用備用comparison_table: {comparison_table}")
+            
+            # 步骤4：格式化最终响应
+            formatted_response = self._format_response_with_beautiful_table(
+                answer_summary,
+                comparison_table,
+                target_modelnames
+            )
+            
+            logging.info(f"兩步驟策略處理完成 - answer_summary: {formatted_response.get('answer_summary', '')}")
+            return formatted_response
+            
+        except Exception as e:
+            logging.error(f"兩步驟策略處理失敗: {e}")
+            # 如果两步骤策略失败，回退到原来的方法
+            return self._process_llm_response(parsed_json, context_list_of_dicts, target_modelnames)
+
+    def _generate_fallback_summary(self, query, context_list_of_dicts, target_modelnames):
+        """
+        生成备用的answer_summary
+        """
+        try:
+            # 根据查询类型生成不同的摘要
+            if "螢幕" in query or "顯示" in query or "screen" in query.lower():
+                if len(target_modelnames) > 1:
+                    return f"根據提供的数据，{len(target_modelnames)}个型号的螢幕規格比較如下。"
+                else:
+                    return f"根據提供的数据，{target_modelnames[0]}的螢幕規格如下。"
+            elif "電池" in query or "續航" in query or "battery" in query.lower():
+                if len(target_modelnames) > 1:
+                    return f"根據提供的数据，{len(target_modelnames)}个型号的電池規格比較如下。"
+                else:
+                    return f"根據提供的数据，{target_modelnames[0]}的電池規格如下。"
+            elif "cpu" in query.lower() or "處理器" in query:
+                if len(target_modelnames) > 1:
+                    return f"根據提供的数据，{len(target_modelnames)}个型号的CPU規格比較如下。"
+                else:
+                    return f"根據提供的数据，{target_modelnames[0]}的CPU規格如下。"
+            elif "gpu" in query.lower() or "顯卡" in query:
+                if len(target_modelnames) > 1:
+                    return f"根據提供的数据，{len(target_modelnames)}个型号的GPU規格比較如下。"
+                else:
+                    return f"根據提供的数据，{target_modelnames[0]}的GPU規格如下。"
+            elif "輕便" in query or "重量" in query or "weight" in query.lower():
+                if len(target_modelnames) > 1:
+                    return f"根據提供的数据，{len(target_modelnames)}个型号的重量和便攜性比較如下。"
+                else:
+                    return f"根據提供的数据，{target_modelnames[0]}的重量和便攜性規格如下。"
+            else:
+                # 通用摘要
+                if len(target_modelnames) > 1:
+                    return f"根據提供的数据，{len(target_modelnames)}个型号的規格比較如下。"
+                else:
+                    return f"根據提供的数据，{target_modelnames[0]}的規格如下。"
+                    
+        except Exception as e:
+            logging.error(f"生成備用summary失敗: {e}")
+            return f"根據提供的数据，比較了 {len(target_modelnames)} 个笔电型号的规格。"
+
+    def _generate_fallback_table(self, context_list_of_dicts, target_modelnames, query):
+        """
+        生成备用的comparison_table
+        """
+        try:
+            # 根据查询类型决定要比较的特征
+            if "螢幕" in query or "顯示" in query or "screen" in query.lower():
+                features = [
+                    ("Display Size", "lcd"),
+                    ("Resolution", "lcd"),
+                    ("Refresh Rate", "lcd"),
+                    ("Panel Type", "lcd")
+                ]
+            elif "電池" in query or "續航" in query or "battery" in query.lower():
+                features = [
+                    ("Battery Capacity", "battery"),
+                    ("Battery Life", "battery"),
+                    ("Charging Speed", "battery")
+                ]
+            elif "cpu" in query.lower() or "處理器" in query:
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("CPU Architecture", "cpu"),
+                    ("CPU TDP", "cpu")
+                ]
+            elif "gpu" in query.lower() or "顯卡" in query:
+                features = [
+                    ("GPU Model", "gpu"),
+                    ("GPU Memory", "gpu"),
+                    ("GPU Power", "gpu")
+                ]
+            elif "輕便" in query or "重量" in query or "weight" in query.lower():
+                features = [
+                    ("Weight", "structconfig"),
+                    ("Dimensions", "structconfig"),
+                    ("Form Factor", "structconfig")
+                ]
+            else:
+                # 通用比较
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("GPU Model", "gpu"),
+                    ("Memory Type", "memory"),
+                    ("Storage Type", "storage"),
+                    ("Battery Capacity", "battery")
+                ]
+            
+            # 构建比较表格
+            comparison_table = []
+            for feature_name, data_field in features:
+                row = {"feature": feature_name}
+                for model_name in target_modelnames:
+                    # 找到对应模型的数据
+                    model_data = next((item for item in context_list_of_dicts if item.get("modelname") == model_name), None)
+                    if model_data:
+                        field_data = model_data.get(data_field, "")
+                        # 提取关键信息
+                        if data_field == "cpu":
+                            # 提取CPU型号
+                            cpu_match = re.search(r"Ryzen™\s+\d+\s+\d+[A-Z]*[HS]*", field_data)
+                            row[model_name] = cpu_match.group(0) if cpu_match else "N/A"
+                        elif data_field == "gpu":
+                            # 提取GPU型号
+                            gpu_match = re.search(r"AMD Radeon™\s+[A-Z0-9]+[A-Z]*", field_data)
+                            row[model_name] = gpu_match.group(0) if gpu_match else "N/A"
+                        elif data_field == "memory":
+                            # 提取内存类型
+                            memory_match = re.search(r"DDR\d+", field_data)
+                            row[model_name] = memory_match.group(0) if memory_match else "N/A"
+                        elif data_field == "storage":
+                            # 提取存储类型
+                            storage_match = re.search(r"M\.2.*?PCIe.*?NVMe", field_data)
+                            row[model_name] = storage_match.group(0) if storage_match else "N/A"
+                        elif data_field == "battery":
+                            # 提取电池容量
+                            battery_match = re.search(r"(\d+\.?\d*)\s*Wh", field_data)
+                            row[model_name] = f"{battery_match.group(1)}Wh" if battery_match else "N/A"
+                        elif data_field == "lcd":
+                            # 提取屏幕信息
+                            if "FHD" in field_data:
+                                row[model_name] = "FHD 1920×1080"
+                            elif "QHD" in field_data:
+                                row[model_name] = "QHD 2560×1440"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "structconfig":
+                            # 提取重量信息
+                            weight_match = re.search(r"Weight:\s*(\d+)\s*g", field_data)
+                            if weight_match:
+                                weight_g = int(weight_match.group(1))
+                                row[model_name] = f"{weight_g}g ({weight_g/1000:.1f}kg)"
+                            else:
+                                row[model_name] = "N/A"
+                        else:
+                            row[model_name] = "N/A"
+                    else:
+                        row[model_name] = "N/A"
+                
+                comparison_table.append(row)
+            
+            return comparison_table
+            
+        except Exception as e:
+            logging.error(f"生成備用table失敗: {e}")
+            return []
