@@ -626,72 +626,195 @@ class SalesAssistantService(BaseService):
         根據modeltype獲取所有相關的modelname
         """
         try:
-            sql_query = "SELECT DISTINCT modelname FROM specs WHERE modeltype = ? AND modelname IS NOT NULL AND modelname != '' AND modelname != 'nan' ORDER BY modelname"
-            result = self.duckdb_query.query_with_params(sql_query, [modeltype])
+            # 使用DuckDB查詢包含該modeltype的所有modelname
+            sql_query = "SELECT DISTINCT modelname FROM specs WHERE modelname LIKE ?"
+            pattern = f"%{modeltype}%"
             
-            if result:
-                modelnames = [row[0] for row in result if row[0] and str(row[0]).lower() != 'nan']
+            results = self.duckdb_query.query_with_params(sql_query, [pattern])
+            
+            if results:
+                modelnames = [record[0] for record in results]
                 logging.info(f"根據modeltype '{modeltype}' 找到的modelname: {modelnames}")
                 return modelnames
             else:
-                logging.warning(f"未找到modeltype為 '{modeltype}' 的modelname")
+                logging.warning(f"未找到包含modeltype '{modeltype}' 的modelname")
                 return []
                 
         except Exception as e:
             logging.error(f"查詢modeltype '{modeltype}' 相關modelname時發生錯誤: {e}")
             return []
 
-    async def chat_stream(self, query: str, **kwargs):
+    def _parse_query_intent(self, query: str) -> dict:
         """
-        執行 RAG 流程，使用修正後的欄位名稱。
+        解析用户查询意图
+        返回包含modelname、modeltype、intent的字典
         """
         try:
-            # 首先檢查查詢中是否包含有效的modeltype
-            contains_modeltype, found_modeltypes = self._check_query_contains_modeltype(query)
+            logging.info(f"開始解析查詢意圖: {query}")
             
-            # 檢查查詢中是否包含有效的modelname
+            result = {
+                "modelnames": [],
+                "modeltypes": [],
+                "intent": "general",  # 默认意图
+                "query_type": "unknown"  # 查询类型
+            }
+            
+            # 1. 检查是否包含modelname
             contains_modelname, found_modelnames = self._check_query_contains_modelname(query)
+            if contains_modelname:
+                result["modelnames"] = found_modelnames
+                result["query_type"] = "specific_model"
             
-            # 如果同時包含modeltype和modelname，優先使用modelname
-            if contains_modeltype and contains_modelname:
-                logging.info(f"查詢同時包含modeltype和modelname，優先使用modelname")
-                logging.info(f"找到的modeltype: {found_modeltypes}")
-                logging.info(f"找到的modelname: {found_modelnames}")
+            # 2. 检查是否包含modeltype
+            contains_modeltype, found_modeltypes = self._check_query_contains_modeltype(query)
+            if contains_modeltype:
+                result["modeltypes"] = found_modeltypes
+                if result["query_type"] == "unknown":
+                    result["query_type"] = "model_type"
+            
+            # 3. 解析查询意图
+            query_lower = query.lower()
+            
+            # 屏幕相关意图
+            if any(keyword in query_lower for keyword in ["螢幕", "顯示", "screen", "lcd", "面板"]):
+                result["intent"] = "display"
+            # CPU相关意图
+            elif any(keyword in query_lower for keyword in ["cpu", "處理器", "processor", "ryzen"]):
+                result["intent"] = "cpu"
+            # GPU相关意图
+            elif any(keyword in query_lower for keyword in ["gpu", "顯卡", "graphics", "radeon"]):
+                result["intent"] = "gpu"
+            # 内存相关意图
+            elif any(keyword in query_lower for keyword in ["記憶體", "內存", "memory", "ram", "ddr"]):
+                result["intent"] = "memory"
+            # 存储相关意图
+            elif any(keyword in query_lower for keyword in ["硬碟", "硬盤", "storage", "ssd", "nvme"]):
+                result["intent"] = "storage"
+            # 电池相关意图
+            elif any(keyword in query_lower for keyword in ["電池", "續航", "battery", "電量"]):
+                result["intent"] = "battery"
+            # 重量和便携性
+            elif any(keyword in query_lower for keyword in ["重量", "輕便", "weight", "portable", "尺寸"]):
+                result["intent"] = "portability"
+            # 接口相关
+            elif any(keyword in query_lower for keyword in ["接口", "port", "usb", "hdmi", "lan"]):
+                result["intent"] = "connectivity"
+            # 比较意图
+            elif any(keyword in query_lower for keyword in ["比較", "compare", "差異", "difference", "不同"]):
+                result["intent"] = "comparison"
+            # 规格查询
+            elif any(keyword in query_lower for keyword in ["規格", "spec", "配置", "configuration"]):
+                result["intent"] = "specifications"
+            
+            logging.info(f"查詢意圖解析結果: {result}")
+            return result
+            
+        except Exception as e:
+            logging.error(f"解析查詢意圖時發生錯誤: {e}")
+            return {
+                "modelnames": [],
+                "modeltypes": [],
+                "intent": "general",
+                "query_type": "unknown"
+            }
+
+    def _get_data_by_query_type(self, query_intent: dict) -> tuple[list, list]:
+        """
+        根据查询类型获取数据
+        返回 (context_list_of_dicts, target_modelnames)
+        """
+        try:
+            query_type = query_intent["query_type"]
+            modelnames = query_intent["modelnames"]
+            modeltypes = query_intent["modeltypes"]
+            
+            logging.info(f"根據查詢類型 '{query_type}' 獲取數據")
+            
+            if query_type == "specific_model":
+                # 单个或多个具体型号查询
+                if not modelnames:
+                    raise ValueError("未找到有效的模型名称")
                 
-                # 優先使用明確指定的modelname
-                target_modelnames = found_modelnames
-                logging.info(f"使用明確指定的modelname: {target_modelnames}")
+                # 验证模型名称是否在白名单中
+                valid_modelnames = []
+                for modelname in modelnames:
+                    if modelname in AVAILABLE_MODELNAMES:
+                        valid_modelnames.append(modelname)
+                    else:
+                        logging.warning(f"模型名称 '{modelname}' 不在白名单中")
                 
-            elif contains_modeltype:
-                # 只有modeltype，沒有modelname
-                logging.info(f"查詢只包含modeltype: {found_modeltypes}")
+                if not valid_modelnames:
+                    raise ValueError(f"所有模型名称都不在白名单中: {modelnames}")
                 
-                # 只取第一個modeltype
-                target_modeltype = found_modeltypes[0]
-                logging.info(f"使用第一個modeltype: {target_modeltype}")
+                # 使用DuckDB查询具体型号数据
+                placeholders = ', '.join(['?'] * len(valid_modelnames))
+                sql_query = f"SELECT * FROM specs WHERE modelname IN ({placeholders})"
                 
-                # 根據modeltype獲取所有相關的modelname
-                target_modelnames = self._get_models_by_type(target_modeltype)
+                full_specs_records = self.duckdb_query.query_with_params(sql_query, valid_modelnames)
+                
+                if not full_specs_records:
+                    raise ValueError(f"未找到型号为 {valid_modelnames} 的数据")
+                
+                # 转换为字典格式
+                context_list_of_dicts = [dict(zip(self.spec_fields, record)) for record in full_specs_records]
+                
+                logging.info(f"成功获取 {len(context_list_of_dicts)} 条具体型号数据")
+                return context_list_of_dicts, valid_modelnames
+                
+            elif query_type == "model_type":
+                # 型号系列查询
+                if not modeltypes:
+                    raise ValueError("未找到有效的型号系列")
+                
+                # 只取第一个型号系列
+                modeltype = modeltypes[0]
+                logging.info(f"查询型号系列: {modeltype}")
+                
+                # 获取该系列的所有型号
+                target_modelnames = self._get_models_by_type(modeltype)
                 
                 if not target_modelnames:
-                    error_message = f"未找到modeltype為 '{target_modeltype}' 的筆電型號。"
-                    error_obj = {
-                        "answer_summary": error_message,
-                        "comparison_table": []
-                    }
-                    yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
-                    return
+                    raise ValueError(f"未找到型号系列 '{modeltype}' 的相关型号")
                 
-                # 直接使用DuckDB查詢這些modelname的資料
-                logging.info(f"根據modeltype '{target_modeltype}' 查詢相關modelname: {target_modelnames}")
+                # 使用DuckDB查询该系列所有型号数据
+                placeholders = ', '.join(['?'] * len(target_modelnames))
+                sql_query = f"SELECT * FROM specs WHERE modelname IN ({placeholders})"
                 
-            elif contains_modelname:
-                # 只有modelname，沒有modeltype
-                logging.info(f"查詢只包含modelname: {found_modelnames}")
-                target_modelnames = found_modelnames
+                full_specs_records = self.duckdb_query.query_with_params(sql_query, target_modelnames)
+                
+                if not full_specs_records:
+                    raise ValueError(f"未找到型号系列 '{modeltype}' 的数据")
+                
+                # 转换为字典格式
+                context_list_of_dicts = [dict(zip(self.spec_fields, record)) for record in full_specs_records]
+                
+                logging.info(f"成功获取型号系列 '{modeltype}' 的 {len(context_list_of_dicts)} 条数据")
+                return context_list_of_dicts, target_modelnames
                 
             else:
-                # 如果既没有modeltype也没有modelname
+                raise ValueError(f"不支持的查询类型: {query_type}")
+                
+        except Exception as e:
+            logging.error(f"获取数据时发生错误: {e}")
+            raise
+
+    async def chat_stream(self, query: str, **kwargs):
+        """
+        新的RAG流程：
+        1. 解析用户查询意图（modelname、modeltype、intent）
+        2. 根据查询类型获取精确数据
+        3. 将数据和查询意图传递给LLM
+        """
+        try:
+            logging.info(f"開始新的RAG流程，查詢: {query}")
+            
+            # 步骤1：解析查询意图
+            query_intent = self._parse_query_intent(query)
+            logging.info(f"查詢意圖解析結果: {query_intent}")
+            
+            # 检查是否有有效的查询类型
+            if query_intent["query_type"] == "unknown":
+                # 如果既没有modeltype也没有modelname，提供帮助信息
                 available_types_str = "\n".join([f"- {modeltype}" for modeltype in AVAILABLE_MODELTYPES])
                 available_models_str = "\n".join([f"- {model}" for model in AVAILABLE_MODELNAMES])
                 
@@ -722,45 +845,55 @@ class SalesAssistantService(BaseService):
                 }
                 yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
                 return
-
-            # 使用DuckDB直接查詢指定的modelname
-            logging.info(f"步驟 2: DuckDB 精確查詢 - 型號: {target_modelnames}")
             
-            placeholders = ', '.join(['?'] * len(target_modelnames))
-            sql_query = f"SELECT * FROM specs WHERE modelname IN ({placeholders})"
-            
-            full_specs_records = self.duckdb_query.query_with_params(sql_query, target_modelnames)
-
-            if not full_specs_records:
-                logging.error(f"DuckDB 查詢失敗或未找到型號為 {target_modelnames} 的資料。")
-                # 提供更详细的错误信息
-                error_message = f"抱歉，在我们的数据库中未找到以下型号的资料：{', '.join(target_modelnames)}"
-                error_message += f"\n\n请检查型号名称是否正确，或查看可用的型号列表。"
-                yield f"data: {json.dumps({'answer_summary': error_message, 'comparison_table': []}, ensure_ascii=False)}\n\n"
+            # 步骤2：根据查询类型获取精确数据
+            try:
+                context_list_of_dicts, target_modelnames = self._get_data_by_query_type(query_intent)
+                logging.info(f"成功获取数据，型号数量: {len(target_modelnames)}")
+                logging.info(f"目标型号: {target_modelnames}")
+                
+            except ValueError as e:
+                # 数据获取失败，返回错误信息
+                error_message = str(e)
+                error_obj = {
+                    "answer_summary": error_message,
+                    "comparison_table": []
+                }
+                yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
                 return
+            
+            # 步骤3：构建增强的上下文，包含查询意图信息
+            enhanced_context = {
+                "data": context_list_of_dicts,
+                "query_intent": query_intent,
+                "target_modelnames": target_modelnames
+            }
+            
+            context_str = json.dumps(enhanced_context, indent=2, ensure_ascii=False)
+            logging.info("成功构建增强上下文，包含查询意图信息")
+            
+            # 步骤4：构建提示并请求LLM
+            # 构建包含查询意图信息的prompt
+            intent_info = f"""
+[QUERY INTENT ANALYSIS]
+Based on the query intent analysis:
+- Query Type: {query_intent['query_type']}
+- Intent: {query_intent['intent']}
+- Target Models: {', '.join(target_modelnames)}
 
-            logging.info(f"成功查询到 {len(full_specs_records)} 条记录")
-            # 记录查询到的实际模型名称
-            found_modelnames = [record[self.spec_fields.index('modelname')] for record in full_specs_records]
-            logging.info(f"查询到的实际模型名称: {found_modelnames}")
-
-            # 3. 將查詢結果格式化為 LLM 需要的上下文
-            context_list_of_dicts = [dict(zip(self.spec_fields, record)) for record in full_specs_records]
-            # ★ 修正點 4：在傳遞給 LLM 的 JSON 中，使用 'modelname' 作為統一的鍵，方便 prompt 處理
-            for item in context_list_of_dicts:
-                item['modelname'] = item.get('modelname', 'Unknown Model')
-
-            context_str = json.dumps(context_list_of_dicts, indent=2, ensure_ascii=False)
-            logging.info("成功將 DuckDB 資料轉換為 JSON 上下文。")
-
-            # 4. 建構提示並請求 LLM
+Focus your analysis on the specific intent and target models identified above.
+"""
+            
             final_prompt = self.prompt_template.replace("{context}", context_str).replace("{query}", query)
+            # 在prompt中添加查询意图信息
+            final_prompt = final_prompt.replace("[QUERY INTENT ANALYSIS]", intent_info)
+            
             logging.info("\n=== 最終傳送給 LLM 的提示 (Final Prompt) ===\n" + final_prompt + "\n========================================")
-
+            
             response_str = self.llm.invoke(final_prompt)
             logging.info(f"\n=== 從 LLM 收到的原始回應 ===\n{response_str}\n=============================")
-
-            # 5. 解析並回傳 JSON
+            
+            # 步骤5：解析并返回JSON
             try:
                 # 首先檢查是否有 <think> 標籤，如果有則提取 </think> 之後的內容
                 think_end = response_str.find("</think>")
@@ -785,14 +918,7 @@ class SalesAssistantService(BaseService):
                     
                     # 檢查是否已經是正確的格式
                     if "answer_summary" in parsed_json and "comparison_table" in parsed_json:
-                        # 提取模型名稱用於美化表格和 post-process
-                        model_names = []
-                        for item in context_list_of_dicts:
-                            model_name = item.get('modelname', 'Unknown')
-                            if model_name not in model_names:
-                                model_names.append(model_name)
-                        
-                        # ★ 使用兩步驟策略：分離驗證answer_summary和comparison_table
+                        # 使用兩步驟策略處理LLM回應
                         logging.info("開始使用兩步驟策略處理LLM回應")
                         processed_response = self._process_llm_response_robust(parsed_json, context_list_of_dicts, target_modelnames, query)
                         

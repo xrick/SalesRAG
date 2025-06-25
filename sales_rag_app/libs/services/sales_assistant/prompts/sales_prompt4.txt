@@ -188,6 +188,14 @@ Here are the notebook specifications retrieved from the database:
 [USER QUERY]
 {query}
 
+[QUERY INTENT ANALYSIS]
+Based on the query intent analysis:
+- Query Type: {query_intent.query_type}
+- Intent: {query_intent.intent}
+- Target Models: {query_intent.target_modelnames}
+
+Focus your analysis on the specific intent and target models identified above.
+
 [FINAL VALIDATION - MANDATORY]
 Before outputting your JSON response, you MUST:
 1. Verify that ALL model names in your comparison_table exist in the provided data's "modelname" field
