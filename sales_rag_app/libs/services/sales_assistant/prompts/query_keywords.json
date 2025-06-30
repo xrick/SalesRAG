@@ -71,10 +71,10 @@
         "重量",
         "輕便",
         "轻便",
+        "便携",
         "weight",
         "portable",
-        "尺寸",
-        "便携"
+        "尺寸"
       ],
       "description": "重量和便攜性相關查詢"
     },
@@ -109,6 +109,21 @@
         "configuration"
       ],
       "description": "規格查詢"
+    },
+    "latest": {
+      "keywords": [
+        "最新",
+        "新款",
+        "最新款",
+        "現在",
+        "目前",
+        "當前",
+        "当前",
+        "current",
+        "now",
+        "newest"
+      ],
+      "description": "最新產品相關查詢"
     }
   }
 }

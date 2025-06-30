@@ -1,0 +1,466 @@
+{
+  "metadata": {
+    "created_at": "2025-06-30T16:25:23.062856",
+    "total_entries": 9,
+    "version": "1.0.0"
+  },
+  "results": [
+    {
+      "original_text": "比較 AG958 和 APX958 的 CPU 性能",
+      "timestamp": "2025-06-30T16:25:23.062219",
+      "entities": [
+        {
+          "text": "比較",
+          "label": "COMPARISON_WORD",
+          "start": 0,
+          "end": 2,
+          "confidence": 0.6720000000000002
+        },
+        {
+          "text": "AG958",
+          "label": "MODEL_NAME",
+          "start": 3,
+          "end": 8,
+          "confidence": 0.9
+        },
+        {
+          "text": "APX958",
+          "label": "MODEL_NAME",
+          "start": 11,
+          "end": 17,
+          "confidence": 0.92
+        },
+        {
+          "text": "CPU",
+          "label": "SPEC_TYPE",
+          "start": 20,
+          "end": 23,
+          "confidence": 0.6880000000000002
+        },
+        {
+          "text": "性能",
+          "label": "PERFORMANCE_WORD",
+          "start": 24,
+          "end": 26,
+          "confidence": 0.6720000000000002
+        }
+      ],
+      "intent": {
+        "name": "cpu",
+        "confidence": 0.2,
+        "keywords": [
+          "cpu"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "比較",
+          "entity_label": "COMPARISON_WORD",
+          "intent_name": "cpu",
+          "relation_type": "comparison_indicator",
+          "confidence": 0.06720000000000002
+        },
+        {
+          "entity_text": "AG958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "cpu",
+          "relation_type": "subject_model",
+          "confidence": 0.08792307692307694
+        },
+        {
+          "entity_text": "APX958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "cpu",
+          "relation_type": "subject_model",
+          "confidence": 0.11012781065088759
+        },
+        {
+          "entity_text": "CPU",
+          "entity_label": "SPEC_TYPE",
+          "intent_name": "cpu",
+          "relation_type": "specification_query",
+          "confidence": 0.11643076923076925
+        },
+        {
+          "entity_text": "性能",
+          "entity_label": "PERFORMANCE_WORD",
+          "intent_name": "cpu",
+          "relation_type": "related_to",
+          "confidence": 0.09272804733727813
+        }
+      ]
+    },
+    {
+      "original_text": "AG958 的電池續航力如何？",
+      "timestamp": "2025-06-30T16:25:23.062339",
+      "entities": [
+        {
+          "text": "AG958",
+          "label": "MODEL_NAME",
+          "start": 0,
+          "end": 5,
+          "confidence": 0.9
+        }
+      ],
+      "intent": {
+        "name": "battery",
+        "confidence": 0.2857142857142857,
+        "keywords": [
+          "電池",
+          "續航"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "AG958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "battery",
+          "relation_type": "subject_model",
+          "confidence": 0.13714285714285712
+        }
+      ]
+    },
+    {
+      "original_text": "958 系列的螢幕規格比較",
+      "timestamp": "2025-06-30T16:25:23.062404",
+      "entities": [
+        {
+          "text": "958",
+          "label": "MODEL_TYPE",
+          "start": 0,
+          "end": 3,
+          "confidence": 0.8600000000000001
+        }
+      ],
+      "intent": {
+        "name": "specifications",
+        "confidence": 0.2,
+        "keywords": [
+          "規格"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "958",
+          "entity_label": "MODEL_TYPE",
+          "intent_name": "specifications",
+          "relation_type": "model_series",
+          "confidence": 0.08600000000000002
+        }
+      ]
+    },
+    {
+      "original_text": "APX958 的記憶體配置是 16GB DDR4",
+      "timestamp": "2025-06-30T16:25:23.062478",
+      "entities": [
+        {
+          "text": "APX958",
+          "label": "MODEL_NAME",
+          "start": 0,
+          "end": 6,
+          "confidence": 0.92
+        },
+        {
+          "text": "16GB",
+          "label": "QUANTITY",
+          "start": 15,
+          "end": 19,
+          "confidence": 0.7040000000000002
+        }
+      ],
+      "intent": {
+        "name": "memory",
+        "confidence": 0.3333333333333333,
+        "keywords": [
+          "記憶體",
+          "ddr"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "APX958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "memory",
+          "relation_type": "subject_model",
+          "confidence": 0.20444444444444446
+        },
+        {
+          "entity_text": "16GB",
+          "entity_label": "QUANTITY",
+          "intent_name": "memory",
+          "relation_type": "specification_value",
+          "confidence": 0.16255555555555556
+        }
+      ]
+    },
+    {
+      "original_text": "哪個型號比較輕便？AG958 還是 APX958？",
+      "timestamp": "2025-06-30T16:25:23.062551",
+      "entities": [
+        {
+          "text": "AG958",
+          "label": "MODEL_NAME",
+          "start": 9,
+          "end": 14,
+          "confidence": 0.9
+        },
+        {
+          "text": "APX958",
+          "label": "MODEL_NAME",
+          "start": 18,
+          "end": 24,
+          "confidence": 0.92
+        }
+      ],
+      "intent": {
+        "name": "portability",
+        "confidence": 0.14285714285714285,
+        "keywords": [
+          "輕便"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "AG958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "portability",
+          "relation_type": "subject_model",
+          "confidence": 0.10499657142857143
+        },
+        {
+          "entity_text": "APX958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "portability",
+          "relation_type": "subject_model",
+          "confidence": 0.05850148571428571
+        }
+      ]
+    },
+    {
+      "original_text": "現在最新的 839 系列有哪些型號？",
+      "timestamp": "2025-06-30T16:25:23.062609",
+      "entities": [
+        {
+          "text": "839",
+          "label": "MODEL_TYPE",
+          "start": 6,
+          "end": 9,
+          "confidence": 0.8600000000000001
+        }
+      ],
+      "intent": {
+        "name": "general",
+        "confidence": 0.0,
+        "keywords": []
+      },
+      "relations": [
+        {
+          "entity_text": "839",
+          "entity_label": "MODEL_TYPE",
+          "intent_name": "general",
+          "relation_type": "model_series",
+          "confidence": 0.0
+        }
+      ]
+    },
+    {
+      "original_text": "AG958 的價格是多少？",
+      "timestamp": "2025-06-30T16:25:23.062652",
+      "entities": [
+        {
+          "text": "AG958",
+          "label": "MODEL_NAME",
+          "start": 0,
+          "end": 5,
+          "confidence": 0.9
+        }
+      ],
+      "intent": {
+        "name": "general",
+        "confidence": 0.0,
+        "keywords": []
+      },
+      "relations": [
+        {
+          "entity_text": "AG958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "general",
+          "relation_type": "subject_model",
+          "confidence": 0.0
+        }
+      ]
+    },
+    {
+      "original_text": "APX958 使用 AMD Ryzen 7 處理器",
+      "timestamp": "2025-06-30T16:25:23.062716",
+      "entities": [
+        {
+          "text": "APX958",
+          "label": "MODEL_NAME",
+          "start": 0,
+          "end": 6,
+          "confidence": 0.92
+        },
+        {
+          "text": "AMD",
+          "label": "BRAND_WORD",
+          "start": 10,
+          "end": 13,
+          "confidence": 0.6880000000000002
+        },
+        {
+          "text": "Ryzen",
+          "label": "BRAND_WORD",
+          "start": 14,
+          "end": 19,
+          "confidence": 0.7200000000000001
+        },
+        {
+          "text": "處理器",
+          "label": "SPEC_TYPE",
+          "start": 22,
+          "end": 25,
+          "confidence": 0.6880000000000002
+        }
+      ],
+      "intent": {
+        "name": "cpu",
+        "confidence": 0.4,
+        "keywords": [
+          "處理器",
+          "ryzen"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "APX958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "cpu",
+          "relation_type": "subject_model",
+          "confidence": 0.18400000000000002
+        },
+        {
+          "entity_text": "AMD",
+          "entity_label": "BRAND_WORD",
+          "intent_name": "cpu",
+          "relation_type": "related_to",
+          "confidence": 0.21267456
+        },
+        {
+          "entity_text": "Ryzen",
+          "entity_label": "BRAND_WORD",
+          "intent_name": "cpu",
+          "relation_type": "related_to",
+          "confidence": 0.255744
+        },
+        {
+          "entity_text": "處理器",
+          "entity_label": "SPEC_TYPE",
+          "intent_name": "cpu",
+          "relation_type": "specification_query",
+          "confidence": 0.22676480000000004
+        }
+      ]
+    },
+    {
+      "original_text": "比較兩個型號的儲存容量：AG958 有 512GB SSD，APX958 有 1TB NVMe",
+      "timestamp": "2025-06-30T16:25:23.062807",
+      "entities": [
+        {
+          "text": "AG958",
+          "label": "MODEL_NAME",
+          "start": 12,
+          "end": 17,
+          "confidence": 0.9
+        },
+        {
+          "text": "512GB",
+          "label": "QUANTITY",
+          "start": 20,
+          "end": 25,
+          "confidence": 0.7200000000000001
+        },
+        {
+          "text": "SSD",
+          "label": "SPEC_TYPE",
+          "start": 26,
+          "end": 29,
+          "confidence": 0.6880000000000002
+        },
+        {
+          "text": "APX958",
+          "label": "MODEL_NAME",
+          "start": 30,
+          "end": 36,
+          "confidence": 0.92
+        },
+        {
+          "text": "1TB",
+          "label": "QUANTITY",
+          "start": 39,
+          "end": 42,
+          "confidence": 0.6880000000000002
+        },
+        {
+          "text": "NVMe",
+          "label": "SPEC_TYPE",
+          "start": 43,
+          "end": 47,
+          "confidence": 0.7040000000000002
+        }
+      ],
+      "intent": {
+        "name": "storage",
+        "confidence": 0.3333333333333333,
+        "keywords": [
+          "ssd",
+          "nvme"
+        ]
+      },
+      "relations": [
+        {
+          "entity_text": "AG958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "storage",
+          "relation_type": "subject_model",
+          "confidence": 0.19988229968311452
+        },
+        {
+          "entity_text": "512GB",
+          "entity_label": "QUANTITY",
+          "intent_name": "storage",
+          "relation_type": "specification_value",
+          "confidence": 0.19154368492530557
+        },
+        {
+          "entity_text": "SSD",
+          "entity_label": "SPEC_TYPE",
+          "intent_name": "storage",
+          "relation_type": "specification_query",
+          "confidence": 0.2039602836879433
+        },
+        {
+          "entity_text": "APX958",
+          "entity_label": "MODEL_NAME",
+          "intent_name": "storage",
+          "relation_type": "subject_model",
+          "confidence": 0.24475026407122377
+        },
+        {
+          "entity_text": "1TB",
+          "entity_label": "QUANTITY",
+          "intent_name": "storage",
+          "relation_type": "specification_value",
+          "confidence": 0.17499514108948247
+        },
+        {
+          "entity_text": "NVMe",
+          "entity_label": "SPEC_TYPE",
+          "intent_name": "storage",
+          "relation_type": "specification_query",
+          "confidence": 0.1917276595744681
+        }
+      ]
+    }
+  ]
+}
