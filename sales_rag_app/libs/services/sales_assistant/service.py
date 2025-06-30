@@ -55,6 +55,9 @@ class SalesAssistantService(BaseService):
         self.duckdb_query = DuckDBQuery(db_file="sales_rag_app/db/sales_specs.db")
         self.prompt_template = self._load_prompt_template("sales_rag_app/libs/services/sales_assistant/prompts/sales_prompt4.txt")
         
+        # 載入關鍵字配置
+        self.intent_keywords = self._load_intent_keywords("sales_rag_app/libs/services/sales_assistant/prompts/query_keywords.json")
+        
         # ★ 修正點 1：修正 spec_fields 列表，使其與 .xlsx 檔案的標題列完全一致
         self.spec_fields = [
             'modeltype', 'version', 'modelname', 'mainboard', 'devtime',
@@ -69,6 +72,109 @@ class SalesAssistantService(BaseService):
     def _load_prompt_template(self, path: str) -> str:
         with open(path, 'r', encoding='utf-8') as f:
             return f.read()
+
+    def _load_intent_keywords(self, path: str) -> dict:
+        """
+        載入查詢意圖關鍵字配置
+        """
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                logging.info(f"成功載入關鍵字配置: {list(config.get('intent_keywords', {}).keys())}")
+                return config.get('intent_keywords', {})
+        except FileNotFoundError:
+            logging.error(f"關鍵字配置文件不存在: {path}")
+            return {}
+        except json.JSONDecodeError as e:
+            logging.error(f"關鍵字配置文件格式錯誤: {e}")
+            return {}
+        except Exception as e:
+            logging.error(f"載入關鍵字配置時發生錯誤: {e}")
+            return {}
+
+    def get_intent_keywords(self) -> dict:
+        """
+        獲取當前載入的關鍵字配置
+        """
+        return self.intent_keywords
+
+    def add_intent_keyword(self, intent_name: str, keyword: str) -> bool:
+        """
+        為指定意圖添加關鍵字
+        """
+        try:
+            if intent_name in self.intent_keywords:
+                if keyword not in self.intent_keywords[intent_name]["keywords"]:
+                    self.intent_keywords[intent_name]["keywords"].append(keyword)
+                    logging.info(f"為意圖 '{intent_name}' 添加關鍵字: {keyword}")
+                    return True
+                else:
+                    logging.warning(f"關鍵字 '{keyword}' 已存在於意圖 '{intent_name}' 中")
+                    return False
+            else:
+                logging.error(f"意圖 '{intent_name}' 不存在")
+                return False
+        except Exception as e:
+            logging.error(f"添加關鍵字時發生錯誤: {e}")
+            return False
+
+    def remove_intent_keyword(self, intent_name: str, keyword: str) -> bool:
+        """
+        從指定意圖中移除關鍵字
+        """
+        try:
+            if intent_name in self.intent_keywords:
+                if keyword in self.intent_keywords[intent_name]["keywords"]:
+                    self.intent_keywords[intent_name]["keywords"].remove(keyword)
+                    logging.info(f"從意圖 '{intent_name}' 移除關鍵字: {keyword}")
+                    return True
+                else:
+                    logging.warning(f"關鍵字 '{keyword}' 不存在於意圖 '{intent_name}' 中")
+                    return False
+            else:
+                logging.error(f"意圖 '{intent_name}' 不存在")
+                return False
+        except Exception as e:
+            logging.error(f"移除關鍵字時發生錯誤: {e}")
+            return False
+
+    def save_intent_keywords(self, path: str = None) -> bool:
+        """
+        保存關鍵字配置到檔案
+        """
+        try:
+            if path is None:
+                path = "sales_rag_app/libs/services/sales_assistant/prompts/query_keywords.json"
+            
+            config = {"intent_keywords": self.intent_keywords}
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+            
+            logging.info(f"關鍵字配置已保存到: {path}")
+            return True
+        except Exception as e:
+            logging.error(f"保存關鍵字配置時發生錯誤: {e}")
+            return False
+
+    def reload_intent_keywords(self, path: str = None) -> bool:
+        """
+        重新載入關鍵字配置
+        """
+        try:
+            if path is None:
+                path = "sales_rag_app/libs/services/sales_assistant/prompts/query_keywords.json"
+            
+            new_keywords = self._load_intent_keywords(path)
+            if new_keywords:
+                self.intent_keywords = new_keywords
+                logging.info("關鍵字配置重新載入成功")
+                return True
+            else:
+                logging.error("重新載入關鍵字配置失敗")
+                return False
+        except Exception as e:
+            logging.error(f"重新載入關鍵字配置時發生錯誤: {e}")
+            return False
 
     def _create_beautiful_markdown_table(self, comparison_table: list | dict, model_names: list) -> str:
         """
@@ -672,39 +778,16 @@ class SalesAssistantService(BaseService):
                 if result["query_type"] == "unknown":
                     result["query_type"] = "model_type"
             
-            # 3. 解析查询意图
+            # 3. 解析查询意图 - 使用配置檔案中的關鍵字
             query_lower = query.lower()
             
-            # 屏幕相关意图
-            if any(keyword in query_lower for keyword in ["螢幕", "顯示", "screen", "lcd", "面板"]):
-                result["intent"] = "display"
-            # CPU相关意图
-            elif any(keyword in query_lower for keyword in ["cpu", "處理器", "processor", "ryzen"]):
-                result["intent"] = "cpu"
-            # GPU相关意图
-            elif any(keyword in query_lower for keyword in ["gpu", "顯卡", "graphics", "radeon"]):
-                result["intent"] = "gpu"
-            # 内存相关意图
-            elif any(keyword in query_lower for keyword in ["記憶體", "內存", "memory", "ram", "ddr"]):
-                result["intent"] = "memory"
-            # 存储相关意图
-            elif any(keyword in query_lower for keyword in ["硬碟", "硬盤", "storage", "ssd", "nvme"]):
-                result["intent"] = "storage"
-            # 电池相关意图
-            elif any(keyword in query_lower for keyword in ["電池", "續航", "battery", "電量"]):
-                result["intent"] = "battery"
-            # 重量和便携性
-            elif any(keyword in query_lower for keyword in ["重量", "輕便", "weight", "portable", "尺寸"]):
-                result["intent"] = "portability"
-            # 接口相关
-            elif any(keyword in query_lower for keyword in ["接口", "port", "usb", "hdmi", "lan"]):
-                result["intent"] = "connectivity"
-            # 比较意图
-            elif any(keyword in query_lower for keyword in ["比較", "compare", "差異", "difference", "不同"]):
-                result["intent"] = "comparison"
-            # 规格查询
-            elif any(keyword in query_lower for keyword in ["規格", "spec", "配置", "configuration"]):
-                result["intent"] = "specifications"
+            # 使用配置檔案中的關鍵字來檢查意圖
+            for intent_name, intent_config in self.intent_keywords.items():
+                keywords = intent_config.get("keywords", [])
+                if any(keyword.lower() in query_lower for keyword in keywords):
+                    result["intent"] = intent_name
+                    logging.info(f"檢測到意圖 '{intent_name}': {intent_config.get('description', '')}")
+                    break
             
             logging.info(f"查詢意圖解析結果: {result}")
             return result
