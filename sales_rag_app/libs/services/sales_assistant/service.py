@@ -454,7 +454,29 @@ class SalesAssistantService(BaseService):
                 first_key = keys[0]
                 logging.info(f"第一個鍵: {first_key}, 值類型: {type(comparison_dict[first_key])}")
                 
-                if isinstance(comparison_dict[first_key], list):
+                # ★ 修正點：檢查第一個鍵是否是 "Model"，如果是則調整邏輯
+                if first_key.lower() == "model" and isinstance(comparison_dict[first_key], list):
+                    logging.info("檢測到 Model 作為第一個鍵，調整轉換邏輯")
+                    models = comparison_dict[first_key]
+                    spec_keys = keys[1:]  # 其他鍵都是規格項目
+                    
+                    logging.info(f"模型列表: {models}")
+                    logging.info(f"規格項目: {spec_keys}")
+                    
+                    converted_table = []
+                    for spec_key in spec_keys:
+                        row = {"feature": spec_key}
+                        for i, model in enumerate(models):
+                            if i < len(comparison_dict[spec_key]):
+                                row[model] = comparison_dict[spec_key][i]
+                            else:
+                                row[model] = "N/A"
+                        converted_table.append(row)
+                    
+                    logging.info(f"Model 鍵格式轉換結果: {converted_table}")
+                    return converted_table
+                
+                elif isinstance(comparison_dict[first_key], list):
                     features = comparison_dict[first_key]
                     model_names = keys[1:]  # 其他鍵都是模型名稱
                     
@@ -1015,6 +1037,33 @@ Focus your analysis on the specific intent and target models identified above.
                     # 嘗試解析 JSON
                     parsed_json = json.loads(json_content)
                     
+                    # ★ 修正點：處理 LLM 返回的嵌套格式
+                    # 檢查是否是嵌套格式：{"answer_summary": {"best_model": "...", "comparison_table": {...}}}
+                    if "answer_summary" in parsed_json and isinstance(parsed_json["answer_summary"], dict):
+                        nested_answer = parsed_json["answer_summary"]
+                        logging.info(f"檢測到嵌套格式的 answer_summary: {nested_answer}")
+                        
+                        # 檢查嵌套的 answer_summary 是否包含 comparison_table
+                        if "comparison_table" in nested_answer:
+                            # 提取 reasoning 或 best_model 作為 answer_summary 的內容
+                            if "reasoning" in nested_answer:
+                                answer_content = nested_answer["reasoning"]
+                            elif "best_model" in nested_answer:
+                                best_model = nested_answer["best_model"]
+                                answer_content = f"根據分析，{best_model} 是最適合的選擇。"
+                            else:
+                                # 如果沒有 reasoning 或 best_model，使用整個嵌套結構的字符串表示
+                                answer_content = json.dumps(nested_answer, ensure_ascii=False)
+                            
+                            # 轉換為標準格式
+                            converted_json = {
+                                "answer_summary": answer_content,
+                                "comparison_table": nested_answer["comparison_table"]
+                            }
+                            
+                            logging.info(f"轉換後的標準格式: {converted_json}")
+                            parsed_json = converted_json
+                    
                     # 檢查是否已經是正確的格式
                     if "answer_summary" in parsed_json and "comparison_table" in parsed_json:
                         # 使用兩步驟策略處理LLM回應
@@ -1381,18 +1430,51 @@ Focus your analysis on the specific intent and target models identified above.
                     has_valid_model_in_table = False
                     has_invalid_content = False
                     
-                    for key in comparison_table.keys():
-                        if key != "modelname" and key not in target_model_variants:
-                            if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', key):
-                                if key not in AVAILABLE_MODELNAMES:
-                                    logging.warning(f"comparison_table包含不存在的模型名称: {key}")
-                                    has_invalid_content = True
-                    
-                    for model_variant in target_model_variants:
-                        if model_variant in comparison_table:
-                            has_valid_model_in_table = True
-                            logging.info(f"在comparison_table字典中找到有效模型名称变体: {model_variant}")
-                            break
+                    # ★ 修正點：檢查第一個鍵是否是 "Model"，如果是則調整驗證邏輯
+                    keys = list(comparison_table.keys())
+                    if keys and keys[0].lower() == "model" and isinstance(comparison_table[keys[0]], list):
+                        # 第一個鍵是 Model，包含模型名稱列表
+                        models = comparison_table[keys[0]]
+                        logging.info(f"檢測到 Model 鍵格式，模型列表: {models}")
+                        
+                        # 檢查模型名稱是否包含目標模型
+                        for model in models:
+                            for model_variant in target_model_variants:
+                                if model == model_variant:
+                                    has_valid_model_in_table = True
+                                    logging.info(f"在comparison_table字典中找到有效模型名称: {model}")
+                                    break
+                            if has_valid_model_in_table:
+                                break
+                        
+                        # 檢查其他鍵是否包含無效內容
+                        for key in keys[1:]:  # 跳過 Model 鍵
+                            if key.lower() in ["model", "modelname", "device_model"]:
+                                continue  # 跳過模型名稱相關的鍵
+                            
+                            # 檢查值中是否包含無效GPU型號
+                            if isinstance(comparison_table[key], list):
+                                for value in comparison_table[key]:
+                                    if isinstance(value, str):
+                                        for gpu_model in invalid_gpu_models:
+                                            if re.search(r'\b' + re.escape(gpu_model) + r'\b', value):
+                                                logging.warning(f"comparison_table包含无效GPU型号: {gpu_model}")
+                                                has_invalid_content = True
+                                                break
+                    else:
+                        # 標準字典格式驗證
+                        for key in comparison_table.keys():
+                            if key != "modelname" and key not in target_model_variants:
+                                if re.match(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+)?', key):
+                                    if key not in AVAILABLE_MODELNAMES:
+                                        logging.warning(f"comparison_table包含不存在的模型名称: {key}")
+                                        has_invalid_content = True
+                        
+                        for model_variant in target_model_variants:
+                            if model_variant in comparison_table:
+                                has_valid_model_in_table = True
+                                logging.info(f"在comparison_table字典中找到有效模型名称变体: {model_variant}")
+                                break
                     
                     if has_valid_model_in_table and not has_invalid_content:
                         table_valid = True
