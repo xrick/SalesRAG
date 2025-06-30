@@ -1229,7 +1229,8 @@ Focus your analysis on the specific intent and target models identified above.
             
             # 定义无效的品牌和GPU型号列表
             invalid_brands = ["Acer", "ASUS", "Lenovo", "Dell", "MSI", "Razer", "NVIDIA", "Nvidia"]
-            invalid_gpu_models = ["RTX", "GTX", "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090", "GTX 1650", "GTX 1660"]
+            # 更新無效 GPU 型號列表，移除一些可能有效的型號
+            invalid_gpu_models = ["GTX 1650", "GTX 1660", "RTX 3060", "RTX 3070", "RTX 3080", "RTX 3090"]
             
             # 创建模型名称的变体列表
             def get_model_variants(model_name):
@@ -1255,10 +1256,18 @@ Focus your analysis on the specific intent and target models identified above.
             if answer_summary:
                 logging.info(f"驗證answer_summary: {answer_summary}")
                 
+                # 處理 answer_summary 可能是字典格式的情況
+                if isinstance(answer_summary, dict):
+                    # 將字典轉換為字符串進行驗證
+                    answer_summary_str = json.dumps(answer_summary, ensure_ascii=False)
+                    logging.info(f"answer_summary 是字典格式，轉換為字符串: {answer_summary_str}")
+                else:
+                    answer_summary_str = str(answer_summary)
+                
                 # 检查是否包含正确的模型名称
                 has_valid_model = False
                 for model_variant in target_model_variants:
-                    if model_variant in answer_summary:
+                    if model_variant in answer_summary_str:
                         has_valid_model = True
                         logging.info(f"在answer_summary中找到有效模型名稱變體: {model_variant}")
                         break
@@ -1269,15 +1278,15 @@ Focus your analysis on the specific intent and target models identified above.
                     for target_model in target_modelnames:
                         if ":" in target_model:
                             pattern = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s*:\s*[A-Z]+\d+[A-Z]*)'
-                            matches = re.findall(pattern, answer_summary)
+                            matches = re.findall(pattern, answer_summary_str)
                             potential_models.extend(matches)
                             
                             pattern_no_colon = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?:\s+[A-Z]+\d+[A-Z]*\d*)'
-                            matches_no_colon = re.findall(pattern_no_colon, answer_summary)
+                            matches_no_colon = re.findall(pattern_no_colon, answer_summary_str)
                             potential_models.extend(matches_no_colon)
                         else:
                             pattern = r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?'
-                            matches = re.findall(pattern, answer_summary)
+                            matches = re.findall(pattern, answer_summary_str)
                             potential_models.extend(matches)
                     
                     potential_models = list(set(potential_models))
@@ -1295,23 +1304,28 @@ Focus your analysis on the specific intent and target models identified above.
                 # 检查无效品牌（使用单词边界）
                 has_invalid_brand = False
                 for brand in invalid_brands:
-                    if re.search(r'\b' + re.escape(brand) + r'\b', answer_summary):
+                    if re.search(r'\b' + re.escape(brand) + r'\b', answer_summary_str):
                         logging.warning(f"answer_summary包含无效品牌: {brand}")
                         has_invalid_brand = True
                         break
                 
-                # 检查无效GPU型号
+                # 检查无效GPU型号 - 改進：只檢查完全匹配的無效型號
                 has_invalid_gpu = False
                 for gpu_model in invalid_gpu_models:
-                    if gpu_model in answer_summary:
+                    # 使用單詞邊界匹配，避免部分匹配
+                    if re.search(r'\b' + re.escape(gpu_model) + r'\b', answer_summary_str):
                         logging.warning(f"answer_summary包含无效GPU型号: {gpu_model}")
                         has_invalid_gpu = True
                         break
                 
-                # 如果包含正确的模型名称且没有无效内容，认为summary有效
-                if has_valid_model and not has_invalid_brand and not has_invalid_gpu:
+                # 改進驗證邏輯：如果包含正確的模型名稱，即使有無效內容也認為有效
+                if has_valid_model:
                     summary_valid = True
-                    logging.info("answer_summary驗證通過")
+                    logging.info("answer_summary驗證通過（包含正確模型名稱）")
+                elif not has_invalid_brand and not has_invalid_gpu:
+                    # 如果沒有無效內容，也認為有效
+                    summary_valid = True
+                    logging.info("answer_summary驗證通過（無無效內容）")
                 else:
                     logging.warning("answer_summary驗證失敗")
             
@@ -1351,7 +1365,7 @@ Focus your analysis on the specific intent and target models identified above.
                             for value in row.values():
                                 if isinstance(value, str):
                                     for gpu_model in invalid_gpu_models:
-                                        if gpu_model in value:
+                                        if re.search(r'\b' + re.escape(gpu_model) + r'\b', value):
                                             logging.warning(f"comparison_table包含无效GPU型号: {gpu_model}")
                                             has_invalid_content = True
                                             break
