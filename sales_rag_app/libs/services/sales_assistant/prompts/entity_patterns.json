@@ -17,8 +17,8 @@
     },
     "SPEC_TYPE": {
       "patterns": [
-        "\\b(?:cpu|gpu|記憶體|內存|内存|硬碟|硬盤|硬盘|電池|电池|螢幕|顯示|屏幕|显示|處理器|处理器|顯卡|显卡|儲存|存储|續航|续航|電量|电量)\\b",
-        "\\b(?:processor|memory|storage|battery|screen|display|graphics|ram|ssd|nvme)\\b"
+        "\\b(?:cpu|gpu|io介面|介面|記憶體|內存|内存|硬碟|硬盤|硬盘|電池|电池|螢幕|顯示|屏幕|显示|處理器|处理器|顯卡|显卡|儲存|存储|續航|续航|電量|电量)\\b",
+        "\\b(?:processor|io|io connector|memory|storage|battery|usb|screen|display|graphics|ram|ssd|nvme)\\b"
       ],
       "description": "規格類型識別",
       "examples": ["CPU", "GPU", "記憶體", "硬碟", "電池", "螢幕"]
