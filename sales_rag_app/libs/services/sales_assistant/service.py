@@ -50,7 +50,11 @@ AVAILABLE_MODELTYPES = [
 '''
 class SalesAssistantService(BaseService):
     def __init__(self):
-        self.llm = LLMInitializer().get_llm()
+        # 初始化 LLM 並獲取系統提示詞
+        self.llm_initializer = LLMInitializer()
+        self.llm = self.llm_initializer.get_llm()
+        self.system_prompt = self.llm_initializer.get_system_prompt()
+        
         self.milvus_query = MilvusQuery(collection_name="sales_notebook_specs")
         self.duckdb_query = DuckDBQuery(db_file="sales_rag_app/db/sales_specs.db")
         self.prompt_template = self._load_prompt_template("sales_rag_app/libs/services/sales_assistant/prompts/sales_prompt4.txt")
@@ -1005,13 +1009,15 @@ Based on the query intent analysis:
 Focus your analysis on the specific intent and target models identified above.
 """
             
+            # 構建最終提示詞
             final_prompt = self.prompt_template.replace("{context}", context_str).replace("{query}", query)
             # 在prompt中添加查询意图信息
             final_prompt = final_prompt.replace("[QUERY INTENT ANALYSIS]", intent_info)
             
             logging.info("\n=== 最終傳送給 LLM 的提示 (Final Prompt) ===\n" + final_prompt + "\n========================================")
             
-            response_str = self.llm.invoke(final_prompt)
+            # 使用 LLMInitializer 的增強方法，自動包含系統提示詞
+            response_str = self.llm_initializer.invoke_with_system_prompt(final_prompt)
             logging.info(f"\n=== 從 LLM 收到的原始回應 ===\n{response_str}\n=============================")
             
             # 步骤5：解析并返回JSON

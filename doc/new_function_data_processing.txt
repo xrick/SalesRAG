@@ -1,0 +1,4 @@
+[mode:innovate]
+I need to create a new interface for new data processing, please satisfy the following requests:
+1. the required data fields are as following:
+     
