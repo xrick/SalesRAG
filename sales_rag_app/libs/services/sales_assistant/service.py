@@ -50,10 +50,9 @@ AVAILABLE_MODELTYPES = [
 '''
 class SalesAssistantService(BaseService):
     def __init__(self):
-        # 初始化 LLM 並獲取系統提示詞
+        # 初始化 LLM
         self.llm_initializer = LLMInitializer()
         self.llm = self.llm_initializer.get_llm()
-        self.system_prompt = self.llm_initializer.get_system_prompt()
         
         self.milvus_query = MilvusQuery(collection_name="sales_notebook_specs")
         self.duckdb_query = DuckDBQuery(db_file="sales_rag_app/db/sales_specs.db")
@@ -458,9 +457,9 @@ class SalesAssistantService(BaseService):
                 first_key = keys[0]
                 logging.info(f"第一個鍵: {first_key}, 值類型: {type(comparison_dict[first_key])}")
                 
-                # ★ 修正點：檢查第一個鍵是否是 "Model"，如果是則調整邏輯
-                if first_key.lower() == "model" and isinstance(comparison_dict[first_key], list):
-                    logging.info("檢測到 Model 作為第一個鍵，調整轉換邏輯")
+                # ★ 修正點：檢查第一個鍵是否是 "Model" 或 "modelname"
+                if first_key.lower() in ["model", "modelname"] and isinstance(comparison_dict[first_key], list):
+                    logging.info(f"檢測到 {first_key} 作為第一個鍵，調整轉換邏輯")
                     models = comparison_dict[first_key]
                     spec_keys = keys[1:]  # 其他鍵都是規格項目
                     
@@ -472,12 +471,16 @@ class SalesAssistantService(BaseService):
                         row = {"feature": spec_key}
                         for i, model in enumerate(models):
                             if i < len(comparison_dict[spec_key]):
-                                row[model] = comparison_dict[spec_key][i]
+                                # 清理規格值，移除末尾的模型名稱
+                                value = comparison_dict[spec_key][i]
+                                if isinstance(value, str) and f" - {model}" in value:
+                                    value = value.replace(f" - {model}", "").strip()
+                                row[model] = value
                             else:
                                 row[model] = "N/A"
                         converted_table.append(row)
                     
-                    logging.info(f"Model 鍵格式轉換結果: {converted_table}")
+                    logging.info(f"{first_key} 鍵格式轉換結果: {converted_table}")
                     return converted_table
                 
                 elif isinstance(comparison_dict[first_key], list):
@@ -1016,8 +1019,8 @@ Focus your analysis on the specific intent and target models identified above.
             
             logging.info("\n=== 最終傳送給 LLM 的提示 (Final Prompt) ===\n" + final_prompt + "\n========================================")
             
-            # 使用 LLMInitializer 的增強方法，自動包含系統提示詞
-            response_str = self.llm_initializer.invoke_with_system_prompt(final_prompt)
+            # 直接調用 LLM
+            response_str = self.llm_initializer.invoke(final_prompt)
             logging.info(f"\n=== 從 LLM 收到的原始回應 ===\n{response_str}\n=============================")
             
             # 步骤5：解析并返回JSON
@@ -1436,12 +1439,12 @@ Focus your analysis on the specific intent and target models identified above.
                     has_valid_model_in_table = False
                     has_invalid_content = False
                     
-                    # ★ 修正點：檢查第一個鍵是否是 "Model"，如果是則調整驗證邏輯
+                    # ★ 修正點：檢查第一個鍵是否是 "Model" 或 "modelname"
                     keys = list(comparison_table.keys())
-                    if keys and keys[0].lower() == "model" and isinstance(comparison_table[keys[0]], list):
-                        # 第一個鍵是 Model，包含模型名稱列表
+                    if keys and keys[0].lower() in ["model", "modelname"] and isinstance(comparison_table[keys[0]], list):
+                        # 第一個鍵是 Model 或 modelname，包含模型名稱列表
                         models = comparison_table[keys[0]]
-                        logging.info(f"檢測到 Model 鍵格式，模型列表: {models}")
+                        logging.info(f"檢測到 {keys[0]} 鍵格式，模型列表: {models}")
                         
                         # 檢查模型名稱是否包含目標模型
                         for model in models:
@@ -1454,7 +1457,7 @@ Focus your analysis on the specific intent and target models identified above.
                                 break
                         
                         # 檢查其他鍵是否包含無效內容
-                        for key in keys[1:]:  # 跳過 Model 鍵
+                        for key in keys[1:]:  # 跳過 Model/modelname 鍵
                             if key.lower() in ["model", "modelname", "device_model"]:
                                 continue  # 跳過模型名稱相關的鍵
                             
