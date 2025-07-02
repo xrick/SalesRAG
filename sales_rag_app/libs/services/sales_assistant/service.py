@@ -630,6 +630,86 @@ class SalesAssistantService(BaseService):
             logging.error(f"創建簡單表格失敗: {e}")
             return "表格生成失敗"
 
+    def _fix_json_format(self, json_content: str) -> str:
+        """
+        修復常見的 JSON 格式問題
+        """
+        try:
+            fixed = json_content.strip()
+            
+            # 1. 移除 JSON 後面的額外內容
+            # 找到最後一個完整的 JSON 物件
+            brace_count = 0
+            last_complete_pos = -1
+            
+            for i, char in enumerate(fixed):
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        last_complete_pos = i
+                        break
+            
+            if last_complete_pos != -1:
+                fixed = fixed[:last_complete_pos + 1]
+            
+            # 2. 修復常見的引號問題
+            fixed = fixed.replace("'", '"')  # 單引號改雙引號
+            
+            # 3. 修復未轉義的引號
+            # 處理 answer_summary 中的引號問題
+            fixed = re.sub(r'"answer_summary"\s*:\s*"([^"]*?)(例如|比如|如下|建議|結論|總結|具體)："([^"]*?)"([^"]*?)"', 
+                          r'"answer_summary": "\1\2：\\"\3\\"\4"', fixed)
+            
+            # 4. 修復多餘的逗號
+            fixed = re.sub(r',\s*}', '}', fixed)  # 移除物件結尾的多餘逗號
+            fixed = re.sub(r',\s*]', ']', fixed)  # 移除陣列結尾的多餘逗號
+            
+            # 5. 修復換行符和空格
+            fixed = re.sub(r'\n+', ' ', fixed)  # 換行符替換為空格
+            fixed = re.sub(r'\s+', ' ', fixed)  # 多重空格合併
+            
+            return fixed
+            
+        except Exception as e:
+            logging.error(f"JSON 格式修復失敗: {e}")
+            return json_content
+    
+    def _extract_partial_json(self, json_content: str) -> dict:
+        """
+        從不完整的 JSON 中提取部分有效內容
+        """
+        try:
+            result = {}
+            
+            # 提取 answer_summary
+            summary_match = re.search(r'"answer_summary"\s*:\s*"([^"]*(?:\\.[^"]*)*)"', json_content)
+            if summary_match:
+                result["answer_summary"] = summary_match.group(1).replace('\\"', '"')
+            
+            # 提取 comparison_table
+            table_match = re.search(r'"comparison_table"\s*:\s*(\[.*?\])', json_content, re.DOTALL)
+            if table_match:
+                try:
+                    table_content = table_match.group(1)
+                    # 嘗試修復表格內容
+                    fixed_table = self._fix_json_format(table_content)
+                    result["comparison_table"] = json.loads(fixed_table)
+                except:
+                    logging.warning("無法解析 comparison_table，使用空陣列")
+                    result["comparison_table"] = []
+            
+            # 如果沒有找到任何內容，返回空字典
+            if not result:
+                return None
+                
+            return result
+            
+        except Exception as e:
+            logging.error(f"部分 JSON 提取失敗: {e}")
+            return None
+
     def _create_simple_table_from_dict_improved(self, comparison_dict: dict, answer_summary=None) -> str:
         """
         改進的字典格式表格創建，更好地處理複雜的數據結構，支持 feature name 作為 row header
@@ -1043,8 +1123,25 @@ Focus your analysis on the specific intent and target models identified above.
                     json_content = cleaned_response_str[json_start:json_end+1]
                     logging.info(f"提取的 JSON 內容: {json_content}")
                     
-                    # 嘗試解析 JSON
-                    parsed_json = json.loads(json_content)
+                    # 嘗試解析 JSON - 改進的錯誤處理
+                    try:
+                        parsed_json = json.loads(json_content)
+                    except json.JSONDecodeError as json_error:
+                        logging.warning(f"JSON 解析失敗: {json_error}")
+                        
+                        # 嘗試修復常見的 JSON 格式問題
+                        fixed_json_content = self._fix_json_format(json_content)
+                        logging.info(f"嘗試修復後的 JSON: {fixed_json_content}")
+                        
+                        try:
+                            parsed_json = json.loads(fixed_json_content)
+                            logging.info("JSON 修復成功")
+                        except json.JSONDecodeError as second_error:
+                            logging.error(f"JSON 修復後仍然失敗: {second_error}")
+                            # 如果修復失敗，嘗試提取部分 JSON
+                            parsed_json = self._extract_partial_json(json_content)
+                            if not parsed_json:
+                                raise json_error
                     
                     # ★ 修正點：處理 LLM 返回的嵌套格式
                     # 檢查是否是嵌套格式：{"answer_summary": {"best_model": "...", "comparison_table": {...}}}
