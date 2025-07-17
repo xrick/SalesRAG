@@ -1,0 +1,4 @@
+Task:
+1.整合SalesRag及MLINFO_Data_Processing
+2.主要將MLINFO_Data_Processing主要的介面、後端功能整合至SalesRag中。
+3.請參考
