@@ -1,10 +1,11 @@
 import json
 import pandas as pd
-from prettytable import PrettyTable
 from ..base_service import BaseService
 from ...RAG.DB.MilvusQuery import MilvusQuery
 from ...RAG.DB.DuckDBQuery import DuckDBQuery
 from ...RAG.LLM.LLMInitializer import LLMInitializer
+from .entity_recognition import EntityRecognitionSystem
+from .clarification_manager import ClarificationManager
 import logging
 import re
 
@@ -60,6 +61,12 @@ class SalesAssistantService(BaseService):
         
         # 載入關鍵字配置
         self.intent_keywords = self._load_intent_keywords("sales_rag_app/libs/services/sales_assistant/prompts/query_keywords.json")
+        
+        # 初始化實體識別系統
+        self.entity_recognizer = EntityRecognitionSystem()
+        
+        # 初始化澄清對話管理器
+        self.clarification_manager = ClarificationManager()
         
         # ★ 修正點 1：修正 spec_fields 列表，使其與 .xlsx 檔案的標題列完全一致
         self.spec_fields = [
@@ -632,13 +639,17 @@ class SalesAssistantService(BaseService):
 
     def _fix_json_format(self, json_content: str) -> str:
         """
-        修復常見的 JSON 格式問題
+        增強版 JSON 格式修復，處理更多邊界情況
         """
         try:
             fixed = json_content.strip()
             
-            # 1. 移除 JSON 後面的額外內容
-            # 找到最後一個完整的 JSON 物件
+            # 1. 移除 JSON 前面的多餘內容（如思考過程）
+            json_start = fixed.find('{')
+            if json_start > 0:
+                fixed = fixed[json_start:]
+            
+            # 2. 找到最後一個完整的 JSON 物件
             brace_count = 0
             last_complete_pos = -1
             
@@ -654,27 +665,92 @@ class SalesAssistantService(BaseService):
             if last_complete_pos != -1:
                 fixed = fixed[:last_complete_pos + 1]
             
-            # 2. 修復常見的引號問題
+            # 3. 修復常見的引號問題
             fixed = fixed.replace("'", '"')  # 單引號改雙引號
             
-            # 3. 修復未轉義的引號
-            # 處理 answer_summary 中的引號問題
-            fixed = re.sub(r'"answer_summary"\s*:\s*"([^"]*?)(例如|比如|如下|建議|結論|總結|具體)："([^"]*?)"([^"]*?)"', 
-                          r'"answer_summary": "\1\2：\\"\3\\"\4"', fixed)
+            # 4. 修復未轉義的引號（更全面的處理）
+            # 處理各種內容中的引號問題
+            fixed = self._fix_quotes_in_content(fixed)
             
-            # 4. 修復多餘的逗號
+            # 5. 修復多餘的逗號
             fixed = re.sub(r',\s*}', '}', fixed)  # 移除物件結尾的多餘逗號
             fixed = re.sub(r',\s*]', ']', fixed)  # 移除陣列結尾的多餘逗號
             
-            # 5. 修復換行符和空格
+            # 6. 修復換行符和空格（保留必要的格式）
             fixed = re.sub(r'\n+', ' ', fixed)  # 換行符替換為空格
             fixed = re.sub(r'\s+', ' ', fixed)  # 多重空格合併
+            
+            # 7. 修復缺少的引號
+            fixed = self._fix_missing_quotes(fixed)
+            
+            # 8. 修復不完整的結構
+            fixed = self._fix_incomplete_structure(fixed)
             
             return fixed
             
         except Exception as e:
             logging.error(f"JSON 格式修復失敗: {e}")
             return json_content
+    
+    def _fix_quotes_in_content(self, content: str) -> str:
+        """
+        修復內容中的引號問題
+        """
+        try:
+            # 處理 answer_summary 中的引號
+            content = re.sub(r'"answer_summary"\s*:\s*"([^"]*?)(例如|比如|如下|建議|結論|總結|具體)："([^"]*?)"([^"]*?)"', 
+                            r'"answer_summary": "\1\2：\\"\3\\"\4"', content)
+            
+            # 處理表格內容中的引號
+            content = re.sub(r'("feature"\s*:\s*"[^"]*?)(")', r'\1\\"', content)
+            
+            # 處理模型名稱中的冒號（如 "APX819: FP7R2"）
+            content = re.sub(r'("(?:AB819-S|AHP819|APX819|ARB819-S|AMD819): [^"]*?")', 
+                            lambda m: m.group(1).replace(': ', '\\: '), content)
+            
+            return content
+            
+        except Exception as e:
+            logging.error(f"修復引號時發生錯誤: {e}")
+            return content
+    
+    def _fix_missing_quotes(self, content: str) -> str:
+        """
+        修復缺少的引號
+        """
+        try:
+            # 修復鍵值對中缺少引號的情況
+            content = re.sub(r'(\w+)(\s*:\s*")', r'"\1"\2', content)
+            
+            # 修復值中缺少引號的情況
+            content = re.sub(r':\s*([^",}\]]+)([,}\]])', r': "\1"\2', content)
+            
+            return content
+            
+        except Exception as e:
+            logging.error(f"修復缺少引號時發生錯誤: {e}")
+            return content
+    
+    def _fix_incomplete_structure(self, content: str) -> str:
+        """
+        修復不完整的 JSON 結構
+        """
+        try:
+            # 如果缺少結尾大括號
+            if content.count('{') > content.count('}'):
+                missing_braces = content.count('{') - content.count('}')
+                content += '}' * missing_braces
+            
+            # 如果缺少結尾中括號
+            if content.count('[') > content.count(']'):
+                missing_brackets = content.count('[') - content.count(']')
+                content += ']' * missing_brackets
+            
+            return content
+            
+        except Exception as e:
+            logging.error(f"修復不完整結構時發生錯誤: {e}")
+            return content
     
     def _extract_partial_json(self, json_content: str) -> dict:
         """
@@ -709,6 +785,903 @@ class SalesAssistantService(BaseService):
         except Exception as e:
             logging.error(f"部分 JSON 提取失敗: {e}")
             return None
+    
+    def parse_llm_response_enhanced(self, llm_response: str) -> dict:
+        """
+        增強版 LLM 回應解析，具備強大的錯誤恢復能力
+        """
+        try:
+            logging.info("開始增強版 LLM 回應解析")
+            
+            if not llm_response or not llm_response.strip():
+                logging.warning("LLM 回應為空")
+                return self._create_fallback_response("回應內容為空")
+            
+            # 1. 嘗試直接解析 JSON
+            try:
+                parsed = json.loads(llm_response)
+                if self._validate_response_structure(parsed):
+                    logging.info("直接 JSON 解析成功")
+                    return self._enhance_parsed_response(parsed)
+                else:
+                    logging.warning("直接解析的 JSON 結構不符合要求")
+            except json.JSONDecodeError as e:
+                logging.info(f"直接 JSON 解析失敗: {e}")
+            
+            # 2. 嘗試修復後解析
+            try:
+                fixed_content = self._fix_json_format(llm_response)
+                parsed = json.loads(fixed_content)
+                if self._validate_response_structure(parsed):
+                    logging.info("修復後 JSON 解析成功")
+                    return self._enhance_parsed_response(parsed)
+                else:
+                    logging.warning("修復後的 JSON 結構不符合要求")
+            except json.JSONDecodeError as e:
+                logging.info(f"修復後 JSON 解析失敗: {e}")
+            
+            # 3. 嘗試部分提取
+            try:
+                partial_result = self._extract_partial_json(llm_response)
+                if partial_result and self._validate_response_structure(partial_result):
+                    logging.info("部分 JSON 提取成功")
+                    return self._enhance_parsed_response(partial_result)
+                else:
+                    logging.warning("部分提取的內容不符合要求")
+            except Exception as e:
+                logging.info(f"部分 JSON 提取失敗: {e}")
+            
+            # 4. 嘗試智能提取
+            try:
+                smart_result = self._smart_extract_response(llm_response)
+                if smart_result and self._validate_response_structure(smart_result):
+                    logging.info("智能提取成功")
+                    return self._enhance_parsed_response(smart_result)
+                else:
+                    logging.warning("智能提取的內容不符合要求")
+            except Exception as e:
+                logging.info(f"智能提取失敗: {e}")
+            
+            # 5. 生成後備回應
+            logging.warning("所有解析方法都失敗，生成後備回應")
+            return self._create_fallback_response("JSON 解析失敗，請重新嘗試")
+            
+        except Exception as e:
+            logging.error(f"增強版 LLM 回應解析發生嚴重錯誤: {e}")
+            return self._create_fallback_response("系統錯誤，請重新嘗試")
+    
+    def _validate_response_structure(self, response: dict) -> bool:
+        """
+        驗證回應結構是否符合要求
+        """
+        try:
+            # 必須包含的基本欄位
+            required_fields = ["answer_summary", "comparison_table"]
+            
+            for field in required_fields:
+                if field not in response:
+                    logging.warning(f"回應缺少必要欄位: {field}")
+                    return False
+            
+            # 驗證 answer_summary
+            if not isinstance(response["answer_summary"], str) or not response["answer_summary"].strip():
+                logging.warning("answer_summary 格式錯誤或為空")
+                return False
+            
+            # 驗證 comparison_table
+            if not isinstance(response["comparison_table"], list):
+                logging.warning("comparison_table 不是列表格式")
+                return False
+            
+            # 如果有表格內容，驗證第一行
+            if response["comparison_table"]:
+                first_row = response["comparison_table"][0]
+                if not isinstance(first_row, dict) or "feature" not in first_row:
+                    logging.warning("comparison_table 格式錯誤，缺少 feature 欄位")
+                    return False
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"驗證回應結構時發生錯誤: {e}")
+            return False
+    
+    def _enhance_parsed_response(self, response: dict) -> dict:
+        """
+        增強解析後的回應，添加額外資訊和驗證
+        """
+        try:
+            enhanced = response.copy()
+            
+            # 添加解析質量評分
+            enhanced["parse_quality_score"] = self._calculate_parse_quality(response)
+            
+            # 添加時間戳
+            enhanced["parsed_at"] = self._get_timestamp()
+            
+            # 驗證並修復模型名稱
+            enhanced["comparison_table"] = self._validate_and_fix_model_names(response.get("comparison_table", []))
+            
+            # 添加統計資訊
+            enhanced["stats"] = {
+                "table_rows": len(enhanced["comparison_table"]),
+                "model_count": self._count_models_in_table(enhanced["comparison_table"]),
+                "features_covered": self._count_features_in_table(enhanced["comparison_table"])
+            }
+            
+            return enhanced
+            
+        except Exception as e:
+            logging.error(f"增強回應時發生錯誤: {e}")
+            return response
+    
+    def _calculate_parse_quality(self, response: dict) -> float:
+        """
+        計算解析品質評分 (0.0 - 1.0)
+        """
+        try:
+            score = 0.0
+            
+            # 基礎分數：有基本結構
+            if "answer_summary" in response and "comparison_table" in response:
+                score += 0.4
+            
+            # answer_summary 品質
+            summary = response.get("answer_summary", "")
+            if summary and len(summary) > 10:
+                score += 0.2
+                if len(summary) > 50:
+                    score += 0.1
+            
+            # comparison_table 品質
+            table = response.get("comparison_table", [])
+            if table:
+                score += 0.2
+                # 檢查表格完整性
+                if len(table) > 1:  # 有實際的比較內容
+                    score += 0.1
+                # 檢查模型名稱的有效性
+                valid_models = self._count_valid_models_in_table(table)
+                if valid_models > 0:
+                    score += min(0.1, valid_models * 0.05)
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logging.error(f"計算解析品質評分時發生錯誤: {e}")
+            return 0.5
+    
+    def _smart_extract_response(self, content: str) -> dict:
+        """
+        智能提取回應內容，處理非標準格式
+        """
+        try:
+            result = {}
+            
+            # 使用更靈活的方式提取 summary
+            summary_patterns = [
+                r'(?:answer_summary|summary|摘要|總結)[\s]*[:：]\s*"?([^"\n]+)"?',
+                r'"answer_summary"\s*:\s*"([^"]+)"',
+                r'總結[:：]?\s*([^\n]+)',
+                r'答案[:：]?\s*([^\n]+)'
+            ]
+            
+            for pattern in summary_patterns:
+                match = re.search(pattern, content, re.IGNORECASE | re.MULTILINE)
+                if match:
+                    result["answer_summary"] = match.group(1).strip()
+                    break
+            
+            # 如果沒有找到摘要，嘗試從內容中生成
+            if "answer_summary" not in result:
+                lines = content.split('\n')
+                for line in lines[:5]:  # 檢查前5行
+                    if len(line.strip()) > 20 and not line.strip().startswith('{'):
+                        result["answer_summary"] = line.strip()
+                        break
+            
+            # 提取表格（如果存在）
+            result["comparison_table"] = []
+            
+            # 嘗試從 markdown 表格提取
+            table_content = self._extract_markdown_table(content)
+            if table_content:
+                result["comparison_table"] = table_content
+            
+            return result if result else None
+            
+        except Exception as e:
+            logging.error(f"智能提取時發生錯誤: {e}")
+            return None
+    
+    def _extract_markdown_table(self, content: str) -> list:
+        """
+        從 markdown 表格中提取資料
+        """
+        try:
+            table_data = []
+            lines = content.split('\n')
+            
+            # 找到表格開始
+            table_start = -1
+            for i, line in enumerate(lines):
+                if '|' in line and 'feature' in line.lower():
+                    table_start = i
+                    break
+            
+            if table_start == -1:
+                return []
+            
+            # 解析表格
+            header_line = lines[table_start]
+            headers = [h.strip(' |') for h in header_line.split('|') if h.strip()]
+            
+            # 跳過分隔線
+            data_start = table_start + 2
+            
+            for i in range(data_start, len(lines)):
+                line = lines[i]
+                if not line.strip() or '|' not in line:
+                    break
+                
+                row_data = [d.strip(' |') for d in line.split('|') if d.strip()]
+                if len(row_data) >= len(headers):
+                    row_dict = {}
+                    for j, header in enumerate(headers):
+                        if j < len(row_data):
+                            row_dict[header] = row_data[j]
+                    table_data.append(row_dict)
+            
+            return table_data
+            
+        except Exception as e:
+            logging.error(f"提取 markdown 表格時發生錯誤: {e}")
+            return []
+    
+    def _create_fallback_response(self, error_message: str) -> dict:
+        """
+        創建後備回應
+        """
+        return {
+            "answer_summary": f"抱歉，處理您的查詢時遇到問題：{error_message}。請重新描述您的需求，我將為您提供更好的服務。",
+            "comparison_table": [],
+            "parse_quality_score": 0.0,
+            "parsed_at": self._get_timestamp(),
+            "is_fallback": True,
+            "stats": {
+                "table_rows": 0,
+                "model_count": 0,
+                "features_covered": 0
+            }
+        }
+    
+    def _validate_and_fix_model_names(self, table: list) -> list:
+        """
+        驗證並修復表格中的模型名稱
+        """
+        try:
+            if not table:
+                return table
+            
+            fixed_table = []
+            
+            for row in table:
+                if not isinstance(row, dict):
+                    continue
+                
+                fixed_row = {}
+                for key, value in row.items():
+                    # 檢查鍵是否為有效的模型名稱
+                    if key != "feature":
+                        if key in AVAILABLE_MODELNAMES:
+                            fixed_row[key] = value
+                        else:
+                            # 嘗試模糊匹配
+                            fuzzy_matches = self._fuzzy_match_model_name(key)
+                            if fuzzy_matches:
+                                # 使用第一個匹配結果
+                                fixed_row[fuzzy_matches[0]] = value
+                                logging.info(f"修復模型名稱: {key} -> {fuzzy_matches[0]}")
+                            else:
+                                # 保留原始鍵但記錄警告
+                                fixed_row[key] = value
+                                logging.warning(f"無法識別的模型名稱: {key}")
+                    else:
+                        fixed_row[key] = value
+                
+                fixed_table.append(fixed_row)
+            
+            return fixed_table
+            
+        except Exception as e:
+            logging.error(f"驗證和修復模型名稱時發生錯誤: {e}")
+            return table
+    
+    def _count_models_in_table(self, table: list) -> int:
+        """計算表格中的模型數量"""
+        if not table:
+            return 0
+        
+        model_names = set()
+        for row in table:
+            if isinstance(row, dict):
+                for key in row.keys():
+                    if key != "feature":
+                        model_names.add(key)
+        
+        return len(model_names)
+    
+    def _count_features_in_table(self, table: list) -> int:
+        """計算表格中的特徵數量"""
+        return len(table) if table else 0
+    
+    def _count_valid_models_in_table(self, table: list) -> int:
+        """計算表格中有效的模型數量"""
+        if not table:
+            return 0
+        
+        valid_models = set()
+        for row in table:
+            if isinstance(row, dict):
+                for key in row.keys():
+                    if key != "feature" and key in AVAILABLE_MODELNAMES:
+                        valid_models.add(key)
+        
+        return len(valid_models)
+    
+    def _get_timestamp(self) -> str:
+        """獲取當前時間戳"""
+        from datetime import datetime
+        return datetime.now().isoformat()
+    
+    def validate_response_quality(self, response: dict, query: str, query_intent: dict) -> dict:
+        """
+        全面的回應品質驗證系統
+        """
+        try:
+            logging.info("開始回應品質驗證")
+            
+            quality_report = {
+                "overall_score": 0.0,
+                "scores": {},
+                "issues": [],
+                "suggestions": [],
+                "validation_passed": False
+            }
+            
+            # 1. 結構完整性檢查
+            structure_score = self._validate_structure_completeness(response)
+            quality_report["scores"]["structure"] = structure_score
+            
+            # 2. 內容準確性檢查
+            accuracy_score = self._validate_content_accuracy(response, query_intent)
+            quality_report["scores"]["accuracy"] = accuracy_score
+            
+            # 3. 相關性檢查
+            relevance_score = self._validate_response_relevance(response, query, query_intent)
+            quality_report["scores"]["relevance"] = relevance_score
+            
+            # 4. 完整性檢查
+            completeness_score = self._validate_response_completeness(response, query_intent)
+            quality_report["scores"]["completeness"] = completeness_score
+            
+            # 5. 可讀性檢查
+            readability_score = self._validate_response_readability(response)
+            quality_report["scores"]["readability"] = readability_score
+            
+            # 計算總分
+            weights = {
+                "structure": 0.25,
+                "accuracy": 0.25,
+                "relevance": 0.20,
+                "completeness": 0.20,
+                "readability": 0.10
+            }
+            
+            quality_report["overall_score"] = sum(
+                quality_report["scores"][key] * weights[key]
+                for key in weights.keys()
+            )
+            
+            # 判斷是否通過驗證
+            quality_report["validation_passed"] = quality_report["overall_score"] >= 0.7
+            
+            # 生成改進建議
+            quality_report["suggestions"] = self._generate_improvement_suggestions(quality_report)
+            
+            logging.info(f"品質驗證完成，總分: {quality_report['overall_score']:.2f}")
+            return quality_report
+            
+        except Exception as e:
+            logging.error(f"回應品質驗證時發生錯誤: {e}")
+            return {
+                "overall_score": 0.0,
+                "scores": {},
+                "issues": [f"驗證過程發生錯誤: {e}"],
+                "suggestions": ["請重新生成回應"],
+                "validation_passed": False
+            }
+    
+    def _validate_structure_completeness(self, response: dict) -> float:
+        """驗證結構完整性"""
+        try:
+            score = 0.0
+            
+            # 檢查必要欄位
+            if "answer_summary" in response:
+                score += 0.4
+                if isinstance(response["answer_summary"], str) and len(response["answer_summary"].strip()) > 0:
+                    score += 0.1
+            
+            if "comparison_table" in response:
+                score += 0.4
+                if isinstance(response["comparison_table"], list):
+                    score += 0.1
+                    if response["comparison_table"]:  # 非空
+                        score += 0.1
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logging.error(f"結構完整性驗證錯誤: {e}")
+            return 0.0
+    
+    def _validate_content_accuracy(self, response: dict, query_intent: dict) -> float:
+        """驗證內容準確性"""
+        try:
+            score = 0.0
+            table = response.get("comparison_table", [])
+            
+            if not table:
+                return 0.5  # 沒有表格不一定是錯誤
+            
+            # 檢查模型名稱準確性
+            valid_model_count = 0
+            total_model_count = 0
+            
+            for row in table:
+                if isinstance(row, dict):
+                    for key in row.keys():
+                        if key != "feature":
+                            total_model_count += 1
+                            if key in AVAILABLE_MODELNAMES:
+                                valid_model_count += 1
+            
+            if total_model_count > 0:
+                model_accuracy = valid_model_count / total_model_count
+                score += model_accuracy * 0.6
+            
+            # 檢查特徵名稱合理性
+            feature_count = len([row for row in table if isinstance(row, dict) and "feature" in row])
+            if feature_count > 0:
+                score += 0.4
+                
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logging.error(f"內容準確性驗證錯誤: {e}")
+            return 0.0
+    
+    def _validate_response_relevance(self, response: dict, query: str, query_intent: dict) -> float:
+        """驗證回應相關性"""
+        try:
+            score = 0.0
+            
+            # 檢查回應是否與查詢意圖相符
+            primary_intent = query_intent.get("primary_intent", "general")
+            table = response.get("comparison_table", [])
+            summary = response.get("answer_summary", "").lower()
+            
+            # 根據意圖類型檢查相關性
+            if primary_intent == "comparison":
+                if len(table) > 0 and self._count_models_in_table(table) > 1:
+                    score += 0.5
+                if any(word in summary for word in ["比較", "compare", "差異", "不同"]):
+                    score += 0.3
+            
+            elif primary_intent in ["cpu", "gpu", "memory", "battery", "storage"]:
+                # 檢查是否包含相應的規格特徵
+                relevant_features = self._get_relevant_features_for_intent(primary_intent)
+                if table:
+                    table_features = [row.get("feature", "").lower() for row in table if isinstance(row, dict)]
+                    matching_features = sum(1 for feature in relevant_features if any(rf in feature for rf in relevant_features))
+                    if matching_features > 0:
+                        score += 0.5
+                
+                # 檢查摘要中是否提到相關關鍵詞
+                intent_keywords = self.intent_keywords.get(primary_intent, {}).get("keywords", [])
+                if any(keyword.lower() in summary for keyword in intent_keywords):
+                    score += 0.3
+            
+            elif primary_intent == "specifications":
+                if table and len(table) > 2:  # 有多個規格項目
+                    score += 0.5
+                if any(word in summary for word in ["規格", "specification", "配置"]):
+                    score += 0.3
+            
+            # 檢查目標模型是否出現在回應中
+            target_models = query_intent.get("modelnames", [])
+            if target_models:
+                response_text = json.dumps(response, ensure_ascii=False).lower()
+                matched_models = sum(1 for model in target_models if model.lower() in response_text)
+                if matched_models > 0:
+                    score += 0.2
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logging.error(f"相關性驗證錯誤: {e}")
+            return 0.0
+    
+    def _validate_response_completeness(self, response: dict, query_intent: dict) -> float:
+        """驗證回應完整性"""
+        try:
+            score = 0.0
+            
+            # 檢查摘要完整性
+            summary = response.get("answer_summary", "")
+            if len(summary) > 20:
+                score += 0.3
+                if len(summary) > 100:
+                    score += 0.2
+            
+            # 檢查表格完整性
+            table = response.get("comparison_table", [])
+            if table:
+                # 檢查是否有足夠的特徵項目
+                feature_count = len(table)
+                if feature_count >= 3:
+                    score += 0.3
+                    if feature_count >= 5:
+                        score += 0.1
+                
+                # 檢查是否包含多個模型
+                model_count = self._count_models_in_table(table)
+                if model_count >= 2:
+                    score += 0.1
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logging.error(f"完整性驗證錯誤: {e}")
+            return 0.0
+    
+    def _validate_response_readability(self, response: dict) -> float:
+        """驗證回應可讀性"""
+        try:
+            score = 0.0
+            
+            # 檢查摘要可讀性
+            summary = response.get("answer_summary", "")
+            if summary:
+                # 檢查是否包含標點符號
+                if any(punct in summary for punct in ["。", "，", "；", "：", ".", ",", ";", ":"]):
+                    score += 0.3
+                
+                # 檢查長度適中性
+                if 20 <= len(summary) <= 300:
+                    score += 0.2
+                
+                # 檢查是否使用繁體中文
+                if self._is_traditional_chinese(summary):
+                    score += 0.2
+            
+            # 檢查表格可讀性
+            table = response.get("comparison_table", [])
+            if table:
+                # 檢查特徵名稱是否有意義
+                valid_features = 0
+                total_features = 0
+                
+                for row in table:
+                    if isinstance(row, dict) and "feature" in row:
+                        total_features += 1
+                        feature_name = row["feature"].strip()
+                        if len(feature_name) > 2 and not feature_name.isdigit():
+                            valid_features += 1
+                
+                if total_features > 0:
+                    feature_quality = valid_features / total_features
+                    score += feature_quality * 0.3
+            
+            return min(score, 1.0)
+            
+        except Exception as e:
+            logging.error(f"可讀性驗證錯誤: {e}")
+            return 0.0
+    
+    def _get_relevant_features_for_intent(self, intent: str) -> list:
+        """根據意圖獲取相關的特徵關鍵詞"""
+        feature_mapping = {
+            "cpu": ["cpu", "處理器", "processor", "核心", "core"],
+            "gpu": ["gpu", "顯卡", "graphics", "radeon"],
+            "memory": ["記憶體", "內存", "memory", "ram", "ddr"],
+            "battery": ["電池", "battery", "續航", "電量"],
+            "storage": ["硬碟", "硬盤", "storage", "ssd", "nvme"],
+            "display": ["螢幕", "顯示", "screen", "lcd"],
+            "portability": ["重量", "尺寸", "weight", "dimension"]
+        }
+        return feature_mapping.get(intent, [])
+    
+    def _is_traditional_chinese(self, text: str) -> bool:
+        """檢查文本是否主要使用繁體中文"""
+        try:
+            # 檢查一些常見的繁簡字對
+            traditional_chars = ["電", "記憶體", "螢幕", "顯示", "處理器", "規格"]
+            simplified_chars = ["电", "内存", "屏幕", "显示", "处理器", "规格"]
+            
+            traditional_count = sum(1 for char in traditional_chars if char in text)
+            simplified_count = sum(1 for char in simplified_chars if char in text)
+            
+            return traditional_count >= simplified_count
+            
+        except Exception as e:
+            logging.error(f"繁體中文檢查錯誤: {e}")
+            return True  # 預設為True
+    
+    def _generate_improvement_suggestions(self, quality_report: dict) -> list:
+        """根據品質報告生成改進建議"""
+        suggestions = []
+        scores = quality_report.get("scores", {})
+        
+        if scores.get("structure", 0) < 0.7:
+            suggestions.append("改進回應結構：確保包含完整的 answer_summary 和 comparison_table")
+        
+        if scores.get("accuracy", 0) < 0.7:
+            suggestions.append("提高內容準確性：檢查模型名稱和規格資訊的正確性")
+        
+        if scores.get("relevance", 0) < 0.7:
+            suggestions.append("增強相關性：確保回應內容與用戶查詢意圖相符")
+        
+        if scores.get("completeness", 0) < 0.7:
+            suggestions.append("完善回應內容：提供更詳細的比較資訊和特徵說明")
+        
+        if scores.get("readability", 0) < 0.7:
+            suggestions.append("改善可讀性：使用清晰的繁體中文和適當的格式")
+        
+        return suggestions
+    
+    def generate_dynamic_prompt(self, query: str, query_intent: dict, context: list) -> str:
+        """
+        根據查詢意圖和上下文動態生成優化的提示模板
+        """
+        try:
+            logging.info("開始生成動態提示")
+            
+            # 基礎提示模板
+            base_prompt = self.prompt_template
+            
+            # 根據意圖類型進行動態調整
+            primary_intent = query_intent.get("primary_intent", "general")
+            target_models = query_intent.get("modelnames", [])
+            confidence_score = query_intent.get("confidence_score", 0.0)
+            
+            # 動態調整提示內容
+            enhanced_prompt = self._enhance_prompt_for_intent(base_prompt, primary_intent, query_intent)
+            
+            # 添加模型特定的指導
+            if target_models:
+                enhanced_prompt = self._add_model_specific_guidance(enhanced_prompt, target_models)
+            
+            # 根據信心度調整嚴格程度
+            if confidence_score < 0.6:
+                enhanced_prompt = self._add_uncertainty_handling(enhanced_prompt, query)
+            
+            # 添加品質控制指令
+            enhanced_prompt = self._add_quality_control_instructions(enhanced_prompt, query_intent)
+            
+            # 添加多意圖處理指令
+            if len(query_intent.get("intents", [])) > 1:
+                enhanced_prompt = self._add_multi_intent_instructions(enhanced_prompt, query_intent["intents"])
+            
+            logging.info(f"動態提示生成完成，意圖: {primary_intent}, 信心度: {confidence_score:.2f}")
+            return enhanced_prompt
+            
+        except Exception as e:
+            logging.error(f"動態提示生成失敗: {e}")
+            return self.prompt_template  # 回退到原始模板
+    
+    def _enhance_prompt_for_intent(self, base_prompt: str, intent: str, query_intent: dict) -> str:
+        """
+        根據具體意圖增強提示內容
+        """
+        try:
+            # 意圖特定的指導
+            intent_guidance = {
+                "comparison": """
+[COMPARISON FOCUS]
+- 重點突出兩個或多個模型之間的差異
+- 在 comparison_table 中明確顯示對比項目
+- 在 answer_summary 中提供清晰的比較結論
+- 特別注意效能差異和適用場景
+""",
+                "cpu": """
+[CPU FOCUS]
+- 專注於處理器相關規格：型號、核心數、頻率、架構
+- 在表格中包含 CPU Model、CPU Cores/Threads、CPU Frequency 等特徵
+- 解釋 CPU 效能對日常使用和專業工作的影響
+- 提及功耗和散熱特性
+""",
+                "gpu": """
+[GPU FOCUS]
+- 專注於顯卡相關規格：型號、記憶體、效能等級
+- 強調遊戲和圖形處理能力
+- 在表格中包含 GPU Model、GPU Memory、Graphics Performance 等特徵
+- 解釋適合的應用場景（辦公、遊戲、創作）
+""",
+                "memory": """
+[MEMORY FOCUS]
+- 專注於記憶體規格：容量、類型、頻率、擴展性
+- 在表格中包含 RAM Capacity、RAM Type、RAM Speed 等特徵
+- 解釋記憶體對系統效能的影響
+- 提及升級可能性
+""",
+                "battery": """
+[BATTERY FOCUS]
+- 專注於電池相關規格：容量、續航時間、充電速度
+- 在表格中包含 Battery Capacity、Battery Life、Charging Speed 等特徵
+- 提供實際使用情境下的續航估算
+- 考慮不同使用模式的電池表現
+""",
+                "storage": """
+[STORAGE FOCUS]
+- 專注於儲存相關規格：容量、類型、速度、擴展性
+- 在表格中包含 Storage Type、Storage Capacity、Storage Speed 等特徵
+- 解釋 SSD vs HDD 的效能差異
+- 提及升級和擴展選項
+""",
+                "portability": """
+[PORTABILITY FOCUS]
+- 專注於便攜性：重量、尺寸、材質、設計
+- 在表格中包含 Weight、Dimensions、Build Quality 等特徵
+- 評估攜帶便利性和日常使用場景
+- 考慮耐用性和設計美感
+""",
+                "latest": """
+[LATEST MODELS FOCUS]
+- 強調最新的技術特性和改進
+- 突出與前代產品的差異和優勢
+- 提及最新的軟硬體支援
+- 評估技術前瞻性和投資價值
+"""
+            }
+            
+            specific_guidance = intent_guidance.get(intent, "")
+            if specific_guidance:
+                # 在現有提示中插入特定指導
+                insertion_point = base_prompt.find("[QUERY INTENT ANALYSIS]")
+                if insertion_point != -1:
+                    enhanced_prompt = base_prompt[:insertion_point] + specific_guidance + "\n" + base_prompt[insertion_point:]
+                else:
+                    enhanced_prompt = base_prompt + "\n" + specific_guidance
+            else:
+                enhanced_prompt = base_prompt
+            
+            return enhanced_prompt
+            
+        except Exception as e:
+            logging.error(f"意圖特定提示增強失敗: {e}")
+            return base_prompt
+    
+    def _add_model_specific_guidance(self, prompt: str, target_models: list) -> str:
+        """
+        添加模型特定的指導
+        """
+        try:
+            model_guidance = f"""
+[TARGET MODELS GUIDANCE]
+- 本次查詢重點關注的模型：{', '.join(target_models)}
+- 確保在 comparison_table 中使用這些確切的模型名稱
+- 重點比較這些特定模型的規格差異
+- 在 answer_summary 中明確提及這些模型的特點
+"""
+            
+            # 在提示末尾添加模型指導
+            return prompt + "\n" + model_guidance
+            
+        except Exception as e:
+            logging.error(f"模型特定指導添加失敗: {e}")
+            return prompt
+    
+    def _add_uncertainty_handling(self, prompt: str, query: str) -> str:
+        """
+        添加不確定性處理指令
+        """
+        try:
+            uncertainty_guidance = """
+[UNCERTAINTY HANDLING]
+- 查詢意圖不太明確，請特別注意：
+- 如果無法確定具體的比較需求，提供通用的規格概覽
+- 在 answer_summary 中說明可能的理解並建議用戶澄清需求
+- 避免做出過於具體的推薦，除非有充分的資料支持
+- 如果資料不足，誠實說明限制並建議替代方案
+"""
+            
+            return prompt + "\n" + uncertainty_guidance
+            
+        except Exception as e:
+            logging.error(f"不確定性處理指令添加失敗: {e}")
+            return prompt
+    
+    def _add_quality_control_instructions(self, prompt: str, query_intent: dict) -> str:
+        """
+        添加品質控制指令
+        """
+        try:
+            quality_instructions = """
+[ENHANCED QUALITY CONTROL]
+- 嚴格遵循 JSON 格式要求，確保輸出可以被成功解析
+- 所有模型名稱必須完全匹配資料庫中的 modelname 欄位
+- comparison_table 的第一欄必須是 "feature"，包含規格類型名稱
+- answer_summary 必須是簡潔明瞭的繁體中文總結
+- 如果資料不足，使用 "N/A" 而非猜測或虛構資訊
+- 確保表格結構一致，每行都包含相同的模型欄位
+"""
+            
+            return prompt + "\n" + quality_instructions
+            
+        except Exception as e:
+            logging.error(f"品質控制指令添加失敗: {e}")
+            return prompt
+    
+    def _add_multi_intent_instructions(self, prompt: str, intents: list) -> str:
+        """
+        添加多意圖處理指令
+        """
+        try:
+            intent_names = [intent["name"] for intent in intents if intent["confidence"] > 0.3]
+            
+            multi_intent_guidance = f"""
+[MULTI-INTENT HANDLING]
+- 檢測到多個查詢意圖：{', '.join(intent_names)}
+- 請在回應中平衡處理所有相關意圖
+- 在 comparison_table 中包含所有相關的規格類型
+- 在 answer_summary 中綜合考慮所有意圖，提供全面的分析
+- 優先處理信心度最高的意圖，同時兼顧其他相關需求
+"""
+            
+            return prompt + "\n" + multi_intent_guidance
+            
+        except Exception as e:
+            logging.error(f"多意圖處理指令添加失敗: {e}")
+            return prompt
+    
+    def create_adaptive_prompt_template(self, success_patterns: dict = None, failure_patterns: dict = None) -> str:
+        """
+        基於歷史成功和失敗模式創建自適應提示模板
+        """
+        try:
+            # 基礎模板
+            adaptive_template = self.prompt_template
+            
+            # 如果有成功模式，強化相關指令
+            if success_patterns:
+                for pattern, frequency in success_patterns.items():
+                    if frequency > 0.8:  # 高成功率的模式
+                        enhancement = self._create_pattern_enhancement(pattern, True)
+                        adaptive_template += f"\n{enhancement}"
+            
+            # 如果有失敗模式，添加避免指令
+            if failure_patterns:
+                for pattern, frequency in failure_patterns.items():
+                    if frequency > 0.3:  # 常見失敗模式
+                        avoidance = self._create_pattern_enhancement(pattern, False)
+                        adaptive_template += f"\n{avoidance}"
+            
+            return adaptive_template
+            
+        except Exception as e:
+            logging.error(f"自適應提示模板創建失敗: {e}")
+            return self.prompt_template
+    
+    def _create_pattern_enhancement(self, pattern: str, is_success: bool) -> str:
+        """
+        基於模式創建提示增強
+        """
+        if is_success:
+            return f"[SUCCESS PATTERN] 繼續使用成功模式：{pattern}"
+        else:
+            return f"[AVOID PATTERN] 避免失敗模式：{pattern}"
 
     def _create_simple_table_from_dict_improved(self, comparison_dict: dict, answer_summary=None) -> str:
         """
@@ -861,53 +1834,288 @@ class SalesAssistantService(BaseService):
 
     def _parse_query_intent(self, query: str) -> dict:
         """
-        解析用户查询意图
-        返回包含modelname、modeltype、intent的字典
+        增強版查詢意圖解析，整合實體識別系統
+        支援多意圖檢測和信心度評分
         """
         try:
-            logging.info(f"開始解析查詢意圖: {query}")
+            logging.info(f"開始增強版查詢意圖解析: {query}")
+            
+            # 使用實體識別系統進行全面分析
+            entity_analysis = self.entity_recognizer.process_text(query)
             
             result = {
                 "modelnames": [],
                 "modeltypes": [],
-                "intent": "general",  # 默认意图
-                "query_type": "unknown"  # 查询类型
+                "intents": [],  # 支援多意圖
+                "primary_intent": "general",  # 主要意圖
+                "query_type": "unknown",
+                "entities": entity_analysis.get("entities", []),
+                "confidence_score": 0.0,
+                "entity_intent_relations": entity_analysis.get("relations", [])
             }
             
-            # 1. 检查是否包含modelname
+            # 1. 從實體識別結果中提取模型名稱和類型
+            for entity in entity_analysis.get("entities", []):
+                if entity["label"] == "MODEL_NAME":
+                    # 精確匹配
+                    if entity["text"] in AVAILABLE_MODELNAMES:
+                        result["modelnames"].append(entity["text"])
+                        result["query_type"] = "specific_model"
+                    else:
+                        # 模糊匹配
+                        fuzzy_matches = self._fuzzy_match_model_name(entity["text"])
+                        if fuzzy_matches:
+                            result["modelnames"].extend(fuzzy_matches)
+                            result["query_type"] = "specific_model"
+                            logging.info(f"模糊匹配到模型: {entity['text']} -> {fuzzy_matches}")
+                elif entity["label"] == "MODEL_TYPE":
+                    if entity["text"] in AVAILABLE_MODELTYPES:
+                        result["modeltypes"].append(entity["text"])
+                        if result["query_type"] == "unknown":
+                            result["query_type"] = "model_type"
+            
+            # 2. 多意圖檢測 - 使用加權評分系統
+            intent_scores = {}
+            query_lower = query.lower()
+            
+            for intent_name, intent_config in self.intent_keywords.items():
+                keywords = intent_config.get("keywords", [])
+                score = 0.0
+                matched_keywords = []
+                
+                for keyword in keywords:
+                    if keyword.lower() in query_lower:
+                        # 基礎分數
+                        keyword_score = 1.0
+                        
+                        # 根據關鍵字長度調整權重
+                        keyword_score *= (len(keyword) / 10.0 + 0.5)
+                        
+                        # 檢查是否為完整詞彙匹配
+                        if f" {keyword.lower()} " in f" {query_lower} ":
+                            keyword_score *= 1.5
+                        
+                        score += keyword_score
+                        matched_keywords.append(keyword)
+                
+                if score > 0:
+                    intent_scores[intent_name] = {
+                        "score": score,
+                        "keywords": matched_keywords,
+                        "confidence": min(score / len(keywords), 1.0) if keywords else 0.0
+                    }
+            
+            # 3. 排序意圖並選擇主要意圖
+            sorted_intents = sorted(intent_scores.items(), key=lambda x: x[1]["score"], reverse=True)
+            
+            if sorted_intents:
+                # 主要意圖
+                result["primary_intent"] = sorted_intents[0][0]
+                result["confidence_score"] = sorted_intents[0][1]["confidence"]
+                
+                # 所有檢測到的意圖（分數 > 0.3 的）
+                result["intents"] = [
+                    {
+                        "name": intent_name,
+                        "confidence": intent_data["confidence"],
+                        "keywords": intent_data["keywords"]
+                    }
+                    for intent_name, intent_data in sorted_intents
+                    if intent_data["confidence"] > 0.3
+                ]
+                
+                logging.info(f"檢測到多個意圖: {[i['name'] for i in result['intents']]}")
+            
+            # 4. 後備意圖推斷 - 根據實體類型推斷可能的意圖
+            if result["primary_intent"] == "general" and entity_analysis.get("entities"):
+                inferred_intent = self._infer_intent_from_entities(entity_analysis.get("entities", []))
+                if inferred_intent:
+                    result["primary_intent"] = inferred_intent
+                    result["confidence_score"] = 0.6  # 推斷的信心度較低
+                    logging.info(f"根據實體推斷意圖: {inferred_intent}")
+            
+            # 5. 為了向後兼容，保持舊的 intent 欄位
+            result["intent"] = result["primary_intent"]
+            
+            logging.info(f"增強版查詢意圖解析結果: {result}")
+            return result
+            
+        except Exception as e:
+            logging.error(f"增強版查詢意圖解析時發生錯誤: {e}")
+            # 回退到原始方法
+            return self._parse_query_intent_fallback(query)
+    
+    def _infer_intent_from_entities(self, entities: list) -> str:
+        """
+        根據實體類型推斷可能的意圖
+        """
+        entity_labels = [entity["label"] for entity in entities]
+        
+        # 推斷規則
+        if "COMPARISON_WORD" in entity_labels:
+            return "comparison"
+        elif "SPEC_TYPE" in entity_labels:
+            spec_entities = [e for e in entities if e["label"] == "SPEC_TYPE"]
+            if spec_entities:
+                spec_text = spec_entities[0]["text"].lower()
+                if any(word in spec_text for word in ["cpu", "處理器"]):
+                    return "cpu"
+                elif any(word in spec_text for word in ["gpu", "顯卡"]):
+                    return "gpu"
+                elif any(word in spec_text for word in ["記憶體", "內存", "memory"]):
+                    return "memory"
+                elif any(word in spec_text for word in ["電池", "battery"]):
+                    return "battery"
+                else:
+                    return "specifications"
+        elif "TIME_WORD" in entity_labels:
+            return "latest"
+        elif "PERFORMANCE_WORD" in entity_labels:
+            return "specifications"
+        elif "PRICE_WORD" in entity_labels:
+            return "general"  # 目前沒有價格相關的意圖
+        
+        return None
+    
+    def _fuzzy_match_model_name(self, input_name: str, threshold: float = 0.7) -> list:
+        """
+        模糊匹配模型名稱，處理拼寫錯誤或部分匹配
+        """
+        try:
+            matches = []
+            input_lower = input_name.lower().strip()
+            
+            for available_name in AVAILABLE_MODELNAMES:
+                available_lower = available_name.lower()
+                
+                # 1. 子字串匹配
+                if input_lower in available_lower or available_lower in input_lower:
+                    matches.append(available_name)
+                    continue
+                
+                # 2. 相似度計算（簡單版本）
+                similarity = self._calculate_string_similarity(input_lower, available_lower)
+                if similarity >= threshold:
+                    matches.append(available_name)
+                    logging.info(f"相似度匹配: {input_name} <-> {available_name} (相似度: {similarity:.2f})")
+                
+                # 3. 關鍵部分匹配（型號系列）
+                input_series = self._extract_model_series(input_lower)
+                available_series = self._extract_model_series(available_lower)
+                if input_series and available_series and input_series == available_series:
+                    matches.append(available_name)
+                    logging.info(f"系列匹配: {input_name} <-> {available_name} (系列: {input_series})")
+            
+            # 去重並限制結果數量
+            matches = list(dict.fromkeys(matches))[:3]  # 最多返回3個匹配結果
+            
+            return matches
+            
+        except Exception as e:
+            logging.error(f"模糊匹配時發生錯誤: {e}")
+            return []
+    
+    def _calculate_string_similarity(self, str1: str, str2: str) -> float:
+        """
+        計算兩個字串的相似度（簡化版 Levenshtein 距離）
+        """
+        try:
+            if not str1 or not str2:
+                return 0.0
+            
+            if str1 == str2:
+                return 1.0
+            
+            # 簡化版相似度計算
+            max_len = max(len(str1), len(str2))
+            if max_len == 0:
+                return 1.0
+            
+            # 計算共同字符數
+            common_chars = 0
+            str1_chars = list(str1)
+            str2_chars = list(str2)
+            
+            for char in str1_chars:
+                if char in str2_chars:
+                    common_chars += 1
+                    str2_chars.remove(char)
+            
+            return common_chars / max_len
+            
+        except Exception as e:
+            logging.error(f"計算字串相似度時發生錯誤: {e}")
+            return 0.0
+    
+    def _extract_model_series(self, model_name: str) -> str:
+        """
+        從模型名稱中提取系列標識符
+        """
+        try:
+            # 提取數字部分（如819, 839, 958）
+            import re
+            series_match = re.search(r'(819|839|958)', model_name)
+            if series_match:
+                return series_match.group(1)
+            return None
+        except Exception as e:
+            logging.error(f"提取模型系列時發生錯誤: {e}")
+            return None
+    
+    def _parse_query_intent_fallback(self, query: str) -> dict:
+        """
+        原始的意圖解析方法作為後備
+        """
+        try:
+            result = {
+                "modelnames": [],
+                "modeltypes": [],
+                "intents": [],
+                "primary_intent": "general",
+                "intent": "general",
+                "query_type": "unknown",
+                "entities": [],
+                "confidence_score": 0.0,
+                "entity_intent_relations": []
+            }
+            
+            # 1. 檢查模型名稱
             contains_modelname, found_modelnames = self._check_query_contains_modelname(query)
             if contains_modelname:
                 result["modelnames"] = found_modelnames
                 result["query_type"] = "specific_model"
             
-            # 2. 检查是否包含modeltype
+            # 2. 檢查模型類型
             contains_modeltype, found_modeltypes = self._check_query_contains_modeltype(query)
             if contains_modeltype:
                 result["modeltypes"] = found_modeltypes
                 if result["query_type"] == "unknown":
                     result["query_type"] = "model_type"
             
-            # 3. 解析查询意图 - 使用配置檔案中的關鍵字
+            # 3. 簡單意圖檢測
             query_lower = query.lower()
-            
-            # 使用配置檔案中的關鍵字來檢查意圖
             for intent_name, intent_config in self.intent_keywords.items():
                 keywords = intent_config.get("keywords", [])
                 if any(keyword.lower() in query_lower for keyword in keywords):
                     result["intent"] = intent_name
-                    logging.info(f"檢測到意圖 '{intent_name}': {intent_config.get('description', '')}")
+                    result["primary_intent"] = intent_name
+                    result["intents"] = [{"name": intent_name, "confidence": 0.8, "keywords": keywords}]
                     break
             
-            logging.info(f"查詢意圖解析結果: {result}")
             return result
             
         except Exception as e:
-            logging.error(f"解析查詢意圖時發生錯誤: {e}")
+            logging.error(f"後備意圖解析失敗: {e}")
             return {
                 "modelnames": [],
                 "modeltypes": [],
+                "intents": [],
+                "primary_intent": "general",
                 "intent": "general",
-                "query_type": "unknown"
+                "query_type": "unknown",
+                "entities": [],
+                "confidence_score": 0.0,
+                "entity_intent_relations": []
             }
 
     def _get_data_by_query_type(self, query_intent: dict) -> tuple[list, list]:
@@ -990,6 +2198,186 @@ class SalesAssistantService(BaseService):
             logging.error(f"获取数据时发生错误: {e}")
             raise
 
+    async def process_clarification_response(self, conversation_id: str, user_choice: str, user_input: str = ""):
+        """
+        處理用戶的澄清回應
+        
+        Args:
+            conversation_id: 對話ID
+            user_choice: 用戶選擇的選項ID
+            user_input: 用戶額外輸入
+            
+        Returns:
+            處理結果
+        """
+        try:
+            logging.info(f"處理澄清回應: conversation_id={conversation_id}, choice={user_choice}")
+            
+            # 處理澄清回應
+            result = self.clarification_manager.process_clarification_response(
+                conversation_id, user_choice, user_input
+            )
+            
+            if result["action"] == "continue":
+                # 需要下一步澄清
+                next_question = result["next_question"]
+                
+                clarification_response = {
+                    "message_type": "clarification_request",
+                    "conversation_id": conversation_id,
+                    "question": next_question.question,
+                    "question_type": next_question.question_type,
+                    "options": next_question.options,
+                    "current_step": result["current_step"],
+                    "total_steps": result["total_steps"],
+                    "template_name": next_question.template_name,
+                    "answer_summary": "感謝您的回覆！請繼續協助我了解您的需求："
+                }
+                
+                return clarification_response
+                
+            elif result["action"] == "complete":
+                # 澄清完成，使用增強的意圖重新查詢
+                enhanced_intent = result["enhanced_intent"]
+                clarification_summary = result["clarification_summary"]
+                
+                logging.info(f"澄清完成，增強意圖: {enhanced_intent}")
+                
+                # 重新構建查詢意圖用於數據檢索
+                enhanced_query_intent = self._build_query_intent_from_enhanced(enhanced_intent)
+                
+                # 執行正常的查詢流程
+                return await self._execute_enhanced_query(enhanced_query_intent, clarification_summary)
+            
+            else:
+                raise ValueError(f"未知的澄清動作: {result['action']}")
+                
+        except Exception as e:
+            logging.error(f"處理澄清回應時發生錯誤: {e}")
+            return {
+                "message_type": "error",
+                "answer_summary": f"處理澄清回應時發生錯誤: {str(e)}",
+                "comparison_table": []
+            }
+
+    def _build_query_intent_from_enhanced(self, enhanced_intent: dict) -> dict:
+        """
+        從增強意圖構建查詢意圖
+        """
+        clarification_context = enhanced_intent.get("clarification_context", {})
+        primary_intent = enhanced_intent.get("primary_intent", "general")
+        priority_specs = enhanced_intent.get("priority_specs", [])
+        
+        # 根據使用場景和澄清資訊構建查詢意圖
+        usage_scenario = clarification_context.get("usage_scenario", "")
+        
+        # 映射使用場景到型號系列
+        modeltype_mapping = {
+            "gaming": "958",      # 遊戲娛樂 -> 高性能958系列
+            "business": "819",    # 商務辦公 -> 819系列
+            "creation": "958",    # 設計創作 -> 高性能958系列
+            "study": "839"        # 學習研究 -> 中階839系列
+        }
+        
+        query_intent = {
+            "modelnames": [],
+            "modeltypes": [modeltype_mapping.get(usage_scenario, "839")],  # 預設中階
+            "intents": priority_specs,
+            "primary_intent": primary_intent,
+            "intent": primary_intent,
+            "query_type": "model_type",  # 基於系列進行查詢
+            "confidence_score": enhanced_intent.get("confidence_score", 0.9),
+            "clarification_enhanced": True,
+            "clarification_context": clarification_context
+        }
+        
+        return query_intent
+
+    async def _execute_enhanced_query(self, query_intent: dict, clarification_summary: str):
+        """
+        使用增強意圖執行查詢
+        """
+        try:
+            # 獲取數據
+            context_list_of_dicts, target_modelnames = self._get_data_by_query_type(query_intent)
+            
+            # 構建增強的上下文
+            enhanced_context = {
+                "data": context_list_of_dicts,
+                "query_intent": query_intent,
+                "target_modelnames": target_modelnames,
+                "clarification_summary": clarification_summary
+            }
+            
+            context_str = json.dumps(enhanced_context, indent=2, ensure_ascii=False)
+            
+            # 構建針對澄清結果的特殊提示
+            clarification_prompt = f"""
+根據用戶的澄清回應：{clarification_summary}
+
+請基於以下資訊提供精準的筆電推薦：
+- 使用場景已確認
+- 需求優先級已明確
+- 推薦重點應符合澄清結果
+
+{self.prompt_template}
+"""
+            
+            # 構建查詢（基於澄清結果的虛擬查詢）
+            virtual_query = f"根據我的需求（{clarification_summary}），推薦適合的筆電"
+            
+            final_prompt = clarification_prompt.replace("{context}", context_str).replace("{query}", virtual_query)
+            
+            # 調用 LLM
+            response_str = self.llm_initializer.invoke(final_prompt)
+            
+            # 解析回應
+            think_end = response_str.find("</think>")
+            if think_end != -1:
+                cleaned_response_str = response_str[think_end + 8:].strip()
+            else:
+                cleaned_response_str = response_str
+            
+            json_start = cleaned_response_str.find("{")
+            json_end = cleaned_response_str.rfind("}")
+            
+            if json_start != -1 and json_end != -1 and json_end > json_start:
+                json_content = cleaned_response_str[json_start:json_end+1]
+                
+                try:
+                    parsed_json = json.loads(json_content)
+                    
+                    # 添加澄清資訊到回應
+                    parsed_json["message_type"] = "final_response"
+                    parsed_json["clarification_summary"] = clarification_summary
+                    
+                    return parsed_json
+                    
+                except json.JSONDecodeError:
+                    # JSON 解析失敗的後備方案
+                    return {
+                        "message_type": "final_response",
+                        "answer_summary": cleaned_response_str,
+                        "comparison_table": [],
+                        "clarification_summary": clarification_summary
+                    }
+            else:
+                # 沒有找到 JSON 格式的後備方案
+                return {
+                    "message_type": "final_response",
+                    "answer_summary": cleaned_response_str,
+                    "comparison_table": [],
+                    "clarification_summary": clarification_summary
+                }
+                
+        except Exception as e:
+            logging.error(f"執行增強查詢時發生錯誤: {e}")
+            return {
+                "message_type": "error",
+                "answer_summary": f"查詢時發生錯誤: {str(e)}",
+                "comparison_table": []
+            }
+
     async def chat_stream(self, query: str, **kwargs):
         """
         新的RAG流程：
@@ -1003,6 +2391,32 @@ class SalesAssistantService(BaseService):
             # 步骤1：解析查询意图
             query_intent = self._parse_query_intent(query)
             logging.info(f"查詢意圖解析結果: {query_intent}")
+            
+            # 步骤1.5：檢查是否需要澄清對話
+            hierarchical_intent_result = self.entity_recognizer.detect_hierarchical_intent(query)
+            if self.clarification_manager.should_clarify(hierarchical_intent_result):
+                logging.info("檢測到需要澄清對話，開始澄清流程")
+                
+                # 開始澄清對話
+                conversation_id, clarification_question = self.clarification_manager.start_clarification(
+                    query, hierarchical_intent_result
+                )
+                
+                # 構建澄清回應
+                clarification_response = {
+                    "message_type": "clarification_request",
+                    "conversation_id": conversation_id,
+                    "question": clarification_question.question,
+                    "question_type": clarification_question.question_type,
+                    "options": clarification_question.options,
+                    "current_step": clarification_question.step,
+                    "total_steps": self.clarification_manager.active_conversations[conversation_id].total_steps,
+                    "template_name": clarification_question.template_name,
+                    "answer_summary": "為了提供更精準的推薦，請協助我了解您的需求："
+                }
+                
+                yield f"data: {json.dumps(clarification_response, ensure_ascii=False)}\n\n"
+                return
             
             # 检查是否有有效的查询类型
             if query_intent["query_type"] == "unknown":

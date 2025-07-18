@@ -209,7 +209,7 @@ class EntityRecognitionSystem:
     
     def detect_intent(self, text: str) -> Intent:
         """
-        意圖檢測
+        增強版意圖檢測，支援階層式意圖檢測
         
         Args:
             text: 輸入文本
@@ -217,36 +217,177 @@ class EntityRecognitionSystem:
         Returns:
             檢測到的意圖
         """
-        best_intent = 'general'
-        best_confidence = 0.0
-        matched_keywords = []
+        # 使用新的階層式意圖檢測
+        hierarchical_result = self.detect_hierarchical_intent(text)
         
-        text_lower = text.lower()
-        
-        for intent_name, config in self.intent_keywords.items():
-            keywords = config.get('keywords', [])
-            score = 0.0
-            temp_keywords = []
-            
-            # 關鍵詞匹配
-            for keyword in keywords:
-                if keyword.lower() in text_lower:
-                    score += 1.0
-                    temp_keywords.append(keyword)
-            
-            # 計算信心度
-            if keywords:
-                confidence = score / len(keywords)
-                if confidence > best_confidence:
-                    best_confidence = confidence
-                    best_intent = intent_name
-                    matched_keywords = temp_keywords
-        
+        # 為了向後兼容，返回主要意圖
         return Intent(
-            name=best_intent,
-            confidence=best_confidence,
-            keywords=matched_keywords
+            name=hierarchical_result.get("primary_intent", "general"),
+            confidence=hierarchical_result.get("confidence_score", 0.0),
+            keywords=hierarchical_result.get("matched_keywords", [])
         )
+    
+    def detect_hierarchical_intent(self, text: str) -> dict:
+        """
+        階層式意圖檢測，支援基礎意圖和細分意圖
+        
+        Args:
+            text: 輸入文本
+            
+        Returns:
+            包含基礎意圖、細分意圖和相關資訊的字典
+        """
+        try:
+            text_lower = text.lower()
+            base_intents = {}
+            sub_intents = {}
+            all_matched_keywords = []
+            
+            # 1. 檢測基礎意圖
+            for intent_name, intent_config in self.intent_keywords.items():
+                base_keywords = intent_config.get('keywords', [])
+                score = 0.0
+                matched_keywords = []
+                
+                # 基礎關鍵字匹配
+                for keyword in base_keywords:
+                    if keyword.lower() in text_lower:
+                        # 基礎分數
+                        keyword_score = 1.0
+                        
+                        # 根據關鍵字長度調整權重
+                        keyword_score *= (len(keyword) / 10.0 + 0.5)
+                        
+                        # 檢查是否為完整詞彙匹配
+                        if f" {keyword.lower()} " in f" {text_lower} ":
+                            keyword_score *= 1.5
+                        
+                        score += keyword_score
+                        matched_keywords.append(keyword)
+                
+                if score > 0:
+                    confidence = min(score / len(base_keywords), 1.0) if base_keywords else 0.0
+                    base_intents[intent_name] = {
+                        "score": score,
+                        "confidence": confidence,
+                        "keywords": matched_keywords,
+                        "description": intent_config.get("description", "")
+                    }
+                    all_matched_keywords.extend(matched_keywords)
+                
+                # 2. 檢測細分意圖
+                sub_intent_configs = intent_config.get('sub_intents', {})
+                for sub_intent_name, sub_config in sub_intent_configs.items():
+                    sub_keywords = sub_config.get('keywords', [])
+                    sub_score = 0.0
+                    sub_matched_keywords = []
+                    
+                    for keyword in sub_keywords:
+                        if keyword.lower() in text_lower:
+                            # 細分意圖權重更高
+                            keyword_score = 1.5
+                            keyword_score *= (len(keyword) / 10.0 + 0.5)
+                            
+                            if f" {keyword.lower()} " in f" {text_lower} ":
+                                keyword_score *= 2.0
+                            
+                            sub_score += keyword_score
+                            sub_matched_keywords.append(keyword)
+                    
+                    if sub_score > 0:
+                        sub_confidence = min(sub_score / len(sub_keywords), 1.0) if sub_keywords else 0.0
+                        sub_intents[sub_intent_name] = {
+                            "score": sub_score,
+                            "confidence": sub_confidence,
+                            "keywords": sub_matched_keywords,
+                            "parent_intent": intent_name,
+                            "description": sub_config.get("description", ""),
+                            "priority_specs": sub_config.get("priority_specs", []),
+                            "scenarios": sub_config.get("scenarios", [])
+                        }
+                        all_matched_keywords.extend(sub_matched_keywords)
+            
+            # 3. 排序和選擇主要意圖
+            all_intents = {}
+            
+            # 合併基礎意圖和細分意圖
+            for intent_name, intent_data in base_intents.items():
+                all_intents[intent_name] = intent_data
+            
+            for sub_intent_name, sub_intent_data in sub_intents.items():
+                # 細分意圖權重更高
+                sub_intent_data["score"] *= 1.3
+                all_intents[sub_intent_name] = sub_intent_data
+            
+            # 按分數排序
+            sorted_intents = sorted(all_intents.items(), key=lambda x: x[1]["score"], reverse=True)
+            
+            # 構建結果
+            result = {
+                "base_intents": base_intents,
+                "sub_intents": sub_intents,
+                "all_intents": sorted_intents,
+                "primary_intent": "general",
+                "primary_intent_type": "base",
+                "confidence_score": 0.0,
+                "matched_keywords": all_matched_keywords,
+                "intent_analysis": {
+                    "total_base_intents": len(base_intents),
+                    "total_sub_intents": len(sub_intents),
+                    "has_hierarchical_match": len(sub_intents) > 0
+                }
+            }
+            
+            # 設定主要意圖
+            if sorted_intents:
+                primary_intent_name = sorted_intents[0][0]
+                primary_intent_data = sorted_intents[0][1]
+                
+                result["primary_intent"] = primary_intent_name
+                result["confidence_score"] = primary_intent_data["confidence"]
+                
+                # 判斷是基礎意圖還是細分意圖
+                if primary_intent_name in sub_intents:
+                    result["primary_intent_type"] = "sub"
+                    result["parent_intent"] = primary_intent_data.get("parent_intent")
+                    result["priority_specs"] = primary_intent_data.get("priority_specs", [])
+                    result["scenarios"] = primary_intent_data.get("scenarios", [])
+                else:
+                    result["primary_intent_type"] = "base"
+                
+                # 提取高信心度的意圖列表（信心度 > 0.3）
+                high_confidence_intents = [
+                    {
+                        "name": intent_name,
+                        "type": "sub" if intent_name in sub_intents else "base",
+                        "confidence": intent_data["confidence"],
+                        "keywords": intent_data["keywords"]
+                    }
+                    for intent_name, intent_data in sorted_intents
+                    if intent_data["confidence"] > 0.3
+                ]
+                
+                result["high_confidence_intents"] = high_confidence_intents
+            
+            return result
+            
+        except Exception as e:
+            logging.error(f"階層式意圖檢測失敗: {e}")
+            return {
+                "base_intents": {},
+                "sub_intents": {},
+                "all_intents": [],
+                "primary_intent": "general",
+                "primary_intent_type": "base",
+                "confidence_score": 0.0,
+                "matched_keywords": [],
+                "intent_analysis": {
+                    "total_base_intents": 0,
+                    "total_sub_intents": 0,
+                    "has_hierarchical_match": False
+                },
+                "high_confidence_intents": []
+            }
     
     def identify_relations(self, text: str, entities: List[Entity], intent: Intent) -> List[EntityIntentRelation]:
         """

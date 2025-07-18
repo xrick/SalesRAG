@@ -82,6 +82,48 @@ async def chat_stream(request: Request):
         print(f"Error in chat_stream: {e}")
         return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
 
+@app.post("/api/clarification-response")
+async def handle_clarification_response(request: Request):
+    """處理澄清對話回應"""
+    try:
+        data = await request.json()
+        conversation_id = data.get("conversation_id")
+        user_choice = data.get("user_choice")
+        user_input = data.get("user_input", "")
+        service_name = data.get("service_name", "sales_assistant")
+
+        if not conversation_id or not user_choice:
+            return JSONResponse(
+                status_code=400, 
+                content={"error": "conversation_id and user_choice are required"}
+            )
+
+        service = service_manager.get_service(service_name)
+        if not service:
+            return JSONResponse(
+                status_code=404, 
+                content={"error": f"Service '{service_name}' not found"}
+            )
+
+        # 檢查服務是否支援澄清對話處理
+        if not hasattr(service, 'process_clarification_response'):
+            return JSONResponse(
+                status_code=501, 
+                content={"error": "Service does not support clarification responses"}
+            )
+
+        # 處理澄清回應
+        result = await service.process_clarification_response(conversation_id, user_choice, user_input)
+        
+        return JSONResponse(content=result)
+
+    except Exception as e:
+        logging.error(f"Error in handle_clarification_response: {e}")
+        return JSONResponse(
+            status_code=500, 
+            content={"error": f"Internal Server Error: {str(e)}"}
+        )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
