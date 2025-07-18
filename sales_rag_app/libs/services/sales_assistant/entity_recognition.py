@@ -331,6 +331,7 @@ class EntityRecognitionSystem:
                 "primary_intent_type": "base",
                 "confidence_score": 0.0,
                 "matched_keywords": all_matched_keywords,
+                "high_confidence_intents": [],  # 初始化為空列表
                 "intent_analysis": {
                     "total_base_intents": len(base_intents),
                     "total_sub_intents": len(sub_intents),

@@ -54,6 +54,11 @@ async def read_root(request: Request):
     """渲染主頁面"""
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/test", response_class=HTMLResponse)
+async def test_interface(request: Request):
+    """渲染測試介面"""
+    return templates.TemplateResponse("test_interface.html", {"request": request})
+
 @app.get("/api/get-services", response_class=JSONResponse)
 async def get_services():
     """獲取可用的服務列表"""
