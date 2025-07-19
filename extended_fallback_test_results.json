@@ -1,0 +1,1284 @@
+{
+  "比較螢幕規格": {
+    "summary": "根據提供的数据，2个型号的螢幕規格比較如下。",
+    "table_features": 7,
+    "table_content": [
+      {
+        "feature": "Display Size",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Resolution",
+        "AHP958": "FHD 1920×1080",
+        "AHP819": "FHD 1920×1080"
+      },
+      {
+        "feature": "Refresh Rate",
+        "AHP958": "144Hz",
+        "AHP819": "60Hz"
+      },
+      {
+        "feature": "Panel Type",
+        "AHP958": "IPS",
+        "AHP819": "IPS"
+      },
+      {
+        "feature": "Color Gamut",
+        "AHP958": "sRGB",
+        "AHP819": "sRGB"
+      },
+      {
+        "feature": "Brightness",
+        "AHP958": "300 nits",
+        "AHP819": "250 nits"
+      },
+      {
+        "feature": "Touch Support",
+        "AHP958": "Yes",
+        "AHP819": "No"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的螢幕規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Display Size",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Resolution",
+          "AHP958": "FHD 1920×1080",
+          "AHP819": "FHD 1920×1080"
+        },
+        {
+          "feature": "Refresh Rate",
+          "AHP958": "144Hz",
+          "AHP819": "60Hz"
+        },
+        {
+          "feature": "Panel Type",
+          "AHP958": "IPS",
+          "AHP819": "IPS"
+        },
+        {
+          "feature": "Color Gamut",
+          "AHP958": "sRGB",
+          "AHP819": "sRGB"
+        },
+        {
+          "feature": "Brightness",
+          "AHP958": "300 nits",
+          "AHP819": "250 nits"
+        },
+        {
+          "feature": "Touch Support",
+          "AHP958": "Yes",
+          "AHP819": "No"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Display Size** | N/A | N/A |\n| **Resolution** | FHD 1920×1080 | FHD 1920×1080 |\n| **Refresh Rate** | 144Hz | 60Hz |\n| **Panel Type** | IPS | IPS |\n| **Color Gamut** | sRGB | sRGB |\n| **Brightness** | 300 nits | 250 nits |\n| **Touch Support** | Yes | No |"
+    }
+  },
+  "電池續航能力比較": {
+    "summary": "根據提供的数据，2个型号的電池規格比較如下。",
+    "table_features": 5,
+    "table_content": [
+      {
+        "feature": "Battery Capacity",
+        "AHP958": "76Wh",
+        "AHP819": "52Wh"
+      },
+      {
+        "feature": "Battery Life",
+        "AHP958": "8 hours",
+        "AHP819": "6 hours"
+      },
+      {
+        "feature": "Charging Speed",
+        "AHP958": "Fast Charging",
+        "AHP819": "Standard"
+      },
+      {
+        "feature": "Power Adapter",
+        "AHP958": "76W",
+        "AHP819": "52W"
+      },
+      {
+        "feature": "Fast Charging",
+        "AHP958": "Yes",
+        "AHP819": "No"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的電池規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Battery Capacity",
+          "AHP958": "76Wh",
+          "AHP819": "52Wh"
+        },
+        {
+          "feature": "Battery Life",
+          "AHP958": "8 hours",
+          "AHP819": "6 hours"
+        },
+        {
+          "feature": "Charging Speed",
+          "AHP958": "Fast Charging",
+          "AHP819": "Standard"
+        },
+        {
+          "feature": "Power Adapter",
+          "AHP958": "76W",
+          "AHP819": "52W"
+        },
+        {
+          "feature": "Fast Charging",
+          "AHP958": "Yes",
+          "AHP819": "No"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Battery Capacity** | 76Wh | 52Wh |\n| **Battery Life** | 8 hours | 6 hours |\n| **Charging Speed** | Fast Charging | Standard |\n| **Power Adapter** | 76W | 52W |\n| **Fast Charging** | Yes | No |"
+    }
+  },
+  "CPU性能對比": {
+    "summary": "根據提供的数据，2个型号的CPU規格比較如下。",
+    "table_features": 8,
+    "table_content": [
+      {
+        "feature": "CPU Model",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "CPU Architecture",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "CPU TDP",
+        "AHP958": "35W",
+        "AHP819": "28W"
+      },
+      {
+        "feature": "CPU Cores",
+        "AHP958": "8 Cores",
+        "AHP819": "6 Cores"
+      },
+      {
+        "feature": "CPU Threads",
+        "AHP958": "16 Threads",
+        "AHP819": "12 Threads"
+      },
+      {
+        "feature": "CPU Base Speed",
+        "AHP958": "4.7 GHz",
+        "AHP819": "4.5 GHz"
+      },
+      {
+        "feature": "CPU Boost Speed",
+        "AHP958": "Up to 4.7 GHz",
+        "AHP819": "Up to 4.5 GHz"
+      },
+      {
+        "feature": "CPU Cache",
+        "AHP958": "16 MB Cache",
+        "AHP819": "16 MB Cache"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的CPU規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "CPU Model",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "CPU Architecture",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "CPU TDP",
+          "AHP958": "35W",
+          "AHP819": "28W"
+        },
+        {
+          "feature": "CPU Cores",
+          "AHP958": "8 Cores",
+          "AHP819": "6 Cores"
+        },
+        {
+          "feature": "CPU Threads",
+          "AHP958": "16 Threads",
+          "AHP819": "12 Threads"
+        },
+        {
+          "feature": "CPU Base Speed",
+          "AHP958": "4.7 GHz",
+          "AHP819": "4.5 GHz"
+        },
+        {
+          "feature": "CPU Boost Speed",
+          "AHP958": "Up to 4.7 GHz",
+          "AHP819": "Up to 4.5 GHz"
+        },
+        {
+          "feature": "CPU Cache",
+          "AHP958": "16 MB Cache",
+          "AHP819": "16 MB Cache"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **CPU Model** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **CPU Architecture** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **CPU TDP** | 35W | 28W |\n| **CPU Cores** | 8 Cores | 6 Cores |\n| **CPU Threads** | 16 Threads | 12 Threads |\n| **CPU Base Speed** | 4.7 GHz | 4.5 GHz |\n| **CPU Boost Speed** | Up to 4.7 GHz | Up to 4.5 GHz |\n| **CPU Cache** | 16 MB Cache | 16 MB Cache |"
+    }
+  },
+  "GPU顯卡比較": {
+    "summary": "根據提供的数据，2个型号的GPU規格比較如下。",
+    "table_features": 8,
+    "table_content": [
+      {
+        "feature": "GPU Model",
+        "AHP958": "AMD Radeon™ RX",
+        "AHP819": "AMD Radeon™ 660M"
+      },
+      {
+        "feature": "GPU Memory",
+        "AHP958": "8GB",
+        "AHP819": "4GB"
+      },
+      {
+        "feature": "GPU Power",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "GPU Architecture",
+        "AHP958": "RDNA 3",
+        "AHP819": "RDNA 2"
+      },
+      {
+        "feature": "GPU Cores",
+        "AHP958": "2048 Cores",
+        "AHP819": "1024 Cores"
+      },
+      {
+        "feature": "GPU Boost Clock",
+        "AHP958": "2200 MHz",
+        "AHP819": "1900 MHz"
+      },
+      {
+        "feature": "Ray Tracing",
+        "AHP958": "Yes",
+        "AHP819": "No"
+      },
+      {
+        "feature": "DLSS/FSR Support",
+        "AHP958": "FSR",
+        "AHP819": "N/A"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的GPU規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "GPU Model",
+          "AHP958": "AMD Radeon™ RX",
+          "AHP819": "AMD Radeon™ 660M"
+        },
+        {
+          "feature": "GPU Memory",
+          "AHP958": "8GB",
+          "AHP819": "4GB"
+        },
+        {
+          "feature": "GPU Power",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "GPU Architecture",
+          "AHP958": "RDNA 3",
+          "AHP819": "RDNA 2"
+        },
+        {
+          "feature": "GPU Cores",
+          "AHP958": "2048 Cores",
+          "AHP819": "1024 Cores"
+        },
+        {
+          "feature": "GPU Boost Clock",
+          "AHP958": "2200 MHz",
+          "AHP819": "1900 MHz"
+        },
+        {
+          "feature": "Ray Tracing",
+          "AHP958": "Yes",
+          "AHP819": "No"
+        },
+        {
+          "feature": "DLSS/FSR Support",
+          "AHP958": "FSR",
+          "AHP819": "N/A"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **GPU Model** | AMD Radeon™ RX | AMD Radeon™ 660M |\n| **GPU Memory** | 8GB | 4GB |\n| **GPU Power** | N/A | N/A |\n| **GPU Architecture** | RDNA 3 | RDNA 2 |\n| **GPU Cores** | 2048 Cores | 1024 Cores |\n| **GPU Boost Clock** | 2200 MHz | 1900 MHz |\n| **Ray Tracing** | Yes | No |\n| **DLSS/FSR Support** | FSR | N/A |"
+    }
+  },
+  "記憶體規格": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 6,
+    "table_content": [
+      {
+        "feature": "Memory Type",
+        "AHP958": "DDR5",
+        "AHP819": "DDR5"
+      },
+      {
+        "feature": "Memory Speed",
+        "AHP958": "4800 MHz",
+        "AHP819": "4800 MHz"
+      },
+      {
+        "feature": "Memory Capacity",
+        "AHP958": "16 GB",
+        "AHP819": "8 GB"
+      },
+      {
+        "feature": "Memory Channels",
+        "AHP958": "Dual",
+        "AHP819": "Single"
+      },
+      {
+        "feature": "Memory Slots",
+        "AHP958": "2 Slots",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Max Memory",
+        "AHP958": "Up to 64 GB",
+        "AHP819": "Up to 32 GB"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Memory Type",
+          "AHP958": "DDR5",
+          "AHP819": "DDR5"
+        },
+        {
+          "feature": "Memory Speed",
+          "AHP958": "4800 MHz",
+          "AHP819": "4800 MHz"
+        },
+        {
+          "feature": "Memory Capacity",
+          "AHP958": "16 GB",
+          "AHP819": "8 GB"
+        },
+        {
+          "feature": "Memory Channels",
+          "AHP958": "Dual",
+          "AHP819": "Single"
+        },
+        {
+          "feature": "Memory Slots",
+          "AHP958": "2 Slots",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Max Memory",
+          "AHP958": "Up to 64 GB",
+          "AHP819": "Up to 32 GB"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Memory Type** | DDR5 | DDR5 |\n| **Memory Speed** | 4800 MHz | 4800 MHz |\n| **Memory Capacity** | 16 GB | 8 GB |\n| **Memory Channels** | Dual | Single |\n| **Memory Slots** | 2 Slots | N/A |\n| **Max Memory** | Up to 64 GB | Up to 32 GB |"
+    }
+  },
+  "硬碟儲存比較": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 6,
+    "table_content": [
+      {
+        "feature": "Storage Type",
+        "AHP958": "NVMe SSD",
+        "AHP819": "NVMe SSD"
+      },
+      {
+        "feature": "Storage Capacity",
+        "AHP958": "N/A",
+        "AHP819": "512 GB"
+      },
+      {
+        "feature": "Storage Speed",
+        "AHP958": "7000 MB/s",
+        "AHP819": "5000 MB/s"
+      },
+      {
+        "feature": "Storage Slots",
+        "AHP958": "2 Slots",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Secondary Storage",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Storage Interface",
+        "AHP958": "PCIe",
+        "AHP819": "PCIe"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Storage Type",
+          "AHP958": "NVMe SSD",
+          "AHP819": "NVMe SSD"
+        },
+        {
+          "feature": "Storage Capacity",
+          "AHP958": "N/A",
+          "AHP819": "512 GB"
+        },
+        {
+          "feature": "Storage Speed",
+          "AHP958": "7000 MB/s",
+          "AHP819": "5000 MB/s"
+        },
+        {
+          "feature": "Storage Slots",
+          "AHP958": "2 Slots",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Secondary Storage",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Storage Interface",
+          "AHP958": "PCIe",
+          "AHP819": "PCIe"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Storage Type** | NVMe SSD | NVMe SSD |\n| **Storage Capacity** | N/A | 512 GB |\n| **Storage Speed** | 7000 MB/s | 5000 MB/s |\n| **Storage Slots** | 2 Slots | N/A |\n| **Secondary Storage** | N/A | N/A |\n| **Storage Interface** | PCIe | PCIe |"
+    }
+  },
+  "重量便攜性": {
+    "summary": "根據提供的数据，2个型号的重量和便攜性比較如下。",
+    "table_features": 6,
+    "table_content": [
+      {
+        "feature": "Weight",
+        "AHP958": "1850g (1.9kg)",
+        "AHP819": "1450g (1.4kg)"
+      },
+      {
+        "feature": "Dimensions",
+        "AHP958": "359×259×19.9mm",
+        "AHP819": "324×220×17.9mm"
+      },
+      {
+        "feature": "Form Factor",
+        "AHP958": "Clamshell, Material: Aluminum, Build Quality: Premium",
+        "AHP819": "Clamshell, Material: Aluminum, Build Quality: Good"
+      },
+      {
+        "feature": "Material",
+        "AHP958": "Aluminum, Build Quality: Premium",
+        "AHP819": "Aluminum, Build Quality: Good"
+      },
+      {
+        "feature": "Thickness",
+        "AHP958": "19.9mm",
+        "AHP819": "17.9mm"
+      },
+      {
+        "feature": "Build Quality",
+        "AHP958": "Metal",
+        "AHP819": "Metal"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的重量和便攜性比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Weight",
+          "AHP958": "1850g (1.9kg)",
+          "AHP819": "1450g (1.4kg)"
+        },
+        {
+          "feature": "Dimensions",
+          "AHP958": "359×259×19.9mm",
+          "AHP819": "324×220×17.9mm"
+        },
+        {
+          "feature": "Form Factor",
+          "AHP958": "Clamshell, Material: Aluminum, Build Quality: Premium",
+          "AHP819": "Clamshell, Material: Aluminum, Build Quality: Good"
+        },
+        {
+          "feature": "Material",
+          "AHP958": "Aluminum, Build Quality: Premium",
+          "AHP819": "Aluminum, Build Quality: Good"
+        },
+        {
+          "feature": "Thickness",
+          "AHP958": "19.9mm",
+          "AHP819": "17.9mm"
+        },
+        {
+          "feature": "Build Quality",
+          "AHP958": "Metal",
+          "AHP819": "Metal"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Weight** | 1850g (1.9kg) | 1450g (1.4kg) |\n| **Dimensions** | 359×259×19.9mm | 324×220×17.9mm |\n| **Form Factor** | Clamshell, Material: Aluminum, Build Quality: P... | Clamshell, Material: Aluminum, Build Quality: Good |\n| **Material** | Aluminum, Build Quality: Premium | Aluminum, Build Quality: Good |\n| **Thickness** | 19.9mm | 17.9mm |\n| **Build Quality** | Metal | Metal |"
+    }
+  },
+  "散熱系統比較": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 5,
+    "table_content": [
+      {
+        "feature": "Thermal Design",
+        "AHP958": "45W",
+        "AHP819": "28W"
+      },
+      {
+        "feature": "Cooling System",
+        "AHP958": "Dual Fan",
+        "AHP819": "Single Fan"
+      },
+      {
+        "feature": "Fan Configuration",
+        "AHP958": "Dual",
+        "AHP819": "Single"
+      },
+      {
+        "feature": "Thermal Performance",
+        "AHP958": "Excellent",
+        "AHP819": "Good"
+      },
+      {
+        "feature": "Noise Level",
+        "AHP958": "Quiet",
+        "AHP819": "Moderate"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Thermal Design",
+          "AHP958": "45W",
+          "AHP819": "28W"
+        },
+        {
+          "feature": "Cooling System",
+          "AHP958": "Dual Fan",
+          "AHP819": "Single Fan"
+        },
+        {
+          "feature": "Fan Configuration",
+          "AHP958": "Dual",
+          "AHP819": "Single"
+        },
+        {
+          "feature": "Thermal Performance",
+          "AHP958": "Excellent",
+          "AHP819": "Good"
+        },
+        {
+          "feature": "Noise Level",
+          "AHP958": "Quiet",
+          "AHP819": "Moderate"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Thermal Design** | 45W | 28W |\n| **Cooling System** | Dual Fan | Single Fan |\n| **Fan Configuration** | Dual | Single |\n| **Thermal Performance** | Excellent | Good |\n| **Noise Level** | Quiet | Moderate |"
+    }
+  },
+  "接口連接性": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 7,
+    "table_content": [
+      {
+        "feature": "USB Ports",
+        "AHP958": "2 USB",
+        "AHP819": "2 USB"
+      },
+      {
+        "feature": "USB-C/Thunderbolt",
+        "AHP958": "USB-C",
+        "AHP819": "USB-C"
+      },
+      {
+        "feature": "HDMI/DisplayPort",
+        "AHP958": "HDMI",
+        "AHP819": "HDMI"
+      },
+      {
+        "feature": "Audio Jacks",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Card Reader",
+        "AHP958": "Yes",
+        "AHP819": "No"
+      },
+      {
+        "feature": "Network Port",
+        "AHP958": "Yes",
+        "AHP819": "No"
+      },
+      {
+        "feature": "Wireless Connectivity",
+        "AHP958": "WiFi + Bluetooth",
+        "AHP819": "WiFi + Bluetooth"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "USB Ports",
+          "AHP958": "2 USB",
+          "AHP819": "2 USB"
+        },
+        {
+          "feature": "USB-C/Thunderbolt",
+          "AHP958": "USB-C",
+          "AHP819": "USB-C"
+        },
+        {
+          "feature": "HDMI/DisplayPort",
+          "AHP958": "HDMI",
+          "AHP819": "HDMI"
+        },
+        {
+          "feature": "Audio Jacks",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Card Reader",
+          "AHP958": "Yes",
+          "AHP819": "No"
+        },
+        {
+          "feature": "Network Port",
+          "AHP958": "Yes",
+          "AHP819": "No"
+        },
+        {
+          "feature": "Wireless Connectivity",
+          "AHP958": "WiFi + Bluetooth",
+          "AHP819": "WiFi + Bluetooth"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **USB Ports** | 2 USB | 2 USB |\n| **USB-C/Thunderbolt** | USB-C | USB-C |\n| **HDMI/DisplayPort** | HDMI | HDMI |\n| **Audio Jacks** | N/A | N/A |\n| **Card Reader** | Yes | No |\n| **Network Port** | Yes | No |\n| **Wireless Connectivity** | WiFi + Bluetooth | WiFi + Bluetooth |"
+    }
+  },
+  "音效系統": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 5,
+    "table_content": [
+      {
+        "feature": "Audio System",
+        "AHP958": "Harman Kardon",
+        "AHP819": "Standard"
+      },
+      {
+        "feature": "Speaker Configuration",
+        "AHP958": "Dual Speakers",
+        "AHP819": "Dual Speakers"
+      },
+      {
+        "feature": "Audio Quality",
+        "AHP958": "Premium",
+        "AHP819": "High"
+      },
+      {
+        "feature": "Microphone",
+        "AHP958": "Array Microphone",
+        "AHP819": "Standard"
+      },
+      {
+        "feature": "Audio Codec",
+        "AHP958": "Realtek",
+        "AHP819": "Realtek"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Audio System",
+          "AHP958": "Harman Kardon",
+          "AHP819": "Standard"
+        },
+        {
+          "feature": "Speaker Configuration",
+          "AHP958": "Dual Speakers",
+          "AHP819": "Dual Speakers"
+        },
+        {
+          "feature": "Audio Quality",
+          "AHP958": "Premium",
+          "AHP819": "High"
+        },
+        {
+          "feature": "Microphone",
+          "AHP958": "Array Microphone",
+          "AHP819": "Standard"
+        },
+        {
+          "feature": "Audio Codec",
+          "AHP958": "Realtek",
+          "AHP819": "Realtek"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Audio System** | Harman Kardon | Standard |\n| **Speaker Configuration** | Dual Speakers | Dual Speakers |\n| **Audio Quality** | Premium | High |\n| **Microphone** | Array Microphone | Standard |\n| **Audio Codec** | Realtek | Realtek |"
+    }
+  },
+  "鍵盤體驗": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 5,
+    "table_content": [
+      {
+        "feature": "Keyboard Type",
+        "AHP958": "Membrane",
+        "AHP819": "Membrane"
+      },
+      {
+        "feature": "Backlight",
+        "AHP958": "RGB",
+        "AHP819": "Yes"
+      },
+      {
+        "feature": "Key Travel",
+        "AHP958": "1.5mm",
+        "AHP819": "1.2mm"
+      },
+      {
+        "feature": "Numpad",
+        "AHP958": "Yes",
+        "AHP819": "No"
+      },
+      {
+        "feature": "Function Keys",
+        "AHP958": "Yes",
+        "AHP819": "Yes"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Keyboard Type",
+          "AHP958": "Membrane",
+          "AHP819": "Membrane"
+        },
+        {
+          "feature": "Backlight",
+          "AHP958": "RGB",
+          "AHP819": "Yes"
+        },
+        {
+          "feature": "Key Travel",
+          "AHP958": "1.5mm",
+          "AHP819": "1.2mm"
+        },
+        {
+          "feature": "Numpad",
+          "AHP958": "Yes",
+          "AHP819": "No"
+        },
+        {
+          "feature": "Function Keys",
+          "AHP958": "Yes",
+          "AHP819": "Yes"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Keyboard Type** | Membrane | Membrane |\n| **Backlight** | RGB | Yes |\n| **Key Travel** | 1.5mm | 1.2mm |\n| **Numpad** | Yes | No |\n| **Function Keys** | Yes | Yes |"
+    }
+  },
+  "觸控板功能": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 4,
+    "table_content": [
+      {
+        "feature": "Touchpad Size",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Touchpad Features",
+        "AHP958": "Precision",
+        "AHP819": "Precision"
+      },
+      {
+        "feature": "Gesture Support",
+        "AHP958": "Yes",
+        "AHP819": "Yes"
+      },
+      {
+        "feature": "Precision",
+        "AHP958": "High",
+        "AHP819": "High"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "Touchpad Size",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Touchpad Features",
+          "AHP958": "Precision",
+          "AHP819": "Precision"
+        },
+        {
+          "feature": "Gesture Support",
+          "AHP958": "Yes",
+          "AHP819": "Yes"
+        },
+        {
+          "feature": "Precision",
+          "AHP958": "High",
+          "AHP819": "High"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **Touchpad Size** | N/A | N/A |\n| **Touchpad Features** | Precision | Precision |\n| **Gesture Support** | Yes | Yes |\n| **Precision** | High | High |"
+    }
+  },
+  "遊戲性能比較": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 9,
+    "table_content": [
+      {
+        "feature": "CPU Model",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "GPU Model",
+        "AHP958": "AMD Radeon™ RX",
+        "AHP819": "AMD Radeon™ 660M"
+      },
+      {
+        "feature": "GPU Memory",
+        "AHP958": "8GB",
+        "AHP819": "4GB"
+      },
+      {
+        "feature": "Memory Type",
+        "AHP958": "DDR5",
+        "AHP819": "DDR5"
+      },
+      {
+        "feature": "Storage Type",
+        "AHP958": "NVMe SSD",
+        "AHP819": "NVMe SSD"
+      },
+      {
+        "feature": "Display Refresh Rate",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Thermal Design",
+        "AHP958": "45W",
+        "AHP819": "28W"
+      },
+      {
+        "feature": "RGB Lighting",
+        "AHP958": "No",
+        "AHP819": "No"
+      },
+      {
+        "feature": "Gaming Features",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "CPU Model",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "GPU Model",
+          "AHP958": "AMD Radeon™ RX",
+          "AHP819": "AMD Radeon™ 660M"
+        },
+        {
+          "feature": "GPU Memory",
+          "AHP958": "8GB",
+          "AHP819": "4GB"
+        },
+        {
+          "feature": "Memory Type",
+          "AHP958": "DDR5",
+          "AHP819": "DDR5"
+        },
+        {
+          "feature": "Storage Type",
+          "AHP958": "NVMe SSD",
+          "AHP819": "NVMe SSD"
+        },
+        {
+          "feature": "Display Refresh Rate",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Thermal Design",
+          "AHP958": "45W",
+          "AHP819": "28W"
+        },
+        {
+          "feature": "RGB Lighting",
+          "AHP958": "No",
+          "AHP819": "No"
+        },
+        {
+          "feature": "Gaming Features",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **CPU Model** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **GPU Model** | AMD Radeon™ RX | AMD Radeon™ 660M |\n| **GPU Memory** | 8GB | 4GB |\n| **Memory Type** | DDR5 | DDR5 |\n| **Storage Type** | NVMe SSD | NVMe SSD |\n| **Display Refresh Rate** | N/A | N/A |\n| **Thermal Design** | 45W | 28W |\n| **RGB Lighting** | No | No |\n| **Gaming Features** | N/A | N/A |"
+    }
+  },
+  "商務辦公特性": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 7,
+    "table_content": [
+      {
+        "feature": "CPU Model",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "Memory Type",
+        "AHP958": "DDR5",
+        "AHP819": "DDR5"
+      },
+      {
+        "feature": "Storage Type",
+        "AHP958": "NVMe SSD",
+        "AHP819": "NVMe SSD"
+      },
+      {
+        "feature": "Battery Capacity",
+        "AHP958": "76Wh",
+        "AHP819": "52Wh"
+      },
+      {
+        "feature": "Weight",
+        "AHP958": "1850g (1.9kg)",
+        "AHP819": "1450g (1.4kg)"
+      },
+      {
+        "feature": "Security Features",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Business Features",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "CPU Model",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "Memory Type",
+          "AHP958": "DDR5",
+          "AHP819": "DDR5"
+        },
+        {
+          "feature": "Storage Type",
+          "AHP958": "NVMe SSD",
+          "AHP819": "NVMe SSD"
+        },
+        {
+          "feature": "Battery Capacity",
+          "AHP958": "76Wh",
+          "AHP819": "52Wh"
+        },
+        {
+          "feature": "Weight",
+          "AHP958": "1850g (1.9kg)",
+          "AHP819": "1450g (1.4kg)"
+        },
+        {
+          "feature": "Security Features",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Business Features",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **CPU Model** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **Memory Type** | DDR5 | DDR5 |\n| **Storage Type** | NVMe SSD | NVMe SSD |\n| **Battery Capacity** | 76Wh | 52Wh |\n| **Weight** | 1850g (1.9kg) | 1450g (1.4kg) |\n| **Security Features** | N/A | N/A |\n| **Business Features** | N/A | N/A |"
+    }
+  },
+  "設計創作功能": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 7,
+    "table_content": [
+      {
+        "feature": "CPU Model",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "GPU Model",
+        "AHP958": "AMD Radeon™ RX",
+        "AHP819": "AMD Radeon™ 660M"
+      },
+      {
+        "feature": "Display Quality",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Color Accuracy",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Memory Type",
+        "AHP958": "DDR5",
+        "AHP819": "DDR5"
+      },
+      {
+        "feature": "Storage Type",
+        "AHP958": "NVMe SSD",
+        "AHP819": "NVMe SSD"
+      },
+      {
+        "feature": "Pen Support",
+        "AHP958": "No",
+        "AHP819": "No"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "CPU Model",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "GPU Model",
+          "AHP958": "AMD Radeon™ RX",
+          "AHP819": "AMD Radeon™ 660M"
+        },
+        {
+          "feature": "Display Quality",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Color Accuracy",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Memory Type",
+          "AHP958": "DDR5",
+          "AHP819": "DDR5"
+        },
+        {
+          "feature": "Storage Type",
+          "AHP958": "NVMe SSD",
+          "AHP819": "NVMe SSD"
+        },
+        {
+          "feature": "Pen Support",
+          "AHP958": "No",
+          "AHP819": "No"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **CPU Model** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **GPU Model** | AMD Radeon™ RX | AMD Radeon™ 660M |\n| **Display Quality** | N/A | N/A |\n| **Color Accuracy** | N/A | N/A |\n| **Memory Type** | DDR5 | DDR5 |\n| **Storage Type** | NVMe SSD | NVMe SSD |\n| **Pen Support** | No | No |"
+    }
+  },
+  "綜合規格比較": {
+    "summary": "根據提供的数据，2个型号的規格比較如下。",
+    "table_features": 14,
+    "table_content": [
+      {
+        "feature": "CPU Model",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "CPU Cores/Threads",
+        "AHP958": "Ryzen™ 7 7735HS",
+        "AHP819": "Ryzen™ 5 7535U"
+      },
+      {
+        "feature": "GPU Model",
+        "AHP958": "AMD Radeon™ RX",
+        "AHP819": "AMD Radeon™ 660M"
+      },
+      {
+        "feature": "GPU Memory",
+        "AHP958": "8GB",
+        "AHP819": "4GB"
+      },
+      {
+        "feature": "Memory Type",
+        "AHP958": "DDR5",
+        "AHP819": "DDR5"
+      },
+      {
+        "feature": "Memory Capacity",
+        "AHP958": "16 GB",
+        "AHP819": "8 GB"
+      },
+      {
+        "feature": "Storage Type",
+        "AHP958": "NVMe SSD",
+        "AHP819": "NVMe SSD"
+      },
+      {
+        "feature": "Storage Capacity",
+        "AHP958": "N/A",
+        "AHP819": "512 GB"
+      },
+      {
+        "feature": "Display Size",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Display Resolution",
+        "AHP958": "N/A",
+        "AHP819": "N/A"
+      },
+      {
+        "feature": "Battery Capacity",
+        "AHP958": "76Wh",
+        "AHP819": "52Wh"
+      },
+      {
+        "feature": "Weight",
+        "AHP958": "1850g (1.9kg)",
+        "AHP819": "1450g (1.4kg)"
+      },
+      {
+        "feature": "USB Ports",
+        "AHP958": "2 USB",
+        "AHP819": "2 USB"
+      },
+      {
+        "feature": "Thermal Design",
+        "AHP958": "45W",
+        "AHP819": "28W"
+      }
+    ],
+    "formatted_response": {
+      "answer_summary": "根據提供的数据，2个型号的規格比較如下。",
+      "comparison_table": [
+        {
+          "feature": "CPU Model",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "CPU Cores/Threads",
+          "AHP958": "Ryzen™ 7 7735HS",
+          "AHP819": "Ryzen™ 5 7535U"
+        },
+        {
+          "feature": "GPU Model",
+          "AHP958": "AMD Radeon™ RX",
+          "AHP819": "AMD Radeon™ 660M"
+        },
+        {
+          "feature": "GPU Memory",
+          "AHP958": "8GB",
+          "AHP819": "4GB"
+        },
+        {
+          "feature": "Memory Type",
+          "AHP958": "DDR5",
+          "AHP819": "DDR5"
+        },
+        {
+          "feature": "Memory Capacity",
+          "AHP958": "16 GB",
+          "AHP819": "8 GB"
+        },
+        {
+          "feature": "Storage Type",
+          "AHP958": "NVMe SSD",
+          "AHP819": "NVMe SSD"
+        },
+        {
+          "feature": "Storage Capacity",
+          "AHP958": "N/A",
+          "AHP819": "512 GB"
+        },
+        {
+          "feature": "Display Size",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Display Resolution",
+          "AHP958": "N/A",
+          "AHP819": "N/A"
+        },
+        {
+          "feature": "Battery Capacity",
+          "AHP958": "76Wh",
+          "AHP819": "52Wh"
+        },
+        {
+          "feature": "Weight",
+          "AHP958": "1850g (1.9kg)",
+          "AHP819": "1450g (1.4kg)"
+        },
+        {
+          "feature": "USB Ports",
+          "AHP958": "2 USB",
+          "AHP819": "2 USB"
+        },
+        {
+          "feature": "Thermal Design",
+          "AHP958": "45W",
+          "AHP819": "28W"
+        }
+      ],
+      "beautiful_table": "| **規格項目** | **AHP958** | **AHP819** |\n| --- | --- | --- |\n| **CPU Model** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **CPU Cores/Threads** | Ryzen™ 7 7735HS | Ryzen™ 5 7535U |\n| **GPU Model** | AMD Radeon™ RX | AMD Radeon™ 660M |\n| **GPU Memory** | 8GB | 4GB |\n| **Memory Type** | DDR5 | DDR5 |\n| **Memory Capacity** | 16 GB | 8 GB |\n| **Storage Type** | NVMe SSD | NVMe SSD |\n| **Storage Capacity** | N/A | 512 GB |\n| **Display Size** | N/A | N/A |\n| **Display Resolution** | N/A | N/A |\n| **Battery Capacity** | 76Wh | 52Wh |\n| **Weight** | 1850g (1.9kg) | 1450g (1.4kg) |\n| **USB Ports** | 2 USB | 2 USB |\n| **Thermal Design** | 45W | 28W |"
+    }
+  }
+}

@@ -129,6 +129,51 @@ async def handle_clarification_response(request: Request):
             content={"error": f"Internal Server Error: {str(e)}"}
         )
 
+@app.post("/api/smart-clarification-response")
+async def handle_smart_clarification_response(request: Request):
+    """處理智能澄清對話回應"""
+    try:
+        data = await request.json()
+        original_query = data.get("original_query")
+        question_id = data.get("question_id")
+        user_choice = data.get("user_choice")
+        user_input = data.get("user_input", "")
+        service_name = data.get("service_name", "sales_assistant")
+
+        if not original_query or not question_id or not user_choice:
+            return JSONResponse(
+                status_code=400, 
+                content={"error": "original_query, question_id and user_choice are required"}
+            )
+
+        service = service_manager.get_service(service_name)
+        if not service:
+            return JSONResponse(
+                status_code=404, 
+                content={"error": f"Service '{service_name}' not found"}
+            )
+
+        # 檢查服務是否支援智能澄清處理
+        if not hasattr(service, 'process_smart_clarification_response'):
+            return JSONResponse(
+                status_code=501, 
+                content={"error": "Service does not support smart clarification responses"}
+            )
+
+        # 處理智能澄清回應
+        result = await service.process_smart_clarification_response(
+            original_query, question_id, user_choice, user_input
+        )
+        
+        return JSONResponse(content=result)
+
+    except Exception as e:
+        logging.error(f"Error in handle_smart_clarification_response: {e}")
+        return JSONResponse(
+            status_code=500, 
+            content={"error": f"Internal Server Error: {str(e)}"}
+        )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -2420,37 +2420,28 @@ class SalesAssistantService(BaseService):
             
             # 检查是否有有效的查询类型
             if query_intent["query_type"] == "unknown":
-                # 如果既没有modeltype也没有modelname，提供帮助信息
-                available_types_str = "\n".join([f"- {modeltype}" for modeltype in AVAILABLE_MODELTYPES])
-                available_models_str = "\n".join([f"- {model}" for model in AVAILABLE_MODELNAMES])
+                # 智能分析用戶查詢，生成具體問題而不是要求重新輸入
+                smart_questions = self._generate_smart_clarification_questions(query, query_intent)
                 
-                # 检查查询中是否包含可能的错误模型名称
-                potential_models = re.findall(r'[A-Z]{2,3}\d{3}(?:-[A-Z]+)?(?::\s*[A-Z]+\d+)?', query)
-                error_message = f"您的查询中提到的模型名称不在我们的数据库中。"
-                
-                if potential_models:
-                    error_message += f"\n\n您提到的模型名称: {', '.join(potential_models)}"
-                    error_message += f"\n\n可能的正确模型名称:"
-                    # 为每个可能的错误模型提供建议
-                    for potential_model in potential_models:
-                        suggestions = []
-                        for available_model in AVAILABLE_MODELNAMES:
-                            # 简单的相似度检查
-                            if potential_model[:3] in available_model or potential_model[-3:] in available_model:
-                                suggestions.append(available_model)
-                        if suggestions:
-                            error_message += f"\n- '{potential_model}' 可能是: {', '.join(suggestions[:3])}"
-                
-                error_message += f"\n\n可用的系列包括：\n{available_types_str}"
-                error_message += f"\n\n可用的型號包括：\n{available_models_str}"
-                error_message += f"\n\n請重新提問，例如：'比較 958 系列的 CPU 性能' 或 '比較 AB819-S: FP6 和 AG958 的 CPU 性能'"
-                
-                error_obj = {
-                    "answer_summary": error_message,
-                    "comparison_table": []
-                }
-                yield f"data: {json.dumps(error_obj, ensure_ascii=False)}\n\n"
-                return
+                if smart_questions:
+                    # 構建智能澄清回應
+                    clarification_response = {
+                        "message_type": "smart_clarification",
+                        "original_query": query,
+                        "questions": smart_questions,
+                        "answer_summary": "我理解您的需求，讓我幫您找到最適合的筆電。請回答以下問題："
+                    }
+                    yield f"data: {json.dumps(clarification_response, ensure_ascii=False)}\n\n"
+                    return
+                else:
+                    # 如果無法生成智能問題，提供友善的幫助信息
+                    help_message = self._generate_user_friendly_help(query)
+                    help_response = {
+                        "answer_summary": help_message,
+                        "comparison_table": []
+                    }
+                    yield f"data: {json.dumps(help_response, ensure_ascii=False)}\n\n"
+                    return
             
             # 步骤2：根据查询类型获取精确数据
             try:
@@ -3413,7 +3404,7 @@ Focus your analysis on the specific intent and target models identified above.
 
     def _generate_fallback_table(self, context_list_of_dicts, target_modelnames, query):
         """
-        生成备用的comparison_table
+        生成备用的comparison_table - 擴展版本，包含更多筆電特性
         """
         try:
             # 根据查询类型决定要比较的特征
@@ -3422,40 +3413,158 @@ Focus your analysis on the specific intent and target models identified above.
                     ("Display Size", "lcd"),
                     ("Resolution", "lcd"),
                     ("Refresh Rate", "lcd"),
-                    ("Panel Type", "lcd")
+                    ("Panel Type", "lcd"),
+                    ("Color Gamut", "lcd"),
+                    ("Brightness", "lcd"),
+                    ("Touch Support", "lcd")
                 ]
             elif "電池" in query or "續航" in query or "battery" in query.lower():
                 features = [
                     ("Battery Capacity", "battery"),
                     ("Battery Life", "battery"),
-                    ("Charging Speed", "battery")
+                    ("Charging Speed", "battery"),
+                    ("Power Adapter", "battery"),
+                    ("Fast Charging", "battery")
                 ]
             elif "cpu" in query.lower() or "處理器" in query:
                 features = [
                     ("CPU Model", "cpu"),
                     ("CPU Architecture", "cpu"),
-                    ("CPU TDP", "cpu")
+                    ("CPU TDP", "cpu"),
+                    ("CPU Cores", "cpu"),
+                    ("CPU Threads", "cpu"),
+                    ("CPU Base Speed", "cpu"),
+                    ("CPU Boost Speed", "cpu"),
+                    ("CPU Cache", "cpu")
                 ]
             elif "gpu" in query.lower() or "顯卡" in query:
                 features = [
                     ("GPU Model", "gpu"),
                     ("GPU Memory", "gpu"),
-                    ("GPU Power", "gpu")
+                    ("GPU Power", "gpu"),
+                    ("GPU Architecture", "gpu"),
+                    ("GPU Cores", "gpu"),
+                    ("GPU Boost Clock", "gpu"),
+                    ("Ray Tracing", "gpu"),
+                    ("DLSS/FSR Support", "gpu")
                 ]
-            elif "輕便" in query or "重量" in query or "weight" in query.lower():
+            elif "記憶體" in query or "內存" in query or "memory" in query.lower() or "ram" in query.lower():
+                features = [
+                    ("Memory Type", "memory"),
+                    ("Memory Speed", "memory"),
+                    ("Memory Capacity", "memory"),
+                    ("Memory Channels", "memory"),
+                    ("Memory Slots", "memory"),
+                    ("Max Memory", "memory")
+                ]
+            elif "硬碟" in query or "硬盤" in query or "storage" in query.lower() or "ssd" in query.lower():
+                features = [
+                    ("Storage Type", "storage"),
+                    ("Storage Capacity", "storage"),
+                    ("Storage Speed", "storage"),
+                    ("Storage Slots", "storage"),
+                    ("Secondary Storage", "storage"),
+                    ("Storage Interface", "storage")
+                ]
+            elif "輕便" in query or "重量" in query or "weight" in query.lower() or "portable" in query.lower():
                 features = [
                     ("Weight", "structconfig"),
                     ("Dimensions", "structconfig"),
-                    ("Form Factor", "structconfig")
+                    ("Form Factor", "structconfig"),
+                    ("Material", "structconfig"),
+                    ("Thickness", "structconfig"),
+                    ("Build Quality", "structconfig")
                 ]
-            else:
-                # 通用比较
+            elif "散熱" in query or "thermal" in query.lower() or "cooling" in query.lower():
+                features = [
+                    ("Thermal Design", "thermal"),
+                    ("Cooling System", "thermal"),
+                    ("Fan Configuration", "thermal"),
+                    ("Thermal Performance", "thermal"),
+                    ("Noise Level", "thermal")
+                ]
+            elif "接口" in query or "port" in query.lower() or "connectivity" in query.lower():
+                features = [
+                    ("USB Ports", "iointerface"),
+                    ("USB-C/Thunderbolt", "iointerface"),
+                    ("HDMI/DisplayPort", "iointerface"),
+                    ("Audio Jacks", "iointerface"),
+                    ("Card Reader", "iointerface"),
+                    ("Network Port", "iointerface"),
+                    ("Wireless Connectivity", "iointerface")
+                ]
+            elif "音效" in query or "audio" in query.lower() or "speaker" in query.lower():
+                features = [
+                    ("Audio System", "audio"),
+                    ("Speaker Configuration", "audio"),
+                    ("Audio Quality", "audio"),
+                    ("Microphone", "audio"),
+                    ("Audio Codec", "audio")
+                ]
+            elif "鍵盤" in query or "keyboard" in query.lower():
+                features = [
+                    ("Keyboard Type", "keyboard"),
+                    ("Backlight", "keyboard"),
+                    ("Key Travel", "keyboard"),
+                    ("Numpad", "keyboard"),
+                    ("Function Keys", "keyboard")
+                ]
+            elif "觸控板" in query or "trackpad" in query.lower() or "touchpad" in query.lower():
+                features = [
+                    ("Touchpad Size", "trackpad"),
+                    ("Touchpad Features", "trackpad"),
+                    ("Gesture Support", "trackpad"),
+                    ("Precision", "trackpad")
+                ]
+            elif "遊戲" in query or "gaming" in query.lower():
                 features = [
                     ("CPU Model", "cpu"),
                     ("GPU Model", "gpu"),
+                    ("GPU Memory", "gpu"),
                     ("Memory Type", "memory"),
                     ("Storage Type", "storage"),
-                    ("Battery Capacity", "battery")
+                    ("Display Refresh Rate", "lcd"),
+                    ("Thermal Design", "thermal"),
+                    ("RGB Lighting", "gaming"),
+                    ("Gaming Features", "gaming")
+                ]
+            elif "商務" in query or "辦公" in query or "business" in query.lower():
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("Memory Type", "memory"),
+                    ("Storage Type", "storage"),
+                    ("Battery Capacity", "battery"),
+                    ("Weight", "structconfig"),
+                    ("Security Features", "security"),
+                    ("Business Features", "business")
+                ]
+            elif "創作" in query or "設計" in query or "creative" in query.lower():
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("GPU Model", "gpu"),
+                    ("Display Quality", "lcd"),
+                    ("Color Accuracy", "lcd"),
+                    ("Memory Type", "memory"),
+                    ("Storage Type", "storage"),
+                    ("Pen Support", "creative")
+                ]
+            else:
+                # 通用比较 - 擴展版本
+                features = [
+                    ("CPU Model", "cpu"),
+                    ("CPU Cores/Threads", "cpu"),
+                    ("GPU Model", "gpu"),
+                    ("GPU Memory", "gpu"),
+                    ("Memory Type", "memory"),
+                    ("Memory Capacity", "memory"),
+                    ("Storage Type", "storage"),
+                    ("Storage Capacity", "storage"),
+                    ("Display Size", "lcd"),
+                    ("Display Resolution", "lcd"),
+                    ("Battery Capacity", "battery"),
+                    ("Weight", "structconfig"),
+                    ("USB Ports", "iointerface"),
+                    ("Thermal Design", "thermal")
                 ]
             
             # 构建比较表格
@@ -3482,6 +3591,26 @@ Focus your analysis on the specific intent and target models identified above.
                                 # 提取TDP信息
                                 tdp_match = re.search(r"TDP:\s*(\d+W)", field_data)
                                 row[model_name] = tdp_match.group(1) if tdp_match else "N/A"
+                            elif feature_name == "CPU Cores":
+                                # 提取核心数
+                                cores_match = re.search(r"(\d+)\s*cores", field_data)
+                                row[model_name] = f"{cores_match.group(1)} Cores" if cores_match else "N/A"
+                            elif feature_name == "CPU Threads":
+                                # 提取线程数
+                                threads_match = re.search(r"(\d+)\s*threads", field_data)
+                                row[model_name] = f"{threads_match.group(1)} Threads" if threads_match else "N/A"
+                            elif feature_name == "CPU Base Speed":
+                                # 提取基础频率
+                                base_match = re.search(r"(\d+\.?\d*)\s*GHz", field_data)
+                                row[model_name] = f"{base_match.group(1)} GHz" if base_match else "N/A"
+                            elif feature_name == "CPU Boost Speed":
+                                # 提取加速频率
+                                boost_match = re.search(r"up to\s*(\d+\.?\d*)\s*GHz", field_data)
+                                row[model_name] = f"Up to {boost_match.group(1)} GHz" if boost_match else "N/A"
+                            elif feature_name == "CPU Cache":
+                                # 提取缓存信息
+                                cache_match = re.search(r"(\d+)\s*MB\s*cache", field_data)
+                                row[model_name] = f"{cache_match.group(1)} MB Cache" if cache_match else "N/A"
                             else:
                                 # 默认提取第一个CPU型号
                                 cpu_match = re.search(r"Ryzen™\s+\d+\s+\d+[A-Z]*[HS]*", field_data)
@@ -3500,36 +3629,420 @@ Focus your analysis on the specific intent and target models identified above.
                                 # 提取功耗信息
                                 power_match = re.search(r"(\d+W)", field_data)
                                 row[model_name] = power_match.group(1) if power_match else "N/A"
+                            elif feature_name == "GPU Architecture":
+                                # 提取架构信息
+                                if "RDNA" in field_data:
+                                    arch_match = re.search(r"RDNA\s*(\d+)", field_data)
+                                    row[model_name] = f"RDNA {arch_match.group(1)}" if arch_match else "RDNA"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "GPU Cores":
+                                # 提取核心数
+                                cores_match = re.search(r"(\d+)\s*cores", field_data)
+                                row[model_name] = f"{cores_match.group(1)} Cores" if cores_match else "N/A"
+                            elif feature_name == "GPU Boost Clock":
+                                # 提取加速频率
+                                boost_match = re.search(r"(\d+\.?\d*)\s*MHz", field_data)
+                                row[model_name] = f"{boost_match.group(1)} MHz" if boost_match else "N/A"
+                            elif feature_name == "Ray Tracing":
+                                # 检查光线追踪支持
+                                if "ray tracing" in field_data.lower() or "rt" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            elif feature_name == "DLSS/FSR Support":
+                                # 检查AI升频支持
+                                features = []
+                                if "fsr" in field_data.lower():
+                                    features.append("FSR")
+                                if "dlss" in field_data.lower():
+                                    features.append("DLSS")
+                                row[model_name] = ", ".join(features) if features else "N/A"
                             else:
                                 # 默认提取第一个GPU型号
                                 gpu_match = re.search(r"AMD Radeon™\s+[A-Z0-9]+[A-Z]*", field_data)
                                 row[model_name] = gpu_match.group(0) if gpu_match else "N/A"
                         elif data_field == "memory":
-                            # 提取内存类型
-                            memory_match = re.search(r"DDR\d+", field_data)
-                            row[model_name] = memory_match.group(0) if memory_match else "N/A"
+                            # 提取内存信息
+                            if feature_name == "Memory Type":
+                                memory_match = re.search(r"DDR\d+", field_data)
+                                row[model_name] = memory_match.group(0) if memory_match else "N/A"
+                            elif feature_name == "Memory Speed":
+                                speed_match = re.search(r"DDR\d+\s*(\d+)", field_data)
+                                row[model_name] = f"{speed_match.group(1)} MHz" if speed_match else "N/A"
+                            elif feature_name == "Memory Capacity":
+                                capacity_match = re.search(r"(\d+)\s*GB", field_data)
+                                row[model_name] = f"{capacity_match.group(1)} GB" if capacity_match else "N/A"
+                            elif feature_name == "Memory Channels":
+                                if "dual" in field_data.lower():
+                                    row[model_name] = "Dual"
+                                elif "single" in field_data.lower():
+                                    row[model_name] = "Single"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Memory Slots":
+                                slots_match = re.search(r"(\d+)\s*slots", field_data)
+                                row[model_name] = f"{slots_match.group(1)} Slots" if slots_match else "N/A"
+                            elif feature_name == "Max Memory":
+                                max_match = re.search(r"up to\s*(\d+)\s*GB", field_data)
+                                row[model_name] = f"Up to {max_match.group(1)} GB" if max_match else "N/A"
+                            else:
+                                row[model_name] = "N/A"
                         elif data_field == "storage":
-                            # 提取存储类型
-                            storage_match = re.search(r"M\.2.*?PCIe.*?NVMe", field_data)
-                            row[model_name] = storage_match.group(0) if storage_match else "N/A"
+                            # 提取存储信息
+                            if feature_name == "Storage Type":
+                                if "nvme" in field_data.lower():
+                                    row[model_name] = "NVMe SSD"
+                                elif "ssd" in field_data.lower():
+                                    row[model_name] = "SSD"
+                                elif "hdd" in field_data.lower():
+                                    row[model_name] = "HDD"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Storage Capacity":
+                                capacity_match = re.search(r"(\d+)\s*GB", field_data)
+                                if capacity_match:
+                                    capacity = int(capacity_match.group(1))
+                                    if capacity >= 1024:
+                                        row[model_name] = f"{capacity/1024:.0f} TB"
+                                    else:
+                                        row[model_name] = f"{capacity} GB"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Storage Speed":
+                                speed_match = re.search(r"(\d+)\s*MB/s", field_data)
+                                row[model_name] = f"{speed_match.group(1)} MB/s" if speed_match else "N/A"
+                            elif feature_name == "Storage Slots":
+                                slots_match = re.search(r"(\d+)\s*slots", field_data)
+                                row[model_name] = f"{slots_match.group(1)} Slots" if slots_match else "N/A"
+                            elif feature_name == "Secondary Storage":
+                                if "hdd" in field_data.lower():
+                                    row[model_name] = "HDD"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Storage Interface":
+                                if "pcie" in field_data.lower():
+                                    row[model_name] = "PCIe"
+                                elif "sata" in field_data.lower():
+                                    row[model_name] = "SATA"
+                                else:
+                                    row[model_name] = "N/A"
+                            else:
+                                row[model_name] = "N/A"
                         elif data_field == "battery":
-                            # 提取电池容量
-                            battery_match = re.search(r"(\d+\.?\d*)\s*Wh", field_data)
-                            row[model_name] = f"{battery_match.group(1)}Wh" if battery_match else "N/A"
+                            # 提取电池信息
+                            if feature_name == "Battery Capacity":
+                                battery_match = re.search(r"(\d+\.?\d*)\s*Wh", field_data)
+                                row[model_name] = f"{battery_match.group(1)}Wh" if battery_match else "N/A"
+                            elif feature_name == "Battery Life":
+                                life_match = re.search(r"(\d+\.?\d*)\s*hours", field_data)
+                                row[model_name] = f"{life_match.group(1)} hours" if life_match else "N/A"
+                            elif feature_name == "Charging Speed":
+                                if "fast" in field_data.lower():
+                                    row[model_name] = "Fast Charging"
+                                else:
+                                    row[model_name] = "Standard"
+                            elif feature_name == "Power Adapter":
+                                adapter_match = re.search(r"(\d+)\s*W", field_data)
+                                row[model_name] = f"{adapter_match.group(1)}W" if adapter_match else "N/A"
+                            elif feature_name == "Fast Charging":
+                                if "fast" in field_data.lower() or "quick" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            else:
+                                row[model_name] = "N/A"
                         elif data_field == "lcd":
                             # 提取屏幕信息
-                            if "FHD" in field_data:
-                                row[model_name] = "FHD 1920×1080"
-                            elif "QHD" in field_data:
-                                row[model_name] = "QHD 2560×1440"
+                            if feature_name == "Display Size":
+                                size_match = re.search(r"(\d+\.?\d*)\s*inch", field_data)
+                                row[model_name] = f"{size_match.group(1)}\"" if size_match else "N/A"
+                            elif feature_name == "Resolution":
+                                if "FHD" in field_data or "1920×1080" in field_data:
+                                    row[model_name] = "FHD 1920×1080"
+                                elif "QHD" in field_data or "2560×1440" in field_data:
+                                    row[model_name] = "QHD 2560×1440"
+                                elif "4K" in field_data or "3840×2160" in field_data:
+                                    row[model_name] = "4K 3840×2160"
+                                else:
+                                    res_match = re.search(r"(\d+×\d+)", field_data)
+                                    row[model_name] = res_match.group(1) if res_match else "N/A"
+                            elif feature_name == "Refresh Rate":
+                                refresh_match = re.search(r"(\d+)\s*Hz", field_data)
+                                row[model_name] = f"{refresh_match.group(1)}Hz" if refresh_match else "N/A"
+                            elif feature_name == "Panel Type":
+                                if "IPS" in field_data:
+                                    row[model_name] = "IPS"
+                                elif "VA" in field_data:
+                                    row[model_name] = "VA"
+                                elif "TN" in field_data:
+                                    row[model_name] = "TN"
+                                elif "OLED" in field_data:
+                                    row[model_name] = "OLED"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Color Gamut":
+                                if "sRGB" in field_data:
+                                    row[model_name] = "sRGB"
+                                elif "Adobe RGB" in field_data:
+                                    row[model_name] = "Adobe RGB"
+                                elif "DCI-P3" in field_data:
+                                    row[model_name] = "DCI-P3"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Brightness":
+                                brightness_match = re.search(r"(\d+)\s*nits", field_data)
+                                row[model_name] = f"{brightness_match.group(1)} nits" if brightness_match else "N/A"
+                            elif feature_name == "Touch Support":
+                                if "touch" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
                             else:
                                 row[model_name] = "N/A"
                         elif data_field == "structconfig":
-                            # 提取重量信息
-                            weight_match = re.search(r"Weight:\s*(\d+)\s*g", field_data)
-                            if weight_match:
-                                weight_g = int(weight_match.group(1))
-                                row[model_name] = f"{weight_g}g ({weight_g/1000:.1f}kg)"
+                            # 提取結構配置信息
+                            if feature_name == "Weight":
+                                weight_match = re.search(r"Weight:\s*(\d+)\s*g", field_data)
+                                if weight_match:
+                                    weight_g = int(weight_match.group(1))
+                                    row[model_name] = f"{weight_g}g ({weight_g/1000:.1f}kg)"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Dimensions":
+                                dim_match = re.search(r"Dimension:\s*([\d\.]+\s*×\s*[\d\.]+\s*×\s*[\d\.]+\s*mm)", field_data)
+                                row[model_name] = dim_match.group(1) if dim_match else "N/A"
+                            elif feature_name == "Form Factor":
+                                form_match = re.search(r"Form:\s*([^\n]+)", field_data)
+                                row[model_name] = form_match.group(1) if form_match else "N/A"
+                            elif feature_name == "Material":
+                                material_match = re.search(r"Material[^:]*:\s*([^\n]+)", field_data)
+                                row[model_name] = material_match.group(1) if material_match else "N/A"
+                            elif feature_name == "Thickness":
+                                thickness_match = re.search(r"(\d+\.?\d*)\s*mm", field_data)
+                                row[model_name] = f"{thickness_match.group(1)}mm" if thickness_match else "N/A"
+                            elif feature_name == "Build Quality":
+                                if "aluminum" in field_data.lower() or "metal" in field_data.lower():
+                                    row[model_name] = "Metal"
+                                elif "plastic" in field_data.lower():
+                                    row[model_name] = "Plastic"
+                                else:
+                                    row[model_name] = "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "thermal":
+                            # 提取散熱信息
+                            if feature_name == "Thermal Design":
+                                thermal_match = re.search(r"(\d+)W", field_data)
+                                row[model_name] = f"{thermal_match.group(1)}W" if thermal_match else "N/A"
+                            elif feature_name == "Cooling System":
+                                if "dual" in field_data.lower() and "fan" in field_data.lower():
+                                    row[model_name] = "Dual Fan"
+                                elif "fan" in field_data.lower():
+                                    row[model_name] = "Single Fan"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Fan Configuration":
+                                if "dual" in field_data.lower():
+                                    row[model_name] = "Dual"
+                                else:
+                                    row[model_name] = "Single"
+                            elif feature_name == "Thermal Performance":
+                                if "excellent" in field_data.lower():
+                                    row[model_name] = "Excellent"
+                                elif "good" in field_data.lower():
+                                    row[model_name] = "Good"
+                                elif "average" in field_data.lower():
+                                    row[model_name] = "Average"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Noise Level":
+                                if "quiet" in field_data.lower():
+                                    row[model_name] = "Quiet"
+                                elif "moderate" in field_data.lower():
+                                    row[model_name] = "Moderate"
+                                else:
+                                    row[model_name] = "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "iointerface":
+                            # 提取接口信息
+                            if feature_name == "USB Ports":
+                                usb_match = re.search(r"(\d+)\s*USB", field_data)
+                                row[model_name] = f"{usb_match.group(1)} USB" if usb_match else "N/A"
+                            elif feature_name == "USB-C/Thunderbolt":
+                                if "thunderbolt" in field_data.lower():
+                                    row[model_name] = "Thunderbolt"
+                                elif "usb-c" in field_data.lower():
+                                    row[model_name] = "USB-C"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "HDMI/DisplayPort":
+                                if "hdmi" in field_data.lower():
+                                    row[model_name] = "HDMI"
+                                elif "displayport" in field_data.lower():
+                                    row[model_name] = "DisplayPort"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Audio Jacks":
+                                audio_match = re.search(r"(\d+)\s*audio", field_data)
+                                row[model_name] = f"{audio_match.group(1)} Audio" if audio_match else "N/A"
+                            elif feature_name == "Card Reader":
+                                if "card" in field_data.lower() and "reader" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            elif feature_name == "Network Port":
+                                if "ethernet" in field_data.lower() or "lan" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            elif feature_name == "Wireless Connectivity":
+                                if "wifi" in field_data.lower() and "bluetooth" in field_data.lower():
+                                    row[model_name] = "WiFi + Bluetooth"
+                                elif "wifi" in field_data.lower():
+                                    row[model_name] = "WiFi"
+                                else:
+                                    row[model_name] = "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "audio":
+                            # 提取音效信息
+                            if feature_name == "Audio System":
+                                if "harman" in field_data.lower():
+                                    row[model_name] = "Harman Kardon"
+                                elif "bang" in field_data.lower() and "olufsen" in field_data.lower():
+                                    row[model_name] = "Bang & Olufsen"
+                                else:
+                                    row[model_name] = "Standard"
+                            elif feature_name == "Speaker Configuration":
+                                if "dual" in field_data.lower() and "speaker" in field_data.lower():
+                                    row[model_name] = "Dual Speakers"
+                                elif "quad" in field_data.lower():
+                                    row[model_name] = "Quad Speakers"
+                                else:
+                                    row[model_name] = "Standard"
+                            elif feature_name == "Audio Quality":
+                                if "premium" in field_data.lower():
+                                    row[model_name] = "Premium"
+                                elif "high" in field_data.lower():
+                                    row[model_name] = "High"
+                                else:
+                                    row[model_name] = "Standard"
+                            elif feature_name == "Microphone":
+                                if "array" in field_data.lower():
+                                    row[model_name] = "Array Microphone"
+                                else:
+                                    row[model_name] = "Standard"
+                            elif feature_name == "Audio Codec":
+                                if "realtek" in field_data.lower():
+                                    row[model_name] = "Realtek"
+                                else:
+                                    row[model_name] = "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "keyboard":
+                            # 提取鍵盤信息
+                            if feature_name == "Keyboard Type":
+                                if "mechanical" in field_data.lower():
+                                    row[model_name] = "Mechanical"
+                                else:
+                                    row[model_name] = "Membrane"
+                            elif feature_name == "Backlight":
+                                if "rgb" in field_data.lower():
+                                    row[model_name] = "RGB"
+                                elif "backlight" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            elif feature_name == "Key Travel":
+                                travel_match = re.search(r"(\d+\.?\d*)\s*mm", field_data)
+                                row[model_name] = f"{travel_match.group(1)}mm" if travel_match else "N/A"
+                            elif feature_name == "Numpad":
+                                if "numpad" in field_data.lower() or "number pad" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            elif feature_name == "Function Keys":
+                                if "function" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "trackpad":
+                            # 提取觸控板信息
+                            if feature_name == "Touchpad Size":
+                                size_match = re.search(r"(\d+\.?\d*)\s*inch", field_data)
+                                row[model_name] = f"{size_match.group(1)}\"" if size_match else "N/A"
+                            elif feature_name == "Touchpad Features":
+                                if "precision" in field_data.lower():
+                                    row[model_name] = "Precision"
+                                else:
+                                    row[model_name] = "Standard"
+                            elif feature_name == "Gesture Support":
+                                if "gesture" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "N/A"
+                            elif feature_name == "Precision":
+                                if "precision" in field_data.lower():
+                                    row[model_name] = "High"
+                                else:
+                                    row[model_name] = "Standard"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "gaming":
+                            # 提取遊戲特性
+                            if feature_name == "RGB Lighting":
+                                if "rgb" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
+                            elif feature_name == "Gaming Features":
+                                features = []
+                                if "g-sync" in field_data.lower():
+                                    features.append("G-Sync")
+                                if "freesync" in field_data.lower():
+                                    features.append("FreeSync")
+                                if "game mode" in field_data.lower():
+                                    features.append("Game Mode")
+                                row[model_name] = ", ".join(features) if features else "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "security":
+                            # 提取安全特性
+                            if feature_name == "Security Features":
+                                features = []
+                                if "fingerprint" in field_data.lower():
+                                    features.append("Fingerprint")
+                                if "face" in field_data.lower() and "recognition" in field_data.lower():
+                                    features.append("Face Recognition")
+                                if "tpm" in field_data.lower():
+                                    features.append("TPM")
+                                row[model_name] = ", ".join(features) if features else "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "business":
+                            # 提取商務特性
+                            if feature_name == "Business Features":
+                                features = []
+                                if "vpro" in field_data.lower():
+                                    features.append("vPro")
+                                if "docking" in field_data.lower():
+                                    features.append("Docking")
+                                if "management" in field_data.lower():
+                                    features.append("Management")
+                                row[model_name] = ", ".join(features) if features else "N/A"
+                            else:
+                                row[model_name] = "N/A"
+                        elif data_field == "creative":
+                            # 提取創作特性
+                            if feature_name == "Pen Support":
+                                if "pen" in field_data.lower() or "stylus" in field_data.lower():
+                                    row[model_name] = "Yes"
+                                else:
+                                    row[model_name] = "No"
                             else:
                                 row[model_name] = "N/A"
                         else:
@@ -3544,3 +4057,357 @@ Focus your analysis on the specific intent and target models identified above.
         except Exception as e:
             logging.error(f"生成備用table失敗: {e}")
             return []
+
+    def _generate_smart_clarification_questions(self, query: str, query_intent: dict) -> list:
+        """
+        根據用戶查詢智能生成具體問題
+        分析用戶意圖，生成針對性的問題而不是要求重新輸入
+        """
+        try:
+            questions = []
+            query_lower = query.lower()
+            
+            # 分析用戶查詢中的關鍵詞
+            detected_intents = query_intent.get("intents", [])
+            entities = query_intent.get("entities", [])
+            
+            # 1. 如果檢測到比較意圖但沒有具體型號
+            if "comparison" in [intent.get("name") for intent in detected_intents]:
+                if not query_intent.get("modelnames") and not query_intent.get("modeltypes"):
+                    questions.append({
+                        "id": "comparison_scope",
+                        "question": "您想要比較哪些筆電？",
+                        "type": "choice",
+                        "options": [
+                            {"id": "series", "label": "比較同系列筆電（如 819 系列、958 系列）"},
+                            {"id": "specific", "label": "比較特定型號（請告訴我型號名稱）"},
+                            {"id": "recommend", "label": "請推薦適合的筆電讓我比較"}
+                        ]
+                    })
+            
+            # 2. 如果檢測到使用場景相關意圖
+            usage_keywords = ["遊戲", "電競", "辦公", "商務", "學習", "創作", "設計", "工作"]
+            detected_usage = [word for word in usage_keywords if word in query_lower]
+            
+            if detected_usage:
+                questions.append({
+                    "id": "usage_scenario",
+                    "question": f"您主要用於{detected_usage[0]}嗎？",
+                    "type": "choice",
+                    "options": [
+                        {"id": "gaming", "label": "🎮 遊戲娛樂"},
+                        {"id": "business", "label": "💼 商務辦公"},
+                        {"id": "creation", "label": "🎨 設計創作"},
+                        {"id": "study", "label": "📚 學習研究"}
+                    ]
+                })
+            
+            # 3. 如果檢測到性能相關意圖
+            performance_keywords = ["性能", "速度", "快", "慢", "效能"]
+            if any(word in query_lower for word in performance_keywords):
+                questions.append({
+                    "id": "performance_priority",
+                    "question": "您最重視哪方面的性能？",
+                    "type": "choice",
+                    "options": [
+                        {"id": "cpu", "label": "💻 處理器性能"},
+                        {"id": "gpu", "label": "🎮 顯卡性能"},
+                        {"id": "battery", "label": "🔋 續航能力"},
+                        {"id": "memory", "label": "💾 記憶體容量"}
+                    ]
+                })
+            
+            # 4. 如果檢測到便攜性相關意圖
+            portability_keywords = ["輕便", "重量", "攜帶", "便攜", "輕薄"]
+            if any(word in query_lower for word in portability_keywords):
+                questions.append({
+                    "id": "portability_priority",
+                    "question": "您對筆電的重量有什麼要求？",
+                    "type": "choice",
+                    "options": [
+                        {"id": "ultralight", "label": "超輕薄（1.5kg 以下）"},
+                        {"id": "light", "label": "輕便（1.5-2kg）"},
+                        {"id": "standard", "label": "標準重量（2kg 以上）"}
+                    ]
+                })
+            
+            # 5. 如果檢測到預算相關意圖
+            budget_keywords = ["便宜", "貴", "價格", "預算", "價錢"]
+            if any(word in query_lower for word in budget_keywords):
+                questions.append({
+                    "id": "budget_range",
+                    "question": "您的預算範圍大概是多少？",
+                    "type": "choice",
+                    "options": [
+                        {"id": "economy", "label": "經濟型（預算有限）"},
+                        {"id": "mid_range", "label": "中階（適中預算）"},
+                        {"id": "premium", "label": "高階（預算充足）"}
+                    ]
+                })
+            
+            # 6. 如果沒有檢測到具體意圖，提供通用問題
+            if not questions:
+                questions.append({
+                    "id": "general_purpose",
+                    "question": "您主要用這台筆電做什麼？",
+                    "type": "choice",
+                    "options": [
+                        {"id": "gaming", "label": "🎮 玩遊戲"},
+                        {"id": "work", "label": "💼 工作辦公"},
+                        {"id": "study", "label": "📚 學習上網"},
+                        {"id": "creation", "label": "🎨 設計創作"}
+                    ]
+                })
+            
+            logging.info(f"為查詢 '{query}' 生成了 {len(questions)} 個智能問題")
+            return questions
+            
+        except Exception as e:
+            logging.error(f"生成智能澄清問題時發生錯誤: {e}")
+            return []
+
+    def _generate_user_friendly_help(self, query: str) -> str:
+        """
+        生成友善的幫助信息，不使用專業術語
+        """
+        try:
+            query_lower = query.lower()
+            
+            # 分析查詢中的關鍵詞
+            if any(word in query_lower for word in ["比較", "比較", "compare", "差異", "差异"]):
+                return """我理解您想要比較筆電，讓我幫您找到最適合的選擇。
+
+您可以這樣問我：
+• "哪一款筆電比較省電？"
+• "哪一款筆電比較適合玩遊戲？"
+• "這二種筆電的主要差異在哪些部分？"
+• "請推薦適合辦公的筆電"
+• "比較 819 系列和 958 系列的差異"
+
+或者告訴我您的使用需求，我會為您推薦最適合的筆電！"""
+
+            elif any(word in query_lower for word in ["推薦", "建議", "推薦", "建議"]):
+                return """我來幫您推薦最適合的筆電！
+
+請告訴我：
+• 您主要用這台筆電做什麼？（遊戲、工作、學習、設計）
+• 您最重視什麼？（性能、續航、輕便、價格）
+• 您的預算大概是多少？
+
+這樣我就能為您找到最適合的選擇！"""
+
+            elif any(word in query_lower for word in ["遊戲", "電競", "gaming"]):
+                return """您想要遊戲筆電！讓我為您推薦最適合的選擇。
+
+遊戲筆電主要看：
+• 顯卡性能（影響遊戲流暢度）
+• 處理器性能（影響遊戲速度）
+• 螢幕品質（影響遊戲體驗）
+
+您可以問我：
+• "哪一款筆電比較適合玩遊戲？"
+• "比較 958 系列的遊戲性能"
+• "推薦高性價比的遊戲筆電"
+
+或者告訴我您玩什麼類型的遊戲，我會為您推薦！"""
+
+            elif any(word in query_lower for word in ["辦公", "工作", "商務", "business"]):
+                return """您需要辦公筆電！讓我為您推薦最適合的選擇。
+
+辦公筆電主要看：
+• 續航能力（影響工作時間）
+• 處理器性能（影響工作效率）
+• 輕便程度（影響攜帶便利性）
+
+您可以問我：
+• "哪一款筆電比較適合辦公？"
+• "推薦續航能力強的筆電"
+• "比較 819 系列的辦公性能"
+
+或者告訴我您的具體工作需求，我會為您推薦！"""
+
+            else:
+                return """我來幫您找到最適合的筆電！
+
+您可以這樣問我：
+• "哪一款筆電比較省電？"
+• "哪一款筆電比較適合玩遊戲？"
+• "推薦適合辦公的筆電"
+• "比較 819 系列和 958 系列的差異"
+• "這二種筆電的主要差異在哪些部分？"
+
+或者直接告訴我您的使用需求，我會為您推薦最適合的選擇！"""
+
+        except Exception as e:
+            logging.error(f"生成友善幫助信息時發生錯誤: {e}")
+            return "我來幫您找到最適合的筆電！請告訴我您的使用需求。"
+
+    async def process_smart_clarification_response(self, original_query: str, question_id: str, user_choice: str, user_input: str = ""):
+        """
+        處理智能澄清回應
+        
+        Args:
+            original_query: 原始查詢
+            question_id: 問題ID
+            user_choice: 用戶選擇
+            user_input: 用戶額外輸入
+            
+        Returns:
+            處理結果
+        """
+        try:
+            logging.info(f"處理智能澄清回應: question_id={question_id}, choice={user_choice}")
+            
+            # 根據問題ID和用戶選擇重新構建查詢意圖
+            enhanced_query_intent = self._build_query_intent_from_smart_clarification(
+                original_query, question_id, user_choice, user_input
+            )
+            
+            # 執行增強的查詢
+            return await self._execute_enhanced_query(enhanced_query_intent, f"根據您的選擇：{user_choice}")
+            
+        except Exception as e:
+            logging.error(f"處理智能澄清回應時發生錯誤: {e}")
+            return {
+                "message_type": "error",
+                "answer_summary": f"處理澄清回應時發生錯誤: {str(e)}",
+                "comparison_table": []
+            }
+
+    def _build_query_intent_from_smart_clarification(self, original_query: str, question_id: str, user_choice: str, user_input: str) -> dict:
+        """
+        根據智能澄清回應構建查詢意圖
+        """
+        try:
+            # 基礎查詢意圖
+            query_intent = {
+                "modelnames": [],
+                "modeltypes": [],
+                "intents": [],
+                "primary_intent": "general",
+                "query_type": "unknown",
+                "confidence_score": 0.8,
+                "smart_clarification_enhanced": True,
+                "original_query": original_query,
+                "clarification_context": {
+                    "question_id": question_id,
+                    "user_choice": user_choice,
+                    "user_input": user_input
+                }
+            }
+            
+            # 根據問題ID和用戶選擇調整查詢意圖
+            if question_id == "comparison_scope":
+                if user_choice == "series":
+                    # 用戶想要比較系列，提供系列選項
+                    query_intent["query_type"] = "model_type"
+                    query_intent["modeltypes"] = ["819", "839", "958"]
+                    query_intent["primary_intent"] = "comparison"
+                elif user_choice == "specific":
+                    # 用戶想要比較特定型號，但沒有提供型號名稱
+                    query_intent["query_type"] = "unknown"
+                    query_intent["primary_intent"] = "comparison"
+                elif user_choice == "recommend":
+                    # 用戶想要推薦
+                    query_intent["primary_intent"] = "recommendation"
+                    
+            elif question_id == "usage_scenario":
+                # 根據使用場景映射到相應的系列和意圖
+                scenario_mapping = {
+                    "gaming": {"modeltypes": ["958"], "intents": ["gpu", "cpu"], "primary_intent": "gaming"},
+                    "business": {"modeltypes": ["819"], "intents": ["battery", "cpu"], "primary_intent": "business"},
+                    "creation": {"modeltypes": ["958"], "intents": ["gpu", "cpu", "memory"], "primary_intent": "creation"},
+                    "study": {"modeltypes": ["839"], "intents": ["battery", "cpu"], "primary_intent": "study"}
+                }
+                
+                if user_choice in scenario_mapping:
+                    mapping = scenario_mapping[user_choice]
+                    query_intent["modeltypes"] = mapping["modeltypes"]
+                    query_intent["intents"] = mapping["intents"]
+                    query_intent["primary_intent"] = mapping["primary_intent"]
+                    query_intent["query_type"] = "model_type"
+                    
+            elif question_id == "performance_priority":
+                # 根據性能優先級調整意圖
+                performance_mapping = {
+                    "cpu": {"intents": ["cpu"], "primary_intent": "cpu"},
+                    "gpu": {"intents": ["gpu"], "primary_intent": "gpu"},
+                    "battery": {"intents": ["battery"], "primary_intent": "battery"},
+                    "memory": {"intents": ["memory"], "primary_intent": "memory"}
+                }
+                
+                if user_choice in performance_mapping:
+                    mapping = performance_mapping[user_choice]
+                    query_intent["intents"] = mapping["intents"]
+                    query_intent["primary_intent"] = mapping["primary_intent"]
+                    # 如果沒有指定系列，使用所有系列
+                    if not query_intent["modeltypes"]:
+                        query_intent["modeltypes"] = ["819", "839", "958"]
+                        query_intent["query_type"] = "model_type"
+                        
+            elif question_id == "portability_priority":
+                # 根據便攜性需求調整意圖
+                portability_mapping = {
+                    "ultralight": {"intents": ["portability"], "primary_intent": "portability"},
+                    "light": {"intents": ["portability"], "primary_intent": "portability"},
+                    "standard": {"intents": ["portability"], "primary_intent": "portability"}
+                }
+                
+                if user_choice in portability_mapping:
+                    mapping = portability_mapping[user_choice]
+                    query_intent["intents"] = mapping["intents"]
+                    query_intent["primary_intent"] = mapping["primary_intent"]
+                    # 如果沒有指定系列，使用所有系列
+                    if not query_intent["modeltypes"]:
+                        query_intent["modeltypes"] = ["819", "839", "958"]
+                        query_intent["query_type"] = "model_type"
+                        
+            elif question_id == "budget_range":
+                # 根據預算範圍調整意圖
+                budget_mapping = {
+                    "economy": {"modeltypes": ["839"], "intents": ["budget"], "primary_intent": "budget"},
+                    "mid_range": {"modeltypes": ["819"], "intents": ["budget"], "primary_intent": "budget"},
+                    "premium": {"modeltypes": ["958"], "intents": ["budget"], "primary_intent": "budget"}
+                }
+                
+                if user_choice in budget_mapping:
+                    mapping = budget_mapping[user_choice]
+                    query_intent["modeltypes"] = mapping["modeltypes"]
+                    query_intent["intents"] = mapping["intents"]
+                    query_intent["primary_intent"] = mapping["primary_intent"]
+                    query_intent["query_type"] = "model_type"
+                    
+            elif question_id == "general_purpose":
+                # 通用目的問題
+                purpose_mapping = {
+                    "gaming": {"modeltypes": ["958"], "intents": ["gpu", "cpu"], "primary_intent": "gaming"},
+                    "work": {"modeltypes": ["819"], "intents": ["battery", "cpu"], "primary_intent": "business"},
+                    "study": {"modeltypes": ["839"], "intents": ["battery", "cpu"], "primary_intent": "study"},
+                    "creation": {"modeltypes": ["958"], "intents": ["gpu", "cpu", "memory"], "primary_intent": "creation"}
+                }
+                
+                if user_choice in purpose_mapping:
+                    mapping = purpose_mapping[user_choice]
+                    query_intent["modeltypes"] = mapping["modeltypes"]
+                    query_intent["intents"] = mapping["intents"]
+                    query_intent["primary_intent"] = mapping["primary_intent"]
+                    query_intent["query_type"] = "model_type"
+            
+            # 為了向後兼容，設置 intent 欄位
+            query_intent["intent"] = query_intent["primary_intent"]
+            
+            logging.info(f"根據智能澄清構建查詢意圖: {query_intent}")
+            return query_intent
+            
+        except Exception as e:
+            logging.error(f"構建智能澄清查詢意圖時發生錯誤: {e}")
+            return {
+                "modelnames": [],
+                "modeltypes": ["839"],  # 預設中階系列
+                "intents": [],
+                "primary_intent": "general",
+                "intent": "general",
+                "query_type": "model_type",
+                "confidence_score": 0.5,
+                "smart_clarification_enhanced": True
+            }
