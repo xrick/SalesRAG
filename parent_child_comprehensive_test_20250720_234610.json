@@ -1,0 +1,425 @@
+{
+  "test_timestamp": "2025-07-20T23:46:10.913328",
+  "test_type": "comprehensive_parent_child_chunking",
+  "results": {
+    "basic_functionality": {
+      "total_queries": 7,
+      "successful_queries": 7,
+      "success_rate": 1.0,
+      "average_processing_time": 0.00014901161193847656,
+      "results": {
+        "哪款筆電比較省電？": {
+          "success": true,
+          "processing_time": 0.00034689903259277344,
+          "primary_intent": "battery_performance",
+          "retrieval_confidence": 0.8366666666666667,
+          "response_strategy": "model_comparison",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        },
+        "推薦適合遊戲的": {
+          "success": true,
+          "processing_time": 0.00010919570922851562,
+          "primary_intent": "gaming_performance",
+          "retrieval_confidence": 0.898,
+          "response_strategy": "gaming_focus",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        },
+        "學生用什麼好？": {
+          "success": true,
+          "processing_time": 9.202957153320312e-05,
+          "primary_intent": "student_value",
+          "retrieval_confidence": 0.93,
+          "response_strategy": "value_focus",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        },
+        "螢幕效果怎麼樣？": {
+          "success": true,
+          "processing_time": 8.606910705566406e-05,
+          "primary_intent": "display_quality",
+          "retrieval_confidence": 0.6633333333333333,
+          "response_strategy": "display_focus",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        },
+        "筆電規格": {
+          "success": true,
+          "processing_time": 8.20159912109375e-05,
+          "primary_intent": "technical_specs",
+          "retrieval_confidence": 0.8500000000000001,
+          "response_strategy": "model_comparison",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        },
+        "適合辦公的筆電": {
+          "success": true,
+          "processing_time": 9.107589721679688e-05,
+          "primary_intent": "business_productivity",
+          "retrieval_confidence": 0.802,
+          "response_strategy": "business_focus",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        },
+        "請比較AMD819-S: FT6與AMD819: FT6何者更輕便？": {
+          "success": true,
+          "processing_time": 0.0002357959747314453,
+          "primary_intent": "portability",
+          "retrieval_confidence": 0.8633333333333334,
+          "response_strategy": "model_comparison",
+          "matched_models": 5,
+          "matched_chunks": 5,
+          "clarification_needed": false
+        }
+      }
+    },
+    "edge_cases": {
+      "total_cases": 10,
+      "robust_cases": 10,
+      "robustness_rate": 1.0,
+      "results": {
+        "空查詢": {
+          "query": "",
+          "robust": true,
+          "processing_time": 5.4836273193359375e-05,
+          "clarification_needed": false,
+          "confidence": 0.0
+        },
+        "單字查詢": {
+          "query": "筆電",
+          "robust": true,
+          "processing_time": 4.887580871582031e-05,
+          "clarification_needed": false,
+          "confidence": 0.0
+        },
+        "英文查詢": {
+          "query": "laptop gaming",
+          "robust": true,
+          "processing_time": 0.00011014938354492188,
+          "clarification_needed": false,
+          "confidence": 0.898
+        },
+        "混合語言": {
+          "query": "gaming 筆電 performance",
+          "robust": true,
+          "processing_time": 9.489059448242188e-05,
+          "clarification_needed": false,
+          "confidence": 0.898
+        },
+        "數字查詢": {
+          "query": "958",
+          "robust": true,
+          "processing_time": 5.221366882324219e-05,
+          "clarification_needed": false,
+          "confidence": 0.0
+        },
+        "特殊符號": {
+          "query": "筆電????",
+          "robust": true,
+          "processing_time": 4.982948303222656e-05,
+          "clarification_needed": false,
+          "confidence": 0.0
+        },
+        "超長查詢": {
+          "query": "我想要一台非常適合遊戲的筆電而且電池續航力要很好螢幕要很大顯卡要很強處理器要很快記憶體要很多儲存空間要很大",
+          "robust": true,
+          "processing_time": 0.00013899803161621094,
+          "clarification_needed": false,
+          "confidence": 0.8206666666666667
+        },
+        "模糊查詢": {
+          "query": "有什麼推薦的嗎",
+          "robust": true,
+          "processing_time": 5.316734313964844e-05,
+          "clarification_needed": false,
+          "confidence": 0.0
+        },
+        "比較查詢": {
+          "query": "958和819哪個好",
+          "robust": true,
+          "processing_time": 0.0001049041748046875,
+          "clarification_needed": false,
+          "confidence": 0.93
+        },
+        "否定查詢": {
+          "query": "不要太貴的筆電",
+          "robust": true,
+          "processing_time": 5.0067901611328125e-05,
+          "clarification_needed": false,
+          "confidence": 0.0
+        }
+      }
+    },
+    "performance_benchmarks": {
+      "total_queries": 50,
+      "average_time": 0.00010432720184326171,
+      "min_time": 7.390975952148438e-05,
+      "max_time": 0.00024199485778808594,
+      "p95_time": 0.00017523765563964844,
+      "queries_per_second": 9585.227844051375,
+      "memory_stats": {
+        "total_parents": 5,
+        "total_chunks": 44,
+        "topic_distribution": {
+          "battery_performance": 5,
+          "gaming_performance": 5,
+          "business_productivity": 5,
+          "student_value": 5,
+          "display_quality": 5,
+          "technical_specs": 5,
+          "portability": 5,
+          "connectivity": 5,
+          "security": 4
+        },
+        "model_series_distribution": {
+          "958": 1,
+          "819": 3,
+          "839": 1
+        },
+        "keyword_count": 206,
+        "status": "initialized",
+        "chunker_counter": 44,
+        "system_type": "parent_child_chunking"
+      }
+    },
+    "conversation_memory": {
+      "session_id": "664a6cd0-f987-4f59-8204-b93e23a514da",
+      "total_turns": 5,
+      "successful_turns": 5,
+      "final_context": {
+        "has_context": true,
+        "session_id": "664a6cd0-f987-4f59-8204-b93e23a514da",
+        "turns": [
+          {
+            "user_query": "我想買筆電",
+            "query_intent": "battery_performance",
+            "response_strategy": "general_comparison",
+            "matched_models": [],
+            "timestamp": "2025-07-20T23:46:10.911104",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "主要用來遊戲",
+            "query_intent": "gaming_performance",
+            "response_strategy": "gaming_focus",
+            "matched_models": [
+              "AG958",
+              "AMD819: FT6",
+              "AMD819-S: FT6",
+              "AHP839",
+              "AB819-S: FP6"
+            ],
+            "timestamp": "2025-07-20T23:46:10.911233",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "預算不要太高",
+            "query_intent": "gaming_performance",
+            "response_strategy": "model_comparison",
+            "matched_models": [
+              "AG958",
+              "AMD819: FT6",
+              "AMD819-S: FT6",
+              "AHP839",
+              "AB819-S: FP6"
+            ],
+            "timestamp": "2025-07-20T23:46:10.911464",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "958系列怎麼樣？",
+            "query_intent": "gaming_performance",
+            "response_strategy": "gaming_focus",
+            "matched_models": [
+              "AMD819-S: FT6",
+              "AMD819: FT6",
+              "AG958",
+              "AHP839",
+              "AB819-S: FP6"
+            ],
+            "timestamp": "2025-07-20T23:46:10.911678",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "和819比較呢？",
+            "query_intent": "gaming_performance",
+            "response_strategy": "model_comparison",
+            "matched_models": [
+              "AG958",
+              "AMD819: FT6",
+              "AMD819-S: FT6",
+              "AHP839",
+              "AB819-S: FP6"
+            ],
+            "timestamp": "2025-07-20T23:46:10.911923",
+            "system_response": "模擬回應"
+          }
+        ],
+        "summary": "用戶專注於 gaming_performance 相關查詢 | 偏好: preferred_use_case: gaming, budget_preference: performance_focused",
+        "user_preferences": {
+          "preferred_use_case": "gaming",
+          "budget_preference": "performance_focused",
+          "preferred_series": "819_series"
+        },
+        "conversation_flow": {
+          "pattern": "comparative_analysis",
+          "focus_area": "gaming_performance",
+          "turn_count": 5,
+          "consistency_score": 0.4
+        }
+      },
+      "conversation_results": [
+        {
+          "turn_id": "664a6cd0-f987-4f59-8204-b93e23a514da_1",
+          "original_query": "我想買筆電",
+          "contextualized_query": "我想買筆電",
+          "intent": "battery_performance",
+          "strategy": "general_comparison",
+          "confidence": 0.0
+        },
+        {
+          "turn_id": "664a6cd0-f987-4f59-8204-b93e23a514da_2",
+          "original_query": "主要用來遊戲",
+          "contextualized_query": "主要用來遊戲 | 延續 battery_performance 相關討論 | 用戶偏好: preferred_use_case: battery_focused",
+          "intent": "gaming_performance",
+          "strategy": "gaming_focus",
+          "confidence": 0.898
+        },
+        {
+          "turn_id": "664a6cd0-f987-4f59-8204-b93e23a514da_3",
+          "original_query": "預算不要太高",
+          "contextualized_query": "預算不要太高 | 延續 gaming_performance 相關討論 | 考慮之前討論的型號: AG958, AMD819: FT6, AMD819-S: FT6 | 用戶偏好: preferred_use_case: gaming; budget_preference: performance_focused",
+          "intent": "gaming_performance",
+          "strategy": "model_comparison",
+          "confidence": 0.9140000000000001
+        },
+        {
+          "turn_id": "664a6cd0-f987-4f59-8204-b93e23a514da_4",
+          "original_query": "958系列怎麼樣？",
+          "contextualized_query": "958系列怎麼樣？ | 延續 gaming_performance 相關討論 | 考慮之前討論的型號: AG958, AMD819: FT6, AMD819-S: FT6 | 用戶偏好: preferred_use_case: gaming; budget_preference: performance_focused",
+          "intent": "gaming_performance",
+          "strategy": "gaming_focus",
+          "confidence": 0.9060000000000001
+        },
+        {
+          "turn_id": "664a6cd0-f987-4f59-8204-b93e23a514da_5",
+          "original_query": "和819比較呢？",
+          "contextualized_query": "和819比較呢？ | 延續 gaming_performance 相關討論 | 考慮之前討論的型號: AG958, AMD819: FT6, AMD819-S: FT6 | 用戶偏好: preferred_use_case: gaming; budget_preference: performance_focused",
+          "intent": "gaming_performance",
+          "strategy": "model_comparison",
+          "confidence": 0.914
+        }
+      ]
+    },
+    "system_comparison": {
+      "tested_queries": 11,
+      "improved_queries": 11,
+      "improvement_rate": 1.0,
+      "old_system_clarification_rate": 1.0,
+      "new_system_clarification_rate": 0.0,
+      "results": {
+        "哪款筆電比較省電？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.8366666666666667,
+          "strategy": "model_comparison"
+        },
+        "推薦適合遊戲的": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.898,
+          "strategy": "gaming_focus"
+        },
+        "958和819哪個好？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.93,
+          "strategy": "model_comparison"
+        },
+        "學生用什麼好？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.93,
+          "strategy": "value_focus"
+        },
+        "螢幕效果怎麼樣？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.6633333333333333,
+          "strategy": "display_focus"
+        },
+        "有什麼推薦的嗎？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.0,
+          "strategy": "general_comparison"
+        },
+        "筆電規格": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.8500000000000001,
+          "strategy": "model_comparison"
+        },
+        "比較一下": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.93,
+          "strategy": "model_comparison"
+        },
+        "哪個性價比高？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.93,
+          "strategy": "model_comparison"
+        },
+        "適合辦公的筆電": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.802,
+          "strategy": "business_focus"
+        },
+        "請比較AMD819-S: FT6與AMD819: FT6何者更輕便？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.8633333333333334,
+          "strategy": "model_comparison"
+        }
+      }
+    },
+    "overall_assessment": {
+      "total_score": 100.0,
+      "grade": "A+ (優秀)",
+      "functionality_score": 25.0,
+      "robustness_score": 20.0,
+      "performance_score": 20,
+      "improvement_score": 35.0,
+      "key_metrics": {
+        "basic_success_rate": "100.0%",
+        "edge_robustness": "100.0%",
+        "avg_processing_time": "0.000s",
+        "improvement_rate": "100.0%"
+      },
+      "recommendations": [
+        "系統表現優秀，建議持續監控並定期優化"
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+[USER QUERY]
+比較958系列哪款筆記型電腦更適合遊戲？
+
+
+[PARENT-CHILD QUERY ANALYSIS]
+使用 Parent-Child 檢索系統分析結果：
+- 查詢類型: specific_model
+- 主要意圖: gaming_performance
+- 目標型號: AG958, AB819-S: FP6, AHP839, AG958P, AKK839
+- 回應策略: gaming_focus
+- 檢索信心度: 0.93
+
+Parent-Child 回應指導：
+用戶查詢意圖分析：比較958系列哪款筆記型電腦更適合遊戲？\n檢測到的主要需求類別：Gaming Performance\n相關型號：AG958, AB819-S: FP6, AHP839, AG958P, AKK839\n重點關注領域：gaming performance, gaming performance, gaming performance\n回應策略：重點說明遊戲效能和顯卡CPU表現\n檢索信心度：0.93
+
+請根據以上 Parent-Child 分析結果，提供精準且有用的回應。
+
+Based on the query intent analysis:
+- Query Type: {query_intent.query_type}
+- Intent: {query_intent.intent}
+- Target Models: {query_intent.target_modelnames}
+
+Focus your analysis on the specific intent and target models identified above.
+
+[FINAL VALIDATION - MANDATORY]
+Before outputting your JSON response, you MUST:
+1. Verify that ALL model names in your comparison_table exist in the provided data's "modelname" field
+2. Verify that you have NOT mentioned any brands or model names that are not in the provided data
+3. Verify that you have NOT created any fictional specifications
+4. Verify that you have NOT mentioned any NVIDIA GPUs or non-AMD GPU brands
+5. If you cannot find the requested information, use "N/A" and explain the limitation in answer_summary
+6. Only proceed with the JSON output if all validations pass
+
+[YOUR JSON RESPONSE - OUTPUT ONLY THE JSON OBJECT WITH answer_summary AND comparison_table]

@@ -6,6 +6,7 @@ from ...RAG.DB.DuckDBQuery import DuckDBQuery
 from ...RAG.LLM.LLMInitializer import LLMInitializer
 from .entity_recognition import EntityRecognitionSystem
 from .clarification_manager import ClarificationManager
+from .parent_child_retriever import ParentChildRetriever
 import logging
 import re
 
@@ -67,6 +68,12 @@ class SalesAssistantService(BaseService):
         
         # 初始化澄清對話管理器
         self.clarification_manager = ClarificationManager()
+        
+        # 初始化 Parent-Child 檢索系統 (替代三層意圖檢測)
+        self.parent_child_retriever = ParentChildRetriever(
+            duckdb_query_instance=self.duckdb_query,
+            cache_dir="sales_rag_app/libs/services/sales_assistant/parent_child_cache"
+        )
         
         # ★ 修正點 1：修正 spec_fields 列表，使其與 .xlsx 檔案的標題列完全一致
         self.spec_fields = [
@@ -2388,35 +2395,23 @@ class SalesAssistantService(BaseService):
         try:
             logging.info(f"開始新的RAG流程，查詢: {query}")
             
-            # 步骤1：解析查询意图
-            query_intent = self._parse_query_intent(query)
-            logging.info(f"查詢意圖解析結果: {query_intent}")
+            # 步骤1：使用 Parent-Child 檢索系統 (替代原有的三層意圖檢測)
+            logging.info("使用 Parent-Child 檢索系統處理查詢")
+            query_intent = self.parent_child_retriever.process_query(query)
+            logging.info(f"Parent-Child 檢索結果: {query_intent.get('primary_intent', 'unknown')}")
             
-            # 步骤1.5：檢查是否需要澄清對話
-            hierarchical_intent_result = self.entity_recognizer.detect_hierarchical_intent(query)
-            if self.clarification_manager.should_clarify(hierarchical_intent_result):
-                logging.info("檢測到需要澄清對話，開始澄清流程")
-                
-                # 開始澄清對話
-                conversation_id, clarification_question = self.clarification_manager.start_clarification(
-                    query, hierarchical_intent_result
-                )
-                
-                # 構建澄清回應
-                clarification_response = {
-                    "message_type": "clarification_request",
-                    "conversation_id": conversation_id,
-                    "question": clarification_question.question,
-                    "question_type": clarification_question.question_type,
-                    "options": clarification_question.options,
-                    "current_step": clarification_question.step,
-                    "total_steps": self.clarification_manager.active_conversations[conversation_id].total_steps,
-                    "template_name": clarification_question.template_name,
-                    "answer_summary": "為了提供更精準的推薦，請協助我了解您的需求："
-                }
-                
-                yield f"data: {json.dumps(clarification_response, ensure_ascii=False)}\n\n"
-                return
+            # 步骤1.5：檢查是否需要澄清 (Parent-Child 系統幾乎不需要澄清)
+            should_clarify = self.parent_child_retriever.should_clarify(query_intent)
+            if should_clarify:
+                logging.warning("Parent-Child 系統觸發澄清請求（極罕見情況）")
+                # 即使在極少數情況下，我們也提供一般性推薦而非澄清
+                query_intent.update({
+                    "modelnames": [],
+                    "modeltypes": ["819", "839", "958"],
+                    "primary_intent": "general",
+                    "query_type": "model_type"
+                })
+                logging.info("已轉換為一般性推薦，避免澄清請求")
             
             # 检查是否有有效的查询类型
             if query_intent["query_type"] == "unknown":
@@ -2475,26 +2470,39 @@ class SalesAssistantService(BaseService):
                 yield f"data: {json.dumps(no_data_response, ensure_ascii=False)}\n\n"
                 return
             
-            # 步骤3：构建增强的上下文，包含查询意图信息
+            # 步骤3：构建增强的上下文，整合 Parent-Child 檢索結果
             enhanced_context = {
                 "data": context_list_of_dicts,
                 "query_intent": query_intent,
                 "target_modelnames": target_modelnames
             }
             
+            # 添加 Parent-Child 特定的上下文信息
+            parent_child_context = self.parent_child_retriever.get_enhanced_context_for_llm(query_intent)
+            enhanced_context["parent_child_guidance"] = parent_child_context
+            
             context_str = json.dumps(enhanced_context, indent=2, ensure_ascii=False)
-            logging.info("成功构建增强上下文，包含查询意图信息")
+            logging.info("成功构建 Parent-Child 增强上下文")
             
             # 步骤4：构建提示并请求LLM
-            # 构建包含查询意图信息的prompt
+            # 构建包含 Parent-Child 分析信息的 prompt
+            parent_child_data = query_intent.get("parent_child_data", {})
+            response_strategy = parent_child_data.get("response_strategy", "general")
+            retrieval_confidence = parent_child_data.get("retrieval_confidence", 0.0)
+            
             intent_info = f"""
-[QUERY INTENT ANALYSIS]
-Based on the query intent analysis:
-- Query Type: {query_intent['query_type']}
-- Intent: {query_intent['intent']}
-- Target Models: {', '.join(target_modelnames)}
+[PARENT-CHILD QUERY ANALYSIS]
+使用 Parent-Child 檢索系統分析結果：
+- 查詢類型: {query_intent['query_type']}
+- 主要意圖: {query_intent['primary_intent']}
+- 目標型號: {', '.join(target_modelnames)}
+- 回應策略: {response_strategy}
+- 檢索信心度: {retrieval_confidence:.2f}
 
-Focus your analysis on the specific intent and target models identified above.
+Parent-Child 回應指導：
+{parent_child_context}
+
+請根據以上 Parent-Child 分析結果，提供精準且有用的回應。
 """
             
             # 構建最終提示詞

@@ -1,0 +1,125 @@
+{
+  "test_timestamp": "2025-07-20T12:56:29.331025",
+  "system_type": "parent_child_chunking",
+  "summary": {
+    "total_queries": 10,
+    "successful_queries": 10,
+    "success_rate": 1.0,
+    "clarification_rate": 0.0,
+    "immediate_response_rate": 1.0,
+    "average_confidence": 0.5727777777777778,
+    "performance_level": "完美",
+    "target_achieved": true
+  },
+  "strategy_distribution": {
+    "battery_focus": 1,
+    "gaming_focus": 1,
+    "general_comparison": 3,
+    "value_focus": 2,
+    "display_focus": 1,
+    "model_comparison": 1,
+    "business_focus": 1
+  },
+  "detailed_results": {
+    "哪款筆電比較省電？": {
+      "success": true,
+      "primary_intent": "battery_performance",
+      "retrieval_confidence": 0.7077777777777778,
+      "response_strategy": "battery_focus",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "推薦適合遊戲的": {
+      "success": true,
+      "primary_intent": "gaming_performance",
+      "retrieval_confidence": 0.8766666666666667,
+      "response_strategy": "gaming_focus",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "958和819哪個好？": {
+      "success": true,
+      "primary_intent": "battery_performance",
+      "retrieval_confidence": 0.0,
+      "response_strategy": "general_comparison",
+      "matched_models": 0,
+      "matched_chunks": 0,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "學生用什麼好？": {
+      "success": true,
+      "primary_intent": "student_value",
+      "retrieval_confidence": 0.93,
+      "response_strategy": "value_focus",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "螢幕效果怎麼樣？": {
+      "success": true,
+      "primary_intent": "display_quality",
+      "retrieval_confidence": 0.6633333333333333,
+      "response_strategy": "display_focus",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "有什麼推薦的嗎？": {
+      "success": true,
+      "primary_intent": "battery_performance",
+      "retrieval_confidence": 0.0,
+      "response_strategy": "general_comparison",
+      "matched_models": 0,
+      "matched_chunks": 0,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "筆電規格": {
+      "success": true,
+      "primary_intent": "technical_specs",
+      "retrieval_confidence": 0.8500000000000001,
+      "response_strategy": "model_comparison",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "比較一下": {
+      "success": true,
+      "primary_intent": "battery_performance",
+      "retrieval_confidence": 0.0,
+      "response_strategy": "general_comparison",
+      "matched_models": 0,
+      "matched_chunks": 0,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "哪個性價比高？": {
+      "success": true,
+      "primary_intent": "student_value",
+      "retrieval_confidence": 0.93,
+      "response_strategy": "value_focus",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    },
+    "適合辦公的筆電": {
+      "success": true,
+      "primary_intent": "business_productivity",
+      "retrieval_confidence": 0.77,
+      "response_strategy": "business_focus",
+      "matched_models": 3,
+      "matched_chunks": 3,
+      "clarification_needed": false,
+      "immediate_response": true
+    }
+  }
+}

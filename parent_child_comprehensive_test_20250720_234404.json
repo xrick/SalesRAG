@@ -1,0 +1,397 @@
+{
+  "test_timestamp": "2025-07-20T23:44:04.432346",
+  "test_type": "comprehensive_parent_child_chunking",
+  "results": {
+    "basic_functionality": {
+      "total_queries": 7,
+      "successful_queries": 7,
+      "success_rate": 1.0,
+      "average_processing_time": 0.00013555799211774553,
+      "results": {
+        "哪款筆電比較省電？": {
+          "success": true,
+          "processing_time": 0.00034880638122558594,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        },
+        "推薦適合遊戲的": {
+          "success": true,
+          "processing_time": 9.202957153320312e-05,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        },
+        "學生用什麼好？": {
+          "success": true,
+          "processing_time": 7.987022399902344e-05,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        },
+        "螢幕效果怎麼樣？": {
+          "success": true,
+          "processing_time": 7.390975952148438e-05,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        },
+        "筆電規格": {
+          "success": true,
+          "processing_time": 6.914138793945312e-05,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        },
+        "適合辦公的筆電": {
+          "success": true,
+          "processing_time": 7.605552673339844e-05,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        },
+        "請比較AMD819-S: FT6與AMD819: FT6何者更輕便？": {
+          "success": true,
+          "processing_time": 0.0002090930938720703,
+          "primary_intent": "general",
+          "retrieval_confidence": 0.5,
+          "response_strategy": "general_recommendation",
+          "matched_models": 0,
+          "matched_chunks": 0,
+          "clarification_needed": false
+        }
+      }
+    },
+    "edge_cases": {
+      "total_cases": 10,
+      "robust_cases": 10,
+      "robustness_rate": 1.0,
+      "results": {
+        "空查詢": {
+          "query": "",
+          "robust": true,
+          "processing_time": 5.412101745605469e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "單字查詢": {
+          "query": "筆電",
+          "robust": true,
+          "processing_time": 4.696846008300781e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "英文查詢": {
+          "query": "laptop gaming",
+          "robust": true,
+          "processing_time": 7.581710815429688e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "混合語言": {
+          "query": "gaming 筆電 performance",
+          "robust": true,
+          "processing_time": 7.605552673339844e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "數字查詢": {
+          "query": "958",
+          "robust": true,
+          "processing_time": 4.601478576660156e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "特殊符號": {
+          "query": "筆電????",
+          "robust": true,
+          "processing_time": 4.601478576660156e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "超長查詢": {
+          "query": "我想要一台非常適合遊戲的筆電而且電池續航力要很好螢幕要很大顯卡要很強處理器要很快記憶體要很多儲存空間要很大",
+          "robust": true,
+          "processing_time": 0.00013208389282226562,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "模糊查詢": {
+          "query": "有什麼推薦的嗎",
+          "robust": true,
+          "processing_time": 4.7206878662109375e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "比較查詢": {
+          "query": "958和819哪個好",
+          "robust": true,
+          "processing_time": 8.916854858398438e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        },
+        "否定查詢": {
+          "query": "不要太貴的筆電",
+          "robust": true,
+          "processing_time": 4.506111145019531e-05,
+          "clarification_needed": false,
+          "confidence": 0.5
+        }
+      }
+    },
+    "performance_benchmarks": {
+      "total_queries": 50,
+      "average_time": 8.477687835693359e-05,
+      "min_time": 5.793571472167969e-05,
+      "max_time": 0.00015974044799804688,
+      "p95_time": 0.0001518726348876953,
+      "queries_per_second": 11795.669047752968,
+      "memory_stats": {
+        "total_parents": 5,
+        "total_chunks": 44,
+        "topic_distribution": {
+          "battery_performance": 5,
+          "gaming_performance": 5,
+          "business_productivity": 5,
+          "student_value": 5,
+          "display_quality": 5,
+          "technical_specs": 5,
+          "portability": 5,
+          "connectivity": 5,
+          "security": 4
+        },
+        "model_series_distribution": {
+          "958": 1,
+          "819": 3,
+          "839": 1
+        },
+        "keyword_count": 206,
+        "status": "initialized",
+        "chunker_counter": 44,
+        "system_type": "parent_child_chunking"
+      }
+    },
+    "conversation_memory": {
+      "session_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c",
+      "total_turns": 5,
+      "successful_turns": 5,
+      "final_context": {
+        "has_context": true,
+        "session_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c",
+        "turns": [
+          {
+            "user_query": "我想買筆電",
+            "query_intent": "general",
+            "response_strategy": "general_recommendation",
+            "matched_models": [],
+            "timestamp": "2025-07-20T23:44:04.430849",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "主要用來遊戲",
+            "query_intent": "general",
+            "response_strategy": "general_recommendation",
+            "matched_models": [],
+            "timestamp": "2025-07-20T23:44:04.430954",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "預算不要太高",
+            "query_intent": "general",
+            "response_strategy": "general_recommendation",
+            "matched_models": [],
+            "timestamp": "2025-07-20T23:44:04.431041",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "958系列怎麼樣？",
+            "query_intent": "general",
+            "response_strategy": "general_recommendation",
+            "matched_models": [],
+            "timestamp": "2025-07-20T23:44:04.431113",
+            "system_response": "模擬回應"
+          },
+          {
+            "user_query": "和819比較呢？",
+            "query_intent": "general",
+            "response_strategy": "general_recommendation",
+            "matched_models": [],
+            "timestamp": "2025-07-20T23:44:04.431218",
+            "system_response": "模擬回應"
+          }
+        ],
+        "summary": "用戶專注於 general 相關查詢",
+        "user_preferences": {},
+        "conversation_flow": {
+          "pattern": "focused_inquiry",
+          "focus_area": "general",
+          "turn_count": 5,
+          "consistency_score": 0.2
+        }
+      },
+      "conversation_results": [
+        {
+          "turn_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c_1",
+          "original_query": "我想買筆電",
+          "contextualized_query": "我想買筆電",
+          "intent": "general",
+          "strategy": "general_recommendation",
+          "confidence": 0.5
+        },
+        {
+          "turn_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c_2",
+          "original_query": "主要用來遊戲",
+          "contextualized_query": "主要用來遊戲 | 延續 general 相關討論",
+          "intent": "general",
+          "strategy": "general_recommendation",
+          "confidence": 0.5
+        },
+        {
+          "turn_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c_3",
+          "original_query": "預算不要太高",
+          "contextualized_query": "預算不要太高 | 延續 general 相關討論",
+          "intent": "general",
+          "strategy": "general_recommendation",
+          "confidence": 0.5
+        },
+        {
+          "turn_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c_4",
+          "original_query": "958系列怎麼樣？",
+          "contextualized_query": "958系列怎麼樣？ | 延續 general 相關討論",
+          "intent": "general",
+          "strategy": "general_recommendation",
+          "confidence": 0.5
+        },
+        {
+          "turn_id": "c2c97ed2-a3fd-4352-984b-09e9034fdc7c_5",
+          "original_query": "和819比較呢？",
+          "contextualized_query": "和819比較呢？ | 延續 general 相關討論",
+          "intent": "general",
+          "strategy": "general_recommendation",
+          "confidence": 0.5
+        }
+      ]
+    },
+    "system_comparison": {
+      "tested_queries": 11,
+      "improved_queries": 11,
+      "improvement_rate": 1.0,
+      "old_system_clarification_rate": 1.0,
+      "new_system_clarification_rate": 0.0,
+      "results": {
+        "哪款筆電比較省電？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "推薦適合遊戲的": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "958和819哪個好？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "學生用什麼好？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "螢幕效果怎麼樣？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "有什麼推薦的嗎？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "筆電規格": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "比較一下": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "哪個性價比高？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "適合辦公的筆電": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        },
+        "請比較AMD819-S: FT6與AMD819: FT6何者更輕便？": {
+          "old_system": "觸發澄清請求",
+          "new_system": "即時回應",
+          "improvement": true,
+          "confidence": 0.5,
+          "strategy": "general_recommendation"
+        }
+      }
+    },
+    "overall_assessment": {
+      "total_score": 100.0,
+      "grade": "A+ (優秀)",
+      "functionality_score": 25.0,
+      "robustness_score": 20.0,
+      "performance_score": 20,
+      "improvement_score": 35.0,
+      "key_metrics": {
+        "basic_success_rate": "100.0%",
+        "edge_robustness": "100.0%",
+        "avg_processing_time": "0.000s",
+        "improvement_rate": "100.0%"
+      },
+      "recommendations": [
+        "系統表現優秀，建議持續監控並定期優化"
+      ]
+    }
+  }
+}
